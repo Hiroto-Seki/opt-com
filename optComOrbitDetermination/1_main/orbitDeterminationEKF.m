@@ -78,7 +78,12 @@ for i_1 = 1: time.stepNum+1
 end
 
 %% 2. calculate true orbit of spacecraft
-scTrue.calcOrbitTwoBody_pertubation(time,constant, error)
+scTrue.calcOrbitTwoBody_pertubation(time,constant, error.dynamics)
+% 観測もなかった時の軌道も作っておく(初期値は推定値と同じ)
+scInitialGuess = orbitalState('spacecraft','estimate','SolarSystem');
+scInitialGuess.pos0 = scEst.pos0;
+scInitialGuess.vel0 = scEst.vel0;
+scInitialGuess.calcOrbitTwoBody_pertubation(time,constant, 0)
 
 %% 3. calculate observed value, 4. estimate spacecraft orbit using observed value by EKF
 %% 観測する(観測は真値を伝搬して求めていく)
@@ -148,7 +153,9 @@ hold off
 
 % 探査機位置誤差の時間履歴
 figure(2)
-title('position error of spacecraft')
+tiledlayout(2,1)
+nexttile
+title('position error of estimated value')
 hold on
 plot(time.list-time.list(1), scEst.pos(1,:) - scTrue.pos(1,:))
 plot(time.list-time.list(1), scEst.pos(2,:) - scTrue.pos(2,:))
@@ -156,18 +163,31 @@ plot(time.list-time.list(1), scEst.pos(3,:) - scTrue.pos(3,:))
 xlabel('time [s]')
 ylabel('position error [m]')
 legend('x', 'y', 'z')
+ylim([-1000 1000])
+hold off
+nexttile
+title('position error of initail guess')
+hold on
+plot(time.list-time.list(1), scInitialGuess.pos(1,:) - scTrue.pos(1,:))
+plot(time.list-time.list(1), scInitialGuess.pos(2,:) - scTrue.pos(2,:))
+plot(time.list-time.list(1), scInitialGuess.pos(3,:) - scTrue.pos(3,:))
+xlabel('time [s]')
+ylabel('position error [m]')
+legend('x', 'y', 'z')
+ylim([-1000 1000])
 hold off
 
 % 探査機位置の真値と推定値の比較
 figure(3)
 title('estemated/true position of spacecraft')
 hold on
-plot3(scEst.pos(1,:),scEst.pos(2,:),scEst.pos(3,:))
 plot3(scTrue.pos(1,:),scTrue.pos(2,:),scTrue.pos(3,:))
+plot3(scEst.pos(1,:),scEst.pos(2,:),scEst.pos(3,:))
+plot3(scInitialGuess.pos(1,:),scInitialGuess.pos(2,:),scInitialGuess.pos(3,:))
 xlabel('x [m]')
 ylabel('y [m]')
 zlabel('z [m]')
-legend('x', 'y', 'z')
+legend('true', 'estimated', 'initial guess')
 hold off
 
 

@@ -27,7 +27,7 @@ classdef orbitalState < handle
         end              
         elem2rv(obj);
         getOrbitTwoBody(obj,time,constant)
-        calcOrbitTwoBody_pertubation(obj,time,constant, error)
+        calcOrbitTwoBody_pertubation(obj,time,constant, dynamicsError)
 %         getEphemData(obj,time,error)
         
     end

@@ -1,5 +1,5 @@
 % 概要: time.list分の探査機の位置を伝搬して求めていく
-function calcOrbitTwoBody_pertubation(obj,time,constant, error)
+function calcOrbitTwoBody_pertubation(obj,time,constant, dynamicsError)
     mu = constant.sunMu;
     %まずはobjを初期化
     obj.t = time.list;
@@ -12,7 +12,7 @@ function calcOrbitTwoBody_pertubation(obj,time,constant, error)
     xv = [obj.pos(:,1);obj.vel(:,1)] ;
     timestep = time.simDt;
     for j = 2:length(time.list)
-        a_pertubation = [error.dynamics * randn ; error.dynamics * randn; error.dynamics * randn];
+        a_pertubation = [dynamicsError * randn ; dynamicsError * randn; dynamicsError * randn];
         k1 = obj.twobody(xv,mu,a_pertubation);
         k2 = obj.twobody(xv+0.5*timestep*k1,mu,a_pertubation);
         k3 = obj.twobody(xv+0.5*timestep*k2,mu,a_pertubation);
