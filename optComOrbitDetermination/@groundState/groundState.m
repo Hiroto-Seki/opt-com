@@ -15,5 +15,6 @@ classdef groundState < handle
     end
     methods(Static)
         [gsPos,gsVel] = earthRotation(pos0, t, constant)
+        [xv] = calcEarthRotation(xv, constant)
     end
 end

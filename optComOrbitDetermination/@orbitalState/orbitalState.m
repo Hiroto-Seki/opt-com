@@ -15,6 +15,8 @@ classdef orbitalState < handle
           vel                     %velocity realtive to the central body [km]
           pos0
           vel0
+          state0
+          clockErrorCorrection
     end
     methods 
         function obj = orbitalState(name,dataType,centralBody) %コンストラクタ 
@@ -25,9 +27,13 @@ classdef orbitalState < handle
         end              
         elem2rv(obj);
         getOrbitTwoBody(obj,time,constant)
-        getEphemData(obj,time,error)
+        calcOrbitTwoBody_pertubation(obj,time,constant, error)
+%         getEphemData(obj,time,error)
+        
     end
     methods(Static)
-        xv = twobody(xv, mu)
+        xv = twobody(xv, mu,a_pertubation)
+        A  = delFdelX(xv,mu)
+        
     end
 end

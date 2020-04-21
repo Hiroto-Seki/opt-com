@@ -1,5 +1,5 @@
 % “ñ‘Ì–â‘è
-function xv = twobody(xv, mu)
+function xv = twobody(xv, mu, a_pertubation)
     x = xv(1);
     y = xv(2);
     z = xv(3);
@@ -9,8 +9,7 @@ function xv = twobody(xv, mu)
 
     r    = [x; y; z];
     R    = norm(r);
-    a    = -mu*r/R^3;         
-   % a_pertubation = [error * randn ; error * randn; error * randn] ;
-%     a    = a_0 +a_pertubation;
+    a_0    = -mu*r/R^3;         
+    a    = a_0 +a_pertubation;
     xv = [u;v;w;a];
 end
