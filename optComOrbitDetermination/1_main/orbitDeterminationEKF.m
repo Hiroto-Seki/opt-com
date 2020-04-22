@@ -47,7 +47,7 @@ error.scVel0 = randn(3,1) *  0.1;
 % ダイナミクスの不確定性の標準偏差(探査機)
 error.dynamics = 1e-10;
 % 角度観測の不確定性の標準偏差(もしかしたらもっと悪いかも)
-error.angle = 1e-6;
+error.angle = 1e-7;
 
 %% set gorund station (USUDAにする)
 % 緯度経度から，ECLIPJ2000,地球中心座標系での座標を得たい
@@ -98,10 +98,19 @@ X_hat = [0;scEst.pos0;scEst.vel0];
    scEst.clockErrorCorrection(1)= X_hat(1);
    scEst.pos(:,1) = X_hat(2:4);
    scEst.vel(:,1) = X_hat(5:7);
-P = 1e4 * eye(7);  %正直適当
+P = zeros(7);
+P(1,1) = 10^2;
+P(2,2) = 1000^2;
+P(3,3) = 1000^2;
+P(4,4) = 1000^2;
+P(5,5) = 1e-1^2;
+P(6,6) = 1e-1^2;
+P(7,7) = 1e-1^2;
+P_list = zeros(7,7,length(time.list));
+P_list(:,:,1) = P;
 R = [100,0,0;      %観測誤差
-    0,1e-12,0;
-    0,0,1e-12];
+    0,1e-10,0;
+    0,0,1e-10];
 
 for i_2 = 2:length(time.list)
    %% まずは観測量を得る
@@ -139,6 +148,7 @@ for i_2 = 2:length(time.list)
    scEst.clockErrorCorrection(i_2)= X_hat(1);
    scEst.pos(:,i_2) = X_hat(2:4);
    scEst.vel(:,i_2) = X_hat(5:7);
+   P_list(:,:,i_2) = P;
 end
 
 %plot
@@ -161,7 +171,7 @@ plot(time.list-time.list(1), scEst.pos(1,:) - scTrue.pos(1,:))
 plot(time.list-time.list(1), scEst.pos(2,:) - scTrue.pos(2,:))
 plot(time.list-time.list(1), scEst.pos(3,:) - scTrue.pos(3,:))
 xlabel('time [s]')
-ylabel('position error [m]')
+ylabel('position error [km]')
 legend('x', 'y', 'z')
 ylim([-1000 1000])
 hold off
@@ -172,7 +182,7 @@ plot(time.list-time.list(1), scInitialGuess.pos(1,:) - scTrue.pos(1,:))
 plot(time.list-time.list(1), scInitialGuess.pos(2,:) - scTrue.pos(2,:))
 plot(time.list-time.list(1), scInitialGuess.pos(3,:) - scTrue.pos(3,:))
 xlabel('time [s]')
-ylabel('position error [m]')
+ylabel('position error [km]')
 legend('x', 'y', 'z')
 ylim([-1000 1000])
 hold off
@@ -184,15 +194,11 @@ hold on
 plot3(scTrue.pos(1,:),scTrue.pos(2,:),scTrue.pos(3,:))
 plot3(scEst.pos(1,:),scEst.pos(2,:),scEst.pos(3,:))
 plot3(scInitialGuess.pos(1,:),scInitialGuess.pos(2,:),scInitialGuess.pos(3,:))
-xlabel('x [m]')
-ylabel('y [m]')
-zlabel('z [m]')
+xlabel('x [km]')
+ylabel('y [km]')
+zlabel('z [km]')
 legend('true', 'estimated', 'initial guess')
 hold off
 
 
-
-% hold on
-% plot(time.list, ephemData.earth(1,:))
-% plot(time.list - observe.ltd, observe.xve(1,:))
-% hold off
+% plot(time.list,reshape(P_list(1,1,:),1,length(time.list)))

@@ -1,6 +1,7 @@
 % EKFのための観測式の微分を求める
 function H_childa = delGdelX(X_bar,xve,xvg,constant)
     xvs = X_bar(2:7);
+    
     c = constant.lightSpeed;
     H_childa = zeros(3,7);
     % D:距離
@@ -36,15 +37,15 @@ function H_childa = delGdelX(X_bar,xve,xvg,constant)
     % thetaのdeltaT微分
     H_childa(2,1) = 0;
     % thetaのxs微分
-    H_childa(2,2) = (t_n^2 + t_d^2 ) * (      (xvs(5) * delDdelXs) * t_d - t_n*(-c + xvs(4)*delDdelXs));
+    H_childa(2,2) = 1/(t_n^2 + t_d^2 ) * (      (xvs(5) * delDdelXs) * t_d - t_n*(-c + xvs(4)*delDdelXs));
     % thetaのys微分
-    H_childa(2,3) = (t_n^2 + t_d^2 ) * ( (-c + xvs(5) * delDdelYs) * t_d - t_n*    ( xvs(4)*delDdelYs));
+    H_childa(2,3) = 1/(t_n^2 + t_d^2 ) * ( (-c + xvs(5) * delDdelYs) * t_d - t_n*    ( xvs(4)*delDdelYs));
     % thetaのzs微分
-    H_childa(2,4) = (t_n^2 + t_d^2 ) * (      (xvs(5) * delDdelZs) * t_d - t_n*    ( xvs(4)*delDdelZs));
+    H_childa(2,4) = 1/(t_n^2 + t_d^2 ) * (      (xvs(5) * delDdelZs) * t_d - t_n*    ( xvs(4)*delDdelZs));
     % thetaのus微分
-    H_childa(2,5) = (t_n^2 + t_d^2 ) * (                                 - t_n*    ( D               ));
+    H_childa(2,5) = 1/(t_n^2 + t_d^2 ) * (                                 - t_n*    ( D               ));
     % thetaのus微分
-    H_childa(2,6) = (t_n^2 + t_d^2 ) * (                       (D) * t_d                              );
+    H_childa(2,6) = 1/(t_n^2 + t_d^2 ) * (                       (D) * t_d                              );
     % thetaのws微分
     H_childa(2,7) = 0;    
 
@@ -62,16 +63,16 @@ function H_childa = delGdelX(X_bar,xve,xvg,constant)
     % phiのdeltaT微分
     H_childa(3,1) = 0;
     % phiのxs微分
-    H_childa(3,2) = (p_n^2 + p_d^2) * (     (xvs(6) * delDdelXs) * p_d - p_n/p_d *(p_d_x*(-c +xvs(4)*delDdelXs) + p_d_y*(     xvs(5)*delDdelXs)));
+    H_childa(3,2) = 1/(p_n^2 + p_d^2) * (     (xvs(6) * delDdelXs) * p_d - p_n/p_d *(p_d_x*(-c +xvs(4)*delDdelXs) + p_d_y*(     xvs(5)*delDdelXs)));
     % phiのys微分
-    H_childa(3,3) = (p_n^2 + p_d^2) * (     (xvs(6) * delDdelYs) * p_d - p_n/p_d *(p_d_x*(   +xvs(4)*delDdelYs) + p_d_y*( -c +xvs(5)*delDdelYs)));
+    H_childa(3,3) = 1/(p_n^2 + p_d^2) * (     (xvs(6) * delDdelYs) * p_d - p_n/p_d *(p_d_x*(   +xvs(4)*delDdelYs) + p_d_y*( -c +xvs(5)*delDdelYs)));
     % phiのzs微分
-    H_childa(3,4) = (p_n^2 + p_d^2) * ( (-c +xvs(6) * delDdelZs) * p_d - p_n/p_d *(p_d_x*(   +xvs(4)*delDdelZs) + p_d_y*(     xvs(5)*delDdelZs)));
+    H_childa(3,4) = 1/(p_n^2 + p_d^2) * ( (-c +xvs(6) * delDdelZs) * p_d - p_n/p_d *(p_d_x*(   +xvs(4)*delDdelZs) + p_d_y*(     xvs(5)*delDdelZs)));
     % phiのus微分
-    H_childa(3,5) = (p_n^2 + p_d^2) * (                                - p_n/p_d *(p_d_x*D)                                                     );
-    % phiのus微分 (ここから)
-    H_childa(3,6) = (p_n^2 + p_d^2) * (                                - p_n/p_d *(p_d_y*D)                                                     );
+    H_childa(3,5) = 1/(p_n^2 + p_d^2) * (                                - p_n/p_d *(p_d_x*D)                                                     );
+    % phiのus微分 
+    H_childa(3,6) = 1/(p_n^2 + p_d^2) * (                                - p_n/p_d *(p_d_y*D)                                                     );
     % phiのws微分
-    H_childa(3,7) = (p_n^2 + p_d^2) * (                     ( D ) * p_d                                                                         ); 
+    H_childa(3,7) = 1/(p_n^2 + p_d^2) * (                     ( D ) * p_d                                                                         ); 
     
 end
