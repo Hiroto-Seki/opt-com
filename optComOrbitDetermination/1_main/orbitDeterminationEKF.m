@@ -7,6 +7,7 @@
 % 4. estimate spacecraft orbit using observed value by EKF
 % ---   Date      ---
 % rev1: 2020/04/19
+% rev2: 2020/04/30  観測誤差共分散行列の値によって収束したり，発散する
 
 clear all; close all; clc
 %% setting parameter
@@ -31,6 +32,8 @@ constant.eathAxis      = 23.4/180*pi;     % inclination of the earth axis
 %% parameter related to time
 % simulation timeStep[s]
 time.simDt = 10;
+% 観測頻度(シミュレーションのタイムステップの何倍か)
+time.obsStep = 10;
 % number of time step
 time.stepNum = 1200; 
 % simulateion start time (ephemeris time)
@@ -108,17 +111,11 @@ P(6,6) = 1e-1^2;
 P(7,7) = 1e-1^2;
 P_list = zeros(7,7,length(time.list));
 P_list(:,:,1) = P;
-R = [100,0,0;      %観測誤差
-    0,1e-10,0;
-    0,0,1e-10];
+R = [1e-6,0,0;      %観測誤差分散
+    0,1e-12,0;
+    0,0,1e-12];
 
 for i_2 = 2:length(time.list)
-   %% まずは観測量を得る
-   observe.calcObservedValue(time,ephemData,scTrue,constant,error,i_2)
-   Y = [observe.ltd(i_2); observe.azimuth(i_2); observe.elevation(i_2)];
-%    % 観測量からレーザーが発された時刻の地上局の状態量を得る
-%    xve = observe.xve(:,i_2);
-%    xvg = observe.xvg(:,i_2);
    %% リファレンスの状態量とSTMを伝搬して求める(RK4,1stepで積分した)
    STM = eye(7);
    xvsc = X_hat(2:7);
@@ -136,14 +133,25 @@ for i_2 = 2:length(time.list)
    %% STMを用いてリファレンスの状態量と誤差共分散行列の更新
    X_bar = STM * X_hat;
    P_bar = STM * P * STM.';
-   % リファレンスの状態量の時の観測量を計算する
-   Y_bar = observe.calcG(X_bar,observe.xve(:,i_2),observe.xvg(:,i_2),constant);
-   y     = Y - Y_bar;
-   H_childa = observe.delGdelX(X_bar,observe.xve(:,i_2),observe.xvg(:,i_2),constant);
-   %% カルマンゲインの計算と推定値の更新
-   K = P_bar * H_childa.'/(H_childa*P_bar*H_childa.' + R);
-   X_hat = X_bar + K*y;
-   P = (eye(7) - K*H_childa)*P_bar;  
+   
+   %% 観測量の有無で場合わけ
+   if mod(i_2,time.obsStep)
+       % 観測量がない場合
+       X_hat = X_bar;
+       P = P_bar;
+   else
+       %% 観測量がある場合
+       observe.calcObservedValue(time,ephemData,scTrue,constant,error,i_2)
+       Y = [observe.ltd(i_2); observe.azimuth(i_2); observe.elevation(i_2)];
+       % リファレンスの状態量の時の観測量を計算する
+       Y_bar = observe.calcG(X_bar,observe.xve(:,i_2),observe.xvg(:,i_2),constant);
+       y     = Y - Y_bar;
+       H_childa = observe.delGdelX(X_bar,observe.xve(:,i_2),observe.xvg(:,i_2),constant);
+       %% カルマンゲインの計算と推定値の更新
+       K = P_bar * H_childa.'/(H_childa*P_bar*H_childa.' + R);
+       X_hat = X_bar + K*y;
+       P = (eye(7) - K*H_childa)*P_bar;  
+   end
    % 記録する
    scEst.clockErrorCorrection(i_2)= X_hat(1);
    scEst.pos(:,i_2) = X_hat(2:4);
