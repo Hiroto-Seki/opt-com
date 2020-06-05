@@ -1,4 +1,4 @@
-function [gsPos,gsVel] = earthRotation(pos0, t, constant)
+function [pos,vel] = earthRotation(pos0, t, constant)
     x0 = pos0(1);
     y0 = pos0(2);
     z0 = pos0(3);
@@ -11,6 +11,6 @@ function [gsPos,gsVel] = earthRotation(pos0, t, constant)
     u = -omega * x0*sin(omega * t) - (y0*cos(phi) - z0*sin(phi))* omega * cos(omega * t);
     v = ((y0*cos(phi) - z0*sin(phi))* (-omega) * sin(omega * t) + x0* omega * cos(omega * t))*cos(phi);
     w = - ((y0*cos(phi) - z0*sin(phi))* (-omega) *sin(omega * t) + x0* (omega) * cos(omega * t))*sin(phi);
-    gsPos = [x;y;z];
-    gsVel = [u;v;w];
+    pos = [x;y;z];
+    vel = [u;v;w];
 end

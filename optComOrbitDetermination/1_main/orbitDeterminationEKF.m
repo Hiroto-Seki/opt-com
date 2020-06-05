@@ -32,10 +32,10 @@ constant.eathAxis      = 23.4/180*pi;     % inclination of the earth axis
 %% parameter related to time
 % simulation timeStep[s]
 time.simDt = 10;
-% 観測頻度(シミュレーションのタイムステップの何倍か)
-time.obsStep = 10;
+% % 観測頻度(シミュレーションのタイムステップの何倍か)
+time.obsStep = 200;
 % number of time step
-time.stepNum = 1200; 
+time.stepNum = 10000; 
 % simulateion start time (ephemeris time)
 time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
 time.list = linspace(time.t0,time.t0+time.simDt * time.stepNum,time.stepNum+1);
@@ -43,14 +43,14 @@ time.list = linspace(time.t0,time.t0+time.simDt * time.stepNum,time.stepNum+1);
 %% 誤差に関するパラメーター
 % 初期時計誤差
 error.clock = 10   * randn; %時計誤差(秒)
-% 初期探査機軌道誤差[km]. 地球からみて1μradくらいの誤差にする
-error.scPos0 = randn(3,1) *  150;
+% 初期探査機軌道誤差[km]. 
+error.scPos0 = randn(3,1) *  1000;
 % 適当に0.1km/s程度の誤差とする
 error.scVel0 = randn(3,1) *  0.1;
 % ダイナミクスの不確定性の標準偏差(探査機)
 error.dynamics = 1e-10;
 % 角度観測の不確定性の標準偏差(もしかしたらもっと悪いかも)
-error.angle = 1e-7;
+error.angle = 1e-6;
 
 %% set gorund station (USUDAにする)
 % 緯度経度から，ECLIPJ2000,地球中心座標系での座標を得たい
@@ -181,7 +181,7 @@ plot(time.list-time.list(1), scEst.pos(3,:) - scTrue.pos(3,:))
 xlabel('time [s]')
 ylabel('position error [km]')
 legend('x', 'y', 'z')
-ylim([-1000 1000])
+% ylim([-1000 1000])
 hold off
 nexttile
 title('position error of initail guess')
