@@ -14,7 +14,7 @@ function [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD)
     % simulation timeStep[s]
     time.simDt = 10;
     % number of time step
-    time.stepNum = 3000; 
+    time.stepNum = 5000; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.list = linspace(time.t0,time.t0+time.simDt * time.stepNum,time.stepNum+1);
@@ -42,7 +42,7 @@ function [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD)
     % 探索1回にかかる時間
     time.obs = (2 * gs.searchArea/gs.searchStep)^2 * gs.searchTimeStep;
     % 探索1回にかかる時間がシミュレーションの何stepに相当するか
-    time.obsStep = round(time.obs/time.simDt);
+    time.obsStep = ceil(time.obs/time.simDt);
     % 地上局のレーザーに関するパラメータ
     gs.peakPower     = 370*10^3;
     gs.meanPower     = 2.5*10^3;

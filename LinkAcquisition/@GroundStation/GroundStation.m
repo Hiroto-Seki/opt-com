@@ -38,10 +38,11 @@ classdef GroundStation < handle
             obj.elvTrans = zeros(1,length(obj.t));
             obj.pointingErrorTrans = zeros(1,length(obj.t));
         end
-        calcTarget(obj,i,scEstGs,eTrue,time,constant) % 地上局が推定している探査機の軌道から，目標方向(stateEstOpn)と到達時刻(tEstOpn)を計算
+        
     end
     methods(Static)
-        [gsTrue, eTrue] = search(gsTrue,i,eTrue,scTrue,gs,time,constant) % tEstOpn時刻での真値と推定値の差分(位置，速度)を求め，探索にかかる時間を求め，tTrans, stateTrans,azmTrans, elvTransを求める
+        opn = calcTarget(t,gsAtT,eAtT,sc,time,constant)
+        [gsTrue,eTrue] = search(i,gsTrue,eTrue,gs,time,constant,opnEstTemp,opnTrueTemp) 
         xv = earthRotation(pos0, t, constant) % t秒後の状態量の計算
     end
 end

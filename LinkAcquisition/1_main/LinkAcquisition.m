@@ -24,7 +24,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(1)
+rng(2)
 
 %% setting parameter
 [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD);
@@ -59,16 +59,16 @@ transNum = 0;
 receiveNum = 0;
 for i = 1:length(time.list)-1
     % 探索一回につき観測一回
-    if mod(i,time.obsStep)==1
+    if mod(i,time.obsStep)==1 || time.obsStep ==1
         transNum = transNum + 1;
         %% 4.ground station Send a signal around the estimated orbit to the spacecraft according to the search pattern.
         % 地上局が推定している探査機の軌道から，目標方向(stateEstOpn)と到達時刻(tEstOpn)を計算
-        gsTrue.calcTarget(i,scEstGs,eTrue,time,constant);
-        % tEstOpnでの宇宙機の真値を求める
-        scTrue.stateAtTEstOpn(:,i) = Spacecraft.calcStateSc(scTrue,gsTrue.tEstOpn(i),time);
-        % tEstOpn時刻での真値と推定値の差分(位置，速度)を求め，探索にかかる時間を求め，tTrans, stateTrans,
+        opnEstTemp = GroundStation.calcTarget(time.list(i),gsTrue.state(:,i),eTrue.state(:,i),scEstGs,time,constant);
+        %[new]実際に時刻time.list(i)で向けるべきだった方向を計算する
+        opnTrueTemp = GroundStation.calcTarget(time.list(i),gsTrue.state(:,i),eTrue.state(:,i),scTrue,time,constant);
+        % 推定値周りに探索した時に，探索にかかる時間を求め，tTrans, stateTrans,
         % azmTrans, elvTransを求める
-        [gsTrue,eTrue] = GroundStation.search(gsTrue,i,eTrue,scTrue,gs,time,constant);
+        [gsTrue,eTrue] = GroundStation.search(i,gsTrue,eTrue,gs,time,constant,opnEstTemp,opnTrueTemp);
         % レーザーを照射した時刻gsTrue.tTrans, とその時刻での
         %% 5. calculate observed value using the send signal
         % tTransにstateTransから照射された光が宇宙機に到達する時刻を求め, その時刻の宇宙機の状態量と観測量を計算する
@@ -81,6 +81,7 @@ for i = 1:length(time.list)-1
         obs.xvg(:,transNum) = eTrue.stateTrans(:,i);
         
     end
+
     %% 6.estimate spacecraft orbit using observed value by EKF
     %%  次の時刻までに観測がなかった時 → リファレンス，誤差共分散を更新
     if time.list(i+1) < obs.t(receiveNum +1)
@@ -114,9 +115,36 @@ for i = 1:length(time.list)-1
    scEst.state(:,i+1) = X_hat(2:7);
    P_list(:,:,i+1) = P;
    end
+
 end
 
 
+% 軌道決定精度をplotする
+% 探査機位置誤差の時間履歴
+figure(1)
+tiledlayout(2,1)
+nexttile
+title('position error of estimated value')
+hold on
+plot(time.list-time.list(1), scEst.state(1,:) - scTrue.state(1,:))
+plot(time.list-time.list(1), scEst.state(2,:) - scTrue.state(2,:))
+plot(time.list-time.list(1), scEst.state(3,:) - scTrue.state(3,:))
+xlabel('time [s]')
+ylabel('position error [km]')
+legend('x', 'y', 'z')
+% ylim([-1000 1000])
+hold off
+nexttile
+title('position error of initail guess')
+hold on
+plot(time.list-time.list(1), scEstGs.state(1,:) - scTrue.state(1,:))
+plot(time.list-time.list(1), scEstGs.state(2,:) - scTrue.state(2,:))
+plot(time.list-time.list(1), scEstGs.state(3,:) - scTrue.state(3,:))
+xlabel('time [s]')
+ylabel('position error [km]')
+legend('x', 'y', 'z')
+% ylim([-1000 1000])
+hold off
 
 
 
@@ -125,8 +153,14 @@ end
 % 軌道決定精度
 % 通信可否
 % 観測量と観測精度
-% 
 
 
+
+
+
+
+
+%% 線型近侍した目標値と実際の観測地点の差
+% search中に出てくるやつ
 
 
