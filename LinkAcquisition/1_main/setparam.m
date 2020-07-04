@@ -3,7 +3,7 @@ function [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD)
     constant.sunMu         = SSD.GM(10);      % km^3/s^2 gravity constant of the sun
     constant.earthMu       = SSD.GM(399);     % km^3/s^2 gravity constant of the 
     constant.saturnMu      = SSD.GM(799);     %[km/s^2]
-    constant.lightSpeed    = 299792.458;      % [km/s] light speed 
+    constant.lightSpeed    = 299792.458 ;      % [km/s] light speed 
     constant.earthRadius   = SSD.r(399);      % [km] earth radius
     constant.earthRotation = 2*pi/24/60/60;   % [rad/s] earth rotation speed
     constant.eathAxis      = 23.4/180*pi;     % inclination of the earth axis
@@ -12,23 +12,25 @@ function [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD)
     
     %% parameter related to time
     % simulation timeStep[s]
-    time.simDt = 10;
+    time.simDt = 1;
     % number of time step
-    time.stepNum = 5000; 
+    time.stepNum = 30000; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.list = linspace(time.t0,time.t0+time.simDt * time.stepNum,time.stepNum+1);
     
     %% parameter related to error
     % 初期時計誤差
-    error.initialClock = 10   * randn; %初期時計誤差(秒)
-    error.randomClock        = 0.01;         %ランダム時計誤差
+    error.initialClock = 10  * randn; %初期時計誤差(秒)
+    error.randomClock        = 1e-8;         %ランダム時計誤差
     % 初期探査機軌道誤差[km]. 
     error.scPos0 = randn(3,1) *  1000;
     % 適当に0.1km/s程度の誤差とする
     error.scVel0 = randn(3,1) *  0.1;
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
+    % STTの精度
+    error.stt = 3 * 10^-6; %1urad
     
     %% ground station
     gs.lat  = 36.1325063*cspice_rpd();
@@ -37,7 +39,7 @@ function [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD)
     %% laser form gs to sc
     % 探索範囲(rad)
     gs.searchArea     = 5e-6; %±5μrad(だいぶ余裕を持たせている)
-    gs.searchStep     = 1e-7; %探索時の1stepあたりの間隔(rad)
+    gs.searchStep     = 1e-6; %探索時の1stepあたりの間隔(rad)
     gs.searchTimeStep = 2e-2; %適当．SOTAの資料にこれに相当するかは分からないが20msの記述あり
     % 探索1回にかかる時間
     time.obs = (2 * gs.searchArea/gs.searchStep)^2 * gs.searchTimeStep;
@@ -66,10 +68,12 @@ function [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD)
     T = 298;             % 絶対温度
     Rsh = 50 * 10^6;     % 並列抵抗
     sc.qdBw = 2 * 1e7;   % 帯域幅
-    sc.qdFov = 100*1e-6; % 視野角 
+    sc.qdFov = 15*1e-6; % 視野角 STTの姿勢決定精度が5urad(1sigma) %PAAより大きい方がいいかも
     sc.qdIj  = (4 * k * T * sc.qdBw/Rsh)^0.5; %熱雑音電流
     sc.qdS   = 0.68;     % 受光感度[A/W]
     sc.qdId  = 5*1e-10;   % 暗電流
+    
+
     
     %% EKFの初期値, 観測誤差分散
     X_hat = [0;sc.state0];
@@ -84,9 +88,9 @@ function [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD)
     P_list = zeros(7,7,length(time.list));
     P_list(:,:,1) = P;
     
-    R = [1e-6,0,0;      %観測誤差分散
-         0,1e-12,0;
-         0,0,1e-12];
+    R = [1e-8,0,0;      %観測誤差分散
+         0,1e-11,0;
+         0,0,1e-11];
     
     
     

@@ -106,7 +106,7 @@ function [gsTrue,eTrue] = search(i,gsTrue,eTrue,gs,time,constant,opnEstTemp,opnT
 %  hold on
 %  plot(estAzmList, estElvList)
 %  plot(pointAzmList, pointElvList)
-%  plot(trueAzmList, trueElvList)
+% % %  plot(trueAzmList, trueElvList)
 %  scatter(gsTrue.azmTrans(i),gsTrue.elvTrans(i))
 
 % %　線型きんじしているが，一番近い時の探査機

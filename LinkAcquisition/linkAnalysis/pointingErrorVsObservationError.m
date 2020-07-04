@@ -12,7 +12,7 @@
 
 
 
-tPointingError = 5e-7:5e-8:2e-6;
+tPointingError = 1e-7:5e-8:2e-6;
 rPointingError = zeros(1,length(tPointingError));
 
 gs.peakPower     = 370*10^3;
@@ -34,12 +34,12 @@ k = 1.381*1e-23;     %ボルツマン定数
 T = 298;             % 絶対温度
 Rsh = 50 * 10^6;     % 並列抵抗
 sc.qdBw = 2 * 1e7;   % 帯域幅
-sc.qdFov = 100*1e-6; % 視野角 
+sc.qdFov = 250*1e-6; % 視野角 
 sc.qdIj  = (4 * k * T * sc.qdBw/Rsh)^0.5; %熱雑音電流
 sc.qdS   = 0.68;     % 受光感度[A/W]
 sc.qdId  = 5*1e-10;   % 暗電流
 
-Ls = (gs.wavelength/(4 * pi * (1.496e+8 * 1e3)))^2;
+Ls = (gs.wavelength/(4 * pi * (10*1.496e+8 * 1e3)))^2;
 
 for i= 1:length(tPointingError)
     pError = tPointingError(i);
@@ -47,11 +47,11 @@ for i= 1:length(tPointingError)
     recPower = gs.peakPower * gs.tAntGain * gs.tEff * Lp * Ls * gs.atmosphereEff *  sc.rAntGain * sc.rEff; 
     rPointingError(i) = (sc.qdIj^2 ...
       + 2 * constant.elementaryCharge * sc.qdId * sc.qdBw ...
-      + 2 * constant.elementaryCharge * recPower * sc.qdBw )^0.5 ...
+      + 2 * constant.elementaryCharge * recPower * sc.qdS *  sc.qdBw )^0.5 ...
       / (recPower * sc.qdS) * sc.qdFov;
   
 end
 
 semilogy(tPointingError,rPointingError)
 xlabel("ground station transmit pointing error[rad]")
-ylabel("gspacecraft observed pointing error[rad]")
+ylabel("spacecraft observed pointing error[rad]")

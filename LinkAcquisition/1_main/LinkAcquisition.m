@@ -24,7 +24,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(2)
+rng(1)
 
 %% setting parameter
 [constant,time,error,gs,sc,X_hat,P,P_list,R] = setparam(SSD);
@@ -78,8 +78,7 @@ for i = 1:length(time.list)-1
         obs.azm(transNum) = scTrue.azmObserved(i);
         obs.elv(transNum) = scTrue.elvObserved(i);
         obs.xve(:,transNum) = gsTrue.stateTrans(:,i);
-        obs.xvg(:,transNum) = eTrue.stateTrans(:,i);
-        
+        obs.xvg(:,transNum) = eTrue.stateTrans(:,i); 
     end
 
     %% 6.estimate spacecraft orbit using observed value by EKF
@@ -93,7 +92,7 @@ for i = 1:length(time.list)-1
         dt1 = obs.t(receiveNum +1) - time.list(i);
         % dt1までリファレンスと誤差共分散行列を更新
         [X_bar, P_bar] = Spacecraft.updateState(X_hat,P, dt1,scEst.mu);
-        % 観測ベクトル
+%         % 観測ベクトル
         Y = [obs.ltd(receiveNum +1);  obs.azm(receiveNum +1); obs.elv(receiveNum +1)];
         % リファレンスの状態量の時の観測量
         Y_bar = Spacecraft.calcG(X_bar,obs.xve(:,receiveNum +1),obs.xvg(:,receiveNum +1),constant);
@@ -108,6 +107,9 @@ for i = 1:length(time.list)-1
         [X_hat, P] = Spacecraft.updateState(X_hat,P, dt2,scEst.mu);
         receiveNum = receiveNum + 1;  
     end
+    
+    
+    
     % 記録する
    if i == length(time.list)
    else
@@ -118,10 +120,19 @@ for i = 1:length(time.list)-1
 
 end
 
+% 時計誤差の時間履歴
+figure(1)
+title('clock error of spacecraft')
+hold on
+plot(time.list-time.list(1), error.initialClock - scEst.clockError)
+xlabel('time [s]')
+ylabel('clock error [s]')
+hold off
+
 
 % 軌道決定精度をplotする
 % 探査機位置誤差の時間履歴
-figure(1)
+figure(2)
 tiledlayout(2,1)
 nexttile
 title('position error of estimated value')
@@ -129,9 +140,12 @@ hold on
 plot(time.list-time.list(1), scEst.state(1,:) - scTrue.state(1,:))
 plot(time.list-time.list(1), scEst.state(2,:) - scTrue.state(2,:))
 plot(time.list-time.list(1), scEst.state(3,:) - scTrue.state(3,:))
+plot(time.list-time.list(1),...
+    ( (scEst.state(1,:) - scTrue.state(1,:)).^2 + (scEst.state(2,:) - scTrue.state(2,:)).^2 + (scEst.state(3,:) - scTrue.state(3,:)).^2).^0.5)
+plot(time.list-time.list(1), 450 * ones(length(time.list),1))
 xlabel('time [s]')
 ylabel('position error [km]')
-legend('x', 'y', 'z')
+legend('x', 'y', 'z','length','450km')
 % ylim([-1000 1000])
 hold off
 nexttile
@@ -145,6 +159,35 @@ ylabel('position error [km]')
 legend('x', 'y', 'z')
 % ylim([-1000 1000])
 hold off
+
+
+figure(3)
+title('estemated/true position of spacecraft')
+hold on
+plot3(scTrue.state(1,:),scTrue.state(2,:),scTrue.state(3,:))
+plot3(scEst.state(1,:),scEst.state(2,:),scEst.state(3,:))
+plot3(scEstGs.state(1,:),scEstGs.state(2,:),scEstGs.state(3,:))
+xlabel('x [km]')
+ylabel('y [km]')
+zlabel('z [km]')
+legend('true', 'estimated', 'initial guess')
+hold off
+
+
+%% 地球との相対位置を求める
+figure(4)
+title('estemated/true position of spacecraft')
+hold on
+plot3(scTrue.state(1,:)-eTrue.state(1,:)-gsTrue.state(1,:),scTrue.state(2,:)-eTrue.state(2,:)-gsTrue.state(2,:),scTrue.state(3,:)-eTrue.state(3,:)-gsTrue.state(3,:))
+plot3(scEst.state(1,:)-eTrue.state(1,:)-gsTrue.state(1,:),scEst.state(2,:)-eTrue.state(2,:)-gsTrue.state(2,:),scEst.state(3,:)-eTrue.state(3,:)-gsTrue.state(3,:))
+plot3(scEstGs.state(1,:)-eTrue.state(1,:)-gsTrue.state(1,:),scEstGs.state(2,:)-eTrue.state(2,:)-gsTrue.state(2,:),scEstGs.state(3,:)-eTrue.state(3,:)-gsTrue.state(3,:))
+xlabel('x [km]')
+ylabel('y [km]')
+zlabel('z [km]')
+legend('true', 'estimated', 'initial guess')
+hold off
+
+
 
 
 

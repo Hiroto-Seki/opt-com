@@ -24,7 +24,7 @@ function opn = calcTarget(t,gsAtT,eAtT,sc,time,constant)
          % 伝搬時刻後までのリストを持っている時
          if (t + timeDelayTemp) < sc.t(length(sc.t))
             % 構造体の状態量の内一番近い時刻のものを探す
-            closeTimeIndex = round((t + timeDelayTemp - time.list(1))/time.simDt);                    % 一番近い時刻がt(closeTimeIndex)
+            closeTimeIndex = round((t + timeDelayTemp - time.list(1))/time.simDt)+1;                    % 一番近い時刻がt(closeTimeIndex)
             closeTimeOffset = (t + timeDelayTemp) - time.list(closeTimeIndex);      % 一番近い時刻から伝搬しなければいけない時間
             % spacecraftについて伝搬時刻後(temp)時間後の状態量を得る
             xvsc = sc.state(:,closeTimeIndex);
