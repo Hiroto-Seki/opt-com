@@ -6,8 +6,6 @@ classdef GroundStation < handle
           t                       %時刻
           state
           % レーザー照射探索に関わるパラメータ
-          tEstOpn               %光が相手の宇宙機に届くと推定される時刻 time_estimate_oponent
-          stateEstOpn           %光が相手の宇宙機に届くと推定される時刻の推定位置
           tTrans                %真値に一番近い方向を照射する時の時刻
           stateTrans            %trans時刻の地上局位置速度
           azmTrans              %光照射方位角
@@ -30,8 +28,6 @@ classdef GroundStation < handle
             for i_1 = 1: time.stepNum+1
                 obj.state(:,i_1) = xform_ec2IAU(:,:,i_1)*bodyFixed;
             end
-            obj.tEstOpn = zeros(1,length(obj.t));
-            obj.stateEstOpn = zeros(6,length(obj.t));
             obj.tTrans = zeros(1,length(obj.t));
             obj.stateTrans = zeros(6,length(obj.t));
             obj.azmTrans = zeros(1,length(obj.t));

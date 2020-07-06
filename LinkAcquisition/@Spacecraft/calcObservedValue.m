@@ -25,7 +25,7 @@ function [scTrue,gsTrue] = calcObservedValue(scTrue,gsTrue,eTrue,i,constant,time
   
   % QDセンサの観測誤差の計算
   % 指向誤差損失の計算
-  Lp = calcPointingLoss(gsTrue.pointingErrorTrans(i),gs);
+  Lp = calcPointingLoss(gsTrue.pointingErrorTrans(i),gs.gamma,gs.alpha,gs.tAperture,gs.wavelength);
   % 自由空間損失
   Ls = (gs.wavelength/(4 * pi * (ltd * constant.lightSpeed * 1e3)))^2;
   % 受信電力強度
@@ -37,18 +37,22 @@ function [scTrue,gsTrue] = calcObservedValue(scTrue,gsTrue,eTrue,i,constant,time
       / (scTrue.receivedPower(i) * sc.qdS) * sc.qdFov;
   % 観測量の角度精度
   angleError = (QdAccuracy ^2 + error.stt^2)^0.5;
+%   disp(angleError)
   % 観測量の計算
-  scTrue.lengthObserved(i) = (ltd + error.initialClock + error.randomClock*randn) * constant.lightSpeed;
+  % 誤差なし
+  scTrue.lengthTrue(i) = ltd * constant.lightSpeed;
   xve = eTrue.stateTrans(:,i);
   xvg = gsTrue.stateTrans(:,i);
   xvs = scTrue.stateReceive(:,i);
-  scTrue.azmObserved(i)  =  atan2(xve(2) + xvg(2) - xvs(2) + xvs(5)*ltd...
-                                , xve(1) + xvg(1) - xvs(1) + xvs(4)*ltd) ...
-                                +angleError * randn;
-  scTrue.elvObserved(i)  = atan( (xve(3) + xvg(3) - xvs(3) + xvs(6)*ltd)/...
+  scTrue.azmTrue(i)  =  atan2(xve(2) + xvg(2) - xvs(2) + xvs(5)*ltd...
+                                , xve(1) + xvg(1) - xvs(1) + xvs(4)*ltd);
+  scTrue.elvTrue(i)  = atan( (xve(3) + xvg(3) - xvs(3) + xvs(6)*ltd)/...
                                    ((xve(2) + xvg(2) - xvs(2) + xvs(5) *ltd)^2 ...
-                                  + (xve(1) + xvg(1) - xvs(1) + xvs(4) *ltd)^2)^0.5 )...
-                                  + angleError * randn;
+                                  + (xve(1) + xvg(1) - xvs(1) + xvs(4) *ltd)^2)^0.5 );
+  % 観測量誤差あり
+  scTrue.lengthObserved(i) = scTrue.lengthTrue(i) + (error.initialClock + error.randomClock*randn) * constant.lightSpeed;
+  scTrue.azmObserved(i)  =  scTrue.azmTrue(i)+angleError * randn;
+  scTrue.elvObserved(i)  = scTrue.elvTrue(i)+ angleError * randn;
   
    
  
