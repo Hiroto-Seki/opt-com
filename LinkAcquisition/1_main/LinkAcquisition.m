@@ -131,10 +131,13 @@ for i = 1:length(time.list)-1
    % 真値の計算
    if time.list(i+1) > scRec.t(receiveNum +1)
        scTrans.t(receiveNum+1) = time.list(i+1);
+       scTrans.stateTrue(:,receiveNum+1) = scTrue.state(:,i+1);
        scTrans.azmTrue(receiveNum+1) = scTrue.azmDown(i+1);
        scTrans.elvTrue(receiveNum+1) = scTrue.elvDown(i+1);
        scTrans.azmPaaTrue(receiveNum+1) = scTrans.azmTrue(receiveNum+1) - scRec.azmTrue(receiveNum+1);
        scTrans.elvPaaTrue(receiveNum+1) = scTrans.elvTrue(receiveNum+1) - scRec.elvTrue(receiveNum+1);
+       scTrans.tReceive(receiveNum+1) = scTrue.tDown(i+1);
+       scTrans.eReceive(:,receiveNum+1) = scTrue.eDown(:,i+1);
        receiveNum = receiveNum + 1;
    else    
    end
@@ -206,12 +209,7 @@ xlabel('time [s]')
 ylabel('angle [rad]')
 legend('azimuth', 'elevation', 'angle','requirement')
 
-% point ahead angleの計算
-figure(5)
-hold on
-plot(scTrans.t, scTrans.azmPaaTrue)
-plot(scTrans.t, scTrans.elvPaaTrue)
-hold off
+
 
 
 %% 地球との相対位置を求める

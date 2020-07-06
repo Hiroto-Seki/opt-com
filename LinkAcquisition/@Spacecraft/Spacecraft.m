@@ -1,10 +1,16 @@
 classdef Spacecraft < handle
     properties
-          t 
           mu                      %Gravitational Constant of central body
-          state
-          %tOpn
-          %stateAtTEstOpn         %gsTrue.tEstOpnでの状態量を求める
+          % tに対応する状態量
+          t 
+          state                   % tに対応する状態量
+          azmDown                % ダウンリンクの方位角
+          elvDown                % ダウンリンクの仰角
+          eDown                  % ダウンリンク先の地球の状態量
+          gsDown                 % ダウンリンク先の地上局の状態量
+          tDown                  % ダウンリンク先の時刻
+          
+          % tReceiveに対応する状態量
           tReceive               %受信時刻
           stateReceive           %受信時刻の状態量
           receivedPower          %受信電力(tReceivedに対応)
@@ -15,8 +21,7 @@ classdef Spacecraft < handle
           azmTrue                %観測された方位角(誤差なし)
           elvTrue                %観測された仰角(誤差なし)
           lengthTrue             %観測された距離(誤差なし)
-          azmDown                % ダウンリンクの方位角
-          elvDown                % ダウンリンクの仰角
+
           
           
     end
