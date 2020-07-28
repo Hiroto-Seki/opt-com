@@ -1,4 +1,4 @@
-% EKFのための観測式の微分を求める
+% 探査機が推定するEKFのための観測式の微分を求める
 function H_childa = delGdelX(X_bar,xve,xvg,constant)
     deltaT =  X_bar(1);
     xvs = X_bar(2:7);

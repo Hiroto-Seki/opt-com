@@ -1,4 +1,4 @@
-% EKFのための伝搬式の微分を求める
+% 探査機が推定するEKFのための伝搬式の微分を求める
 function A  = delFdelX(xv,mu)
 % 初期化
 A = zeros(7);

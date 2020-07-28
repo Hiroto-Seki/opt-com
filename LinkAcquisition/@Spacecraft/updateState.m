@@ -1,4 +1,4 @@
-% 伝搬時間を与えてリファレンスの状態量，誤差共分散行列の更新をする
+% 探査機のEKFの際，伝搬時間を与えてリファレンスの状態量，誤差共分散行列の更新をする
 function [X_bar, P_bar] = updateState(X_hat,P, dt,mu)
    STM = eye(7);
    xvsc = X_hat(2:7);
