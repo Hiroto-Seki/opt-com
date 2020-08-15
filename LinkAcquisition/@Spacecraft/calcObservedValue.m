@@ -54,6 +54,7 @@ function [scTrue,gsTrue] = calcObservedValue(scTrue,gsTrue,eTrue,i,constant,time
   scTrue.azmObserved(i)  =  scTrue.azmTrue(i)+angleError * randn;
   scTrue.elvObserved(i)  = scTrue.elvTrue(i)+ angleError * randn;
   
+  % 加速度センサの値
    
  
 end

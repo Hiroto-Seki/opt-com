@@ -34,7 +34,7 @@ P_r_peakList = zeros(1, length(posErrorList));
 
 for i = 1:length(posErrorList)
     theta = posErrorList(i)/L;
-    eta_tp = calcPointingLoss(theta, lambda, D_t, gamma);
+    eta_tp = calcPointingLoss(theta,gamma,alpha_t,D_t,lambda);
     P_r_mean = P_l_mean * g_t * eta_t * eta_tp* l_s * l_a * g_r * eta_r * eta_lambda * eta_D;
     P_r_peak = P_l_peak * g_t * eta_t * eta_tp* l_s * l_a * g_r * eta_r * eta_lambda * eta_D;
     P_r_meanList(1,i) = P_r_mean;

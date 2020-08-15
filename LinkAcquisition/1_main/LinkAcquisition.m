@@ -24,7 +24,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(3)
+rng(2)
 
 %% setting parameter
 [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD);
@@ -61,6 +61,7 @@ gsTransNum = 0;
 scReceiveNum = 0;
 gsReceiveNum = 0;
 for i = 1:length(time.list)-1
+    disp(i)
     % 探索一回につき観測一回
     if mod(i,time.obsStep)==1 || time.obsStep ==1
         gsTransNum = gsTransNum + 1;
@@ -214,7 +215,7 @@ hold off
 % 軌道決定精度をplotする
 % 探査機位置誤差の時間履歴
 figure(2)
-tiledlayout(2,1)
+tiledlayout(3,1)
 nexttile
 title('position error of estimated value')
 hold on
@@ -228,6 +229,19 @@ plot(time.list-time.list(1), -450 * ones(length(time.list),1),'g')
 xlabel('time [s]')
 ylabel('position error [km]')
 legend('x', 'y', 'z','length','450km')
+% ylim([-1000 1000])
+hold off
+nexttile
+title('velocity error of estimated value')
+hold on
+plot(time.list-time.list(1), scEst.state(4,:) - scTrue.state(4,:))
+plot(time.list-time.list(1), scEst.state(5,:) - scTrue.state(5,:))
+plot(time.list-time.list(1), scEst.state(6,:) - scTrue.state(6,:))
+plot(time.list-time.list(1),...
+    ( (scEst.state(4,:) - scTrue.state(4,:)).^2 + (scEst.state(5,:) - scTrue.state(5,:)).^2 + (scEst.state(6,:) - scTrue.state(6,:)).^2).^0.5)
+xlabel('time [s]')
+ylabel('position error [km]')
+legend('x', 'y', 'z','speed')
 % ylim([-1000 1000])
 hold off
 nexttile
@@ -245,6 +259,8 @@ legend('azimuth', 'elevation', 'angle','requirement')
 
 % 地上局の推定値
 figure(3)
+tiledlayout(2,1)
+nexttile
 title('position error of estimated value')
 hold on
 plot(time.list-time.list(1), scEstGs.state(1,:) - scTrue.state(1,:))
@@ -255,7 +271,17 @@ plot(time.list-time.list(1),...
 xlabel('time [s]')
 ylabel('position error [km]')
 legend('x', 'y', 'z','length')
-
+nexttile
+title('velocity error of estimated value')
+hold on
+plot(time.list-time.list(1), scEstGs.state(4,:) - scTrue.state(4,:))
+plot(time.list-time.list(1), scEstGs.state(5,:) - scTrue.state(5,:))
+plot(time.list-time.list(1), scEstGs.state(6,:) - scTrue.state(6,:))
+plot(time.list-time.list(1),...
+    ( (scEstGs.state(4,:) - scTrue.state(4,:)).^2 + (scEstGs.state(5,:) - scTrue.state(5,:)).^2 + (scEstGs.state(6,:) - scTrue.state(6,:)).^2).^0.5)
+xlabel('time [s]')
+ylabel('position error [km]')
+legend('x', 'y', 'z','length')
 
 figure(4)
 title('estemated/true position of spacecraft')
@@ -263,10 +289,11 @@ hold on
 plot3(scTrue.state(1,:),scTrue.state(2,:),scTrue.state(3,:))
 plot3(scEst.state(1,:),scEst.state(2,:),scEst.state(3,:))
 plot3(scEstGs.state(1,:),scEstGs.state(2,:),scEstGs.state(3,:))
+plot3(scIniGuess(1,:),scIniGuess(2,:),scIniGuess(3,:))
 xlabel('x [km]')
 ylabel('y [km]')
 zlabel('z [km]')
-legend('true', 'estimated(sc)', 'estimated(gs)')
+legend('true', 'estimated(sc)', 'estimated(gs)','initial guess')
 hold off
 
 

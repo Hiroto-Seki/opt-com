@@ -2,7 +2,8 @@
 
 function calcObservedValue(obj, scTrue,scEst,i,constant,time,gs,sc,error)
 % 探査機のダウンリンク方向の誤差の計算 
-pointingError = ((scEst.azmDown(i) - scTrue.azmDown(i)).^2 + (scEst.elvDown(i) - scTrue.elvDown(i)).^2).^0.5;
+% sttの誤差も加えている
+pointingError = ((scEst.azmDown(i) - scTrue.azmDown(i)).^2 + (scEst.elvDown(i) - scTrue.elvDown(i)).^2 + (error.stt * rand)^2).^0.5;
 Lp = calcPointingLoss(pointingError,sc.gamma,sc.alpha,sc.aperture,sc.wavelength);
 ltd = scTrue.tDown(i) - time.list(i);
 Ls = (sc.wavelength/(4 * pi * (ltd * constant.lightSpeed * 1e3)))^2;
