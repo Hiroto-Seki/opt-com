@@ -12,6 +12,8 @@ function  Y_bar = calcG(X_bar,xve,xvg,constant)
     phi = atan( (xve(3) + xvg(3) - xvs(3) + xvs(6)*(T-deltaT))/...
                                    ((xve(2) + xvg(2) - xvs(2) + xvs(5) *(T-deltaT))^2 ...
                                   + (xve(1) + xvg(1) - xvs(1) + xvs(4) *(T-deltaT))^2)^0.5 );
-   Y_bar = [T;theta;phi];
+    velAccel = Spacecraft.twobody(xvs, constant.sunMu, 0);
+    
+    Y_bar = [T;theta;phi; velAccel(4:6)];
     
 end

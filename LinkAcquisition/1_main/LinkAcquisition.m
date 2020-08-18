@@ -24,7 +24,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(2)
+rng(1)
 
 %% setting parameter
 [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD);
@@ -81,6 +81,7 @@ for i = 1:length(time.list)-1
         scRec.ltdObs(gsTransNum) = scTrue.lengthObserved(i) /constant.lightSpeed;
         scRec.azmObs(gsTransNum) = scTrue.azmObserved(i);
         scRec.elvObs(gsTransNum) = scTrue.elvObserved(i);
+        scRec.acelObs(:,gsTransNum) = scTrue.accelObserved(:,i);
         scRec.tTrans(gsTransNum) = gsTrue.tTrans(i); %光が送信された時刻
         scRec.xve(:,gsTransNum) = gsTrue.stateTrans(:,i);
         scRec.xvg(:,gsTransNum) = eTrue.stateTrans(:,i); 
@@ -101,7 +102,7 @@ for i = 1:length(time.list)-1
         % dt1までリファレンスと誤差共分散行列を更新
         [sc_est.X_bar, sc_est.P_bar] = Spacecraft.updateState(sc_est.X_hat,sc_est.P, sc_est.Dt1,scEst.mu);
         % 観測ベクトル
-        sc_est.Y = [scRec.ltdObs(scReceiveNum +1);  scRec.azmObs(scReceiveNum +1); scRec.elvObs(scReceiveNum +1)];
+        sc_est.Y = [scRec.ltdObs(scReceiveNum +1);  scRec.azmObs(scReceiveNum +1); scRec.elvObs(scReceiveNum +1); scRec.acelObs(:,scReceiveNum +1)];
         % リファレンスの状態量の時の観測量
         sc_est.Y_bar = Spacecraft.calcG(sc_est.X_bar,scRec.xve(:,scReceiveNum +1),scRec.xvg(:,scReceiveNum +1),constant);
         sc_est.y     = sc_est.Y - sc_est.Y_bar;

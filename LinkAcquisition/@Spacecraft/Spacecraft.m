@@ -17,6 +17,7 @@ classdef Spacecraft < handle
           azmObserved            %観測された方位角
           elvObserved            %観測された仰角
           lengthObserved         %観測された距離
+          accelObserved   %観測された加速度
           clockError             %(推定値)時計誤差
           azmTrue                %観測された方位角(誤差なし)
           elvTrue                %観測された仰角(誤差なし)

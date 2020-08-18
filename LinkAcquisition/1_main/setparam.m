@@ -24,9 +24,9 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     error.initialClock = 0.5  * randn; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
     error.randomClock        = 1e-8;         %ランダム時計誤差
     % 初期探査機軌道誤差[km]. 1000kmに設定
-    error.scPos0 = randn(3,1) *  3e3;
+    error.scPos0 = randn(3,1) *  1e3;
     % 適当に0.1km/s程度の誤差とする
-    error.scVel0 = randn(3,1) *  1e-1;
+    error.scVel0 = randn(3,1) *  1.5e-1;
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
     % STTの精度
@@ -50,7 +50,7 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     % 探索1回にかかる時間がシミュレーションの何stepに相当するか
     time.obsStep = ceil(time.obs/time.simDt);
     % 地上局のレーザーに関するパラメータ
-    gs.peakPower     = 370*10^3;
+    gs.peakPower     = 370*10^3 ;
 %     gs.meanPower     = 2.4*10^3;
     gs.tEff  = 0.7;
     gs.atmosphereEff = 0.73;
@@ -78,7 +78,7 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     %% laser from sc to gs
     % European Deep Space Optical Communication Programを参考にした
     % 探査機
-    sc.meanPower = 4;
+    sc.meanPower = 10;
     sc.peakPower = 640; 
     sc.tEff = 0.7;
     sc.atmosphereEff = 0.73;
@@ -87,13 +87,13 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     sc.tAntGain      = (pi * sc.aperture/ sc.wavelength)^2 * 2/sc.alpha * (exp(-sc.alpha^2) - exp(-sc.alpha^2*sc.gamma^2))^2;
     
     % 地上局
-    gs.rAperture = 8.2; 
+    gs.rAperture = 10; 
     gs.rAntGain = (pi * gs.rAperture/ sc.wavelength)^2  * (1- gs.gamma^2)^2;
     gs.rEff = 0.7;
     % QD センサに相当するもの(地上局)
     gsT = 0.65;           % 絶対温度
     gsRsh = 50 * 10^6;     % 並列抵抗
-    gs.qdBw =  1e3;   % 帯域幅. pulse widthを大きくできれば可能 2e7に設定．仮置きで小さな値を設定
+    gs.qdBw =  2.5e8;   % 帯域幅. pulse widthを大きくできれば可能 2e7に設定．仮置きで小さな値を設定
     gs.qdFov = 5*1e-6;  % 視野角 STTの姿勢決定精度が5urad(1sigma) 
     gs.qdIj  = (4 * k * gsT * sc.qdBw/gsRsh)^0.5; %熱雑音電流
     gs.qdS   = 0.68;     % 受光感度[A/W]
@@ -120,9 +120,12 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     sc_est.P_list = zeros(7,7,length(time.list));
     sc_est.P_list(:,:,1) = sc_est.P;
     
-    sc_est.R = [1e-10,0,0;      %観測誤差分散
-         0,3e-10,0;
-         0,0,3e-10];
+    sc_est.R = [1e-10,0,0,0,0,0;      %観測誤差分散
+         0,3e-10,0,0,0,0;
+         0,0,3e-10,0,0,0;
+         0,0,0,1e-24,0,0;
+         0,0,0,0,1e-24,0;
+         0,0,0,0,0,1e-24];
     
     %% 地上局が推定するEKFの初期値, 観測誤差分散
     % ダウンリンクを受信した時刻の推定値 

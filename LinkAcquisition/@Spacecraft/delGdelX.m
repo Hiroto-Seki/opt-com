@@ -4,6 +4,7 @@ function H_childa = delGdelX(X_bar,xve,xvg,constant)
     xvs = X_bar(2:7);
     
     c = constant.lightSpeed;
+    mu = constant.sunMu;
     H_childa = zeros(3,7);
     % D:距離
     D = ((xve(1) + xvg(1) - xvs(1))^2 + (xve(2) + xvg(2) - xvs(2))^2 +(xve(3) + xvg(3) - xvs(3))^2)^0.5;
@@ -72,5 +73,19 @@ function H_childa = delGdelX(X_bar,xve,xvg,constant)
     % phiの微分
     H_childa(3,:) = 1/(ax^2 + ay^2 + az^2)/(ax^2 + ay^2)^0.5 ...
                     * ( (ax^2 + ay^2)* delAz - (az * ax) * delAx - (az * ay) *delAy  );
+                
+   % 加速度の微分
+   delAccelXdelXs = -mu* (-3 * D^(-4)* delDdelXs * xvs(1) + D^(-3));
+   delAccelXdelYs = -mu* (-3 * D^(-4)* delDdelYs * xvs(1));
+   delAccelXdelZs = -mu* (-3 * D^(-4)* delDdelZs * xvs(1));
+   H_childa(4,:) = [0, delAccelXdelXs, delAccelXdelYs, delAccelXdelZs,0,0,0 ];
+   delAccelYdelXs = -mu* (-3 * D^(-4)* delDdelXs * xvs(2));
+   delAccelYdelYs = -mu* (-3 * D^(-4)* delDdelYs * xvs(2) + D^(-3));
+   delAccelYdelZs = -mu* (-3 * D^(-4)* delDdelZs * xvs(2));
+   H_childa(5,:) = [0, delAccelYdelXs, delAccelYdelYs, delAccelYdelZs,0,0,0 ];
+   delAccelZdelXs = -mu* (-3 * D^(-4)* delDdelXs * xvs(3));
+   delAccelZdelYs = -mu* (-3 * D^(-4)* delDdelYs * xvs(3));
+   delAccelZdelZs = -mu* (-3 * D^(-4)* delDdelZs * xvs(3) + D^(-3));
+   H_childa(6,:) = [0, delAccelZdelXs, delAccelZdelYs, delAccelZdelZs,0,0,0 ];
       
 end

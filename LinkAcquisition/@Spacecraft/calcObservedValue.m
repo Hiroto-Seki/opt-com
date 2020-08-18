@@ -55,6 +55,8 @@ function [scTrue,gsTrue] = calcObservedValue(scTrue,gsTrue,eTrue,i,constant,time
   scTrue.elvObserved(i)  = scTrue.elvTrue(i)+ angleError * randn;
   
   % 加速度センサの値
+  velAccel = Spacecraft.twobody(scTrue.stateReceive(:,i), constant.sunMu, 0);
+  scTrue.accelObserved(:,i) = velAccel(4:6) + randn(3,1) * norm(velAccel(4:6))* error.stt + randn(3,1)* error.accel;
    
  
 end
