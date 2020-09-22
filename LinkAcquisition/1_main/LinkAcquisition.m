@@ -15,7 +15,7 @@ rev1: 2020/05/29
 %}
 
 %% 前処理
-clear all; close all; clc
+% clear all; close all; clc
 % add path to SPICE
 addpath(genpath('~/Documents/Matlab/SPICE'));
 % SPICEのKernel(天体情報)を読み込む
@@ -40,6 +40,7 @@ eTrue.getEphem();
 scEst = Spacecraft(time,constant.sunMu,"spacecraft");
 scEst.state=sc.state0;
 scEst.clockError = sc_est.X_hat(1);
+scEst.resClockError(1) = error.initialClock - scEst.clockError;
 % 真値(誤差を入れる)
 scTrue = Spacecraft(time,constant.sunMu,"spacecraft");
 scTrue.state = scEst.state + [error.scPos0; error.scVel0];
@@ -60,6 +61,11 @@ scIniGuess = scEstGs.state;
 gsTransNum = 0;
 scReceiveNum = 0;
 gsReceiveNum = 0;
+% 地上局が2wayを観測できるかどうか
+gs2way = 0; % 0: 観測前, 1:観測後
+% 探査機が2wayを観測できるようになる時間(初期化)
+time.sc2wayGet = time.list(length(time.list));
+
 for i = 1:length(time.list)-1
     disp(i)
     % 探索一回につき観測一回
@@ -76,51 +82,119 @@ for i = 1:length(time.list)-1
         % レーザーを照射した時刻gsTrue.tTrans, とその時刻での
         %% 5. calculate observed value using the send signal
         % tTransにstateTransから照射された光が宇宙機に到達する時刻を求め, その時刻の宇宙機の状態量と観測量を計算する
-        [scTrue,gsTrue] = Spacecraft.calcObservedValue(scTrue,gsTrue,eTrue,i,constant,time,gs,sc,error);
+        % two-way取れるかで場合わけ
+        if gs2way == 0
+            %one wayの観測
+            [scTrue,gsTrue] = Spacecraft.calcObservedValue(scTrue,gsTrue,eTrue,i,constant,time,gs,sc,error);
+            scRec.ltdObs(gsTransNum) = scTrue.lengthObserved(i) /constant.lightSpeed;
+        else
+            %one wayの観測. ただし，地上局は2wayが取れているので，この送信に対して，探査機は2wayが取れる
+            [scTrue,gsTrue] = Spacecraft.calcObservedValue2way(scTrue,gsTrue,eTrue,i,constant,time,gs,sc,error,scTrans,gsReceiveNum);    
+            scRec.rtltObserved(gsTransNum) = scTrue.rtltObserved(i);
+            %地上局がdownlinkを受信する時刻の状態量(DownlinkReceive)uplink信号に含まれる
+            scRec.xveDr(:,gsTransNum) = scTrans.eReceive(:,gsReceiveNum); 
+            scRec.xvgDr(:,gsTransNum) = scTrans.gsReceive(:,gsReceiveNum);
+            scRec.duration(gsTransNum) = scTrue.duration(i);
+            % 初めて，探査機が2wayを観測できる時刻を求める
+            if gsReceiveNum == 1
+                time.sc2wayGet = scTrue.tReceive(i);
+            end
+        end
+        % 1wayでも2wayでも共通のもの
         scRec.t(gsTransNum) = scTrue.tReceive(i); % 受信時刻
-        scRec.ltdObs(gsTransNum) = scTrue.lengthObserved(i) /constant.lightSpeed;
         scRec.azmObs(gsTransNum) = scTrue.azmObserved(i);
         scRec.elvObs(gsTransNum) = scTrue.elvObserved(i);
         scRec.acelObs(:,gsTransNum) = scTrue.accelObserved(:,i);
         scRec.tTrans(gsTransNum) = gsTrue.tTrans(i); %光が送信された時刻
-        scRec.xve(:,gsTransNum) = gsTrue.stateTrans(:,i);
-        scRec.xvg(:,gsTransNum) = eTrue.stateTrans(:,i); 
+        scRec.xve(:,gsTransNum) = eTrue.stateTrans(:,i);
+        scRec.xvg(:,gsTransNum) = gsTrue.stateTrans(:,i); 
         scRec.azmTrue(gsTransNum) = scTrue.azmTrue(i);
         scRec.elvTrue(gsTransNum) = scTrue.elvTrue(i);
+        scRec.angleError(gsTransNum) = scTrue.angleError(i);
     end
         
 
     %% 6.estimate spacecraft orbit using observed value by EKF(探査機が自身の軌道を推定する)
-    %%  次の時刻までに観測がなかった時 → リファレンス，誤差共分散を更新
-    if time.list(i+1) < scRec.t(scReceiveNum +1)
-       sc_est.Dt = time.simDt;
-       % リファレンスと誤差共分散行列を更新
-       [sc_est.X_hat, sc_est.P] = Spacecraft.updateState(sc_est.X_hat,sc_est.P, sc_est.Dt,scEst.mu);
-    else
-    % 次の時刻までに観測があった時→dt1とdt2に分けて更新
-        sc_est.Dt1 = scRec.t(scReceiveNum +1) - time.list(i);
-        % dt1までリファレンスと誤差共分散行列を更新
-        [sc_est.X_bar, sc_est.P_bar] = Spacecraft.updateState(sc_est.X_hat,sc_est.P, sc_est.Dt1,scEst.mu);
-        % 観測ベクトル
-        sc_est.Y = [scRec.ltdObs(scReceiveNum +1);  scRec.azmObs(scReceiveNum +1); scRec.elvObs(scReceiveNum +1); scRec.acelObs(:,scReceiveNum +1)];
-        % リファレンスの状態量の時の観測量
-        sc_est.Y_bar = Spacecraft.calcG(sc_est.X_bar,scRec.xve(:,scReceiveNum +1),scRec.xvg(:,scReceiveNum +1),constant);
-        sc_est.y     = sc_est.Y - sc_est.Y_bar;
-        sc_est.H_childa = Spacecraft.delGdelX(sc_est.X_bar,scRec.xve(:,scReceiveNum +1),scRec.xvg(:,scReceiveNum +1),constant);
-        % カルマンゲインの計算と推定値の更新
-        sc_est.K = sc_est.P_bar * sc_est.H_childa.'/(sc_est.H_childa*sc_est.P_bar*sc_est.H_childa.' + sc_est.R);
-        sc_est.X_hat = sc_est.X_bar + sc_est.K*sc_est.y;
-        sc_est.P = (eye(7) - sc_est.K*sc_est.H_childa)*sc_est.P_bar;
-        % dt2の間は普通にリファレンスと誤差共分散行列を更新
-        sc_est.Dt2 = time.list(i+1) - scRec.t(scReceiveNum +1);
-        [sc_est.X_hat, sc_est.P] = Spacecraft.updateState(sc_est.X_hat,sc_est.P, sc_est.Dt2,scEst.mu);  
+    % 2wayが取れる前後で場合わけ
+    if time.list(i+1) < time.sc2wayGet
+        %%  次の時刻までに観測がなかった時 → リファレンス，誤差共分散を更新
+        if time.list(i+1) < scRec.t(scReceiveNum +1)
+           sc_est.Dt = time.simDt;
+           % リファレンスと誤差共分散行列を更新
+           [sc_est.X_hat, sc_est.P] = Spacecraft.updateState(sc_est.X_hat,sc_est.P, sc_est.Dt,scEst.mu);
+        else
+        % 次の時刻までに観測があった時→dt1とdt2に分けて更新
+            sc_est.Dt1 = scRec.t(scReceiveNum +1) - time.list(i);
+            % dt1までリファレンスと誤差共分散行列を更新
+            [sc_est.X_bar, sc_est.P_bar] = Spacecraft.updateState(sc_est.X_hat,sc_est.P, sc_est.Dt1,scEst.mu);
+            % 観測ベクトル
+            sc_est.Y = [scRec.ltdObs(scReceiveNum +1);  scRec.azmObs(scReceiveNum +1); scRec.elvObs(scReceiveNum +1); scRec.acelObs(:,scReceiveNum +1)];
+            % リファレンスの状態量の時の観測量
+            sc_est.Y_bar = Spacecraft.calcG(sc_est.X_bar,scRec.xve(:,scReceiveNum +1),scRec.xvg(:,scReceiveNum +1),constant);
+            sc_est.y     = sc_est.Y - sc_est.Y_bar;
+            sc_est.H_childa = Spacecraft.delGdelX(sc_est.X_bar,scRec.xve(:,scReceiveNum +1),scRec.xvg(:,scReceiveNum +1),constant);
+            % 観測誤差共分散行列の更新
+            sc_est.R(2,2) = scRec.angleError(scReceiveNum +1)^2;
+            sc_est.R(3,3) = sc_est.R(2,2);
+            % カルマンゲインの計算と推定値の更新
+            sc_est.K = sc_est.P_bar * sc_est.H_childa.'/(sc_est.H_childa*sc_est.P_bar*sc_est.H_childa.' + sc_est.R);
+            sc_est.X_hat = sc_est.X_bar + sc_est.K*sc_est.y;
+            sc_est.P = (eye(7) - sc_est.K*sc_est.H_childa)*sc_est.P_bar;
+            % dt2の間は普通にリファレンスと誤差共分散行列を更新
+            sc_est.Dt2 = time.list(i+1) - scRec.t(scReceiveNum +1);
+            [sc_est.X_hat, sc_est.P] = Spacecraft.updateState(sc_est.X_hat,sc_est.P, sc_est.Dt2,scEst.mu);  
+        end
+        % 探査機の軌道の推定値を記録する
+        if i == length(time.list)
+        else
+        scEst.resClockError(i+1)= error.initialClock - sc_est.X_hat(1);
+        scEst.state(:,i+1) = sc_est.X_hat(2:7);
+        sc_est.P_list(:,:,i+1) = sc_est.P;
+        end
+        %2wayの時に使うものだけ抽出
+        sc_est.X_hat2w = sc_est.X_hat(2:7);
+        sc_est.P2w     = sc_est.P(2:7,2:7);
+    else % 2wayが取れた後
+        % 次の時刻まで観測がなかった場合
+        if time.list(i+1) < scRec.t(scReceiveNum +1)
+           sc_est.Dt = time.simDt;
+           % リファレンスと誤差共分散行列を更新
+           [sc_est.X_hat2w, sc_est.P2w] = Spacecraft.updateState2(sc_est.X_hat2w,sc_est.P2w, sc_est.Dt,scEst.mu);
+        else
+        % 次の時刻までに観測があった時→dt1とdt2に分けて更新
+            sc_est.Dt1 = scRec.t(scReceiveNum +1) - time.list(i);
+            % dt1までリファレンスと誤差共分散行列を更新
+            [sc_est.X_bar2w, sc_est.P_bar2w] = Spacecraft.updateState2(sc_est.X_hat2w,sc_est.P2w, sc_est.Dt1,scEst.mu);
+            % 観測ベクトル
+            sc_est.Y2w = [scRec.rtltObserved(scReceiveNum +1);  scRec.azmObs(scReceiveNum +1); scRec.elvObs(scReceiveNum +1); scRec.acelObs(:,scReceiveNum +1)];
+            % リファレンスの状態量の時の観測量
+            sc_est.Y_bar2w = Spacecraft.calcG2w(sc_est.X_bar2w,scRec.xve(:,scReceiveNum +1),scRec.xvg(:,scReceiveNum +1),scRec.xveDr(:,scReceiveNum +1),scRec.xvgDr(:,scReceiveNum +1),scTrue.duration(scReceiveNum +1),constant);
+            sc_est.y2w     = sc_est.Y2w - sc_est.Y_bar2w;
+            sc_est.H_childa2w = Spacecraft.delGdelX2w(sc_est.X_bar2w,scRec.xve(:,scReceiveNum +1),scRec.xvg(:,scReceiveNum +1),scRec.xveDr(:,scReceiveNum +1),scRec.xvgDr(:,scReceiveNum +1),scTrue.duration(scReceiveNum +1),constant);
+            % 観測誤差共分散行列の更新
+            sc_est.R(2,2) = scRec.angleError(scReceiveNum +1)^2;
+            sc_est.R(3,3) = sc_est.R(2,2);          
+            % カルマンゲインの計算と推定値の更新
+            sc_est.K2w = sc_est.P_bar2w * sc_est.H_childa2w.'/(sc_est.H_childa2w*sc_est.P_bar2w*sc_est.H_childa2w.' + sc_est.R);
+            sc_est.X_hat2w = sc_est.X_bar2w + sc_est.K2w*sc_est.y2w;
+            sc_est.P2w = (eye(6) - sc_est.K2w*sc_est.H_childa2w)*sc_est.P_bar2w;
+            % 時計誤差に換算する
+            if i ==  length(time.list)
+            else
+            scEst.resClockError(i+1)= norm(sc_est.X_hat2w(1:3) - scRec.xve(1:3,scReceiveNum +1) - scRec.xvg(1:3,scReceiveNum +1))/constant.lightSpeed ...
+                + scRec.tTrans(scReceiveNum +1) - scRec.t(scReceiveNum +1);
+            end
+            % dt2の間は普通にリファレンスと誤差共分散行列を更新
+            sc_est.Dt2 = time.list(i+1) - scRec.t(scReceiveNum +1);
+            [sc_est.X_hat2w, sc_est.P2w] = Spacecraft.updateState2(sc_est.X_hat2w,sc_est.P2w, sc_est.Dt2,scEst.mu);  
+        end
     end
    % 探査機の軌道の推定値を記録する
    if i == length(time.list)
    else
-   scEst.clockError(i+1)= sc_est.X_hat(1);
-   scEst.state(:,i+1) = sc_est.X_hat(2:7);
-   sc_est.P_list(:,:,i+1) = sc_est.P;
+   scEst.state(:,i+1) = sc_est.X_hat2w;
+   sc_est.P_list(1,1,i+1) = sc_est.P_list(1,1,i);
+   sc_est.P_list(2:7,2:7,i+1) = sc_est.P2w;
    end
    
 %%  7.  ダウンリンク推定方向の計算. (PAAの計算に次時刻の推定値が必要なので，ここで計算している)
@@ -147,6 +221,7 @@ for i = 1:length(time.list)-1
        % 地上局で観測される観測量
        scTrans.azmObserved(scReceiveNum+1) = gsTrue.azmObserved(i+1);
        scTrans.elvObserved(scReceiveNum+1) = gsTrue.elvObserved(i+1);
+       scTrans.angleError(scReceiveNum+1) = gsTrue.angleError(i+1);
        scReceiveNum = scReceiveNum + 1;
    else    
    end
@@ -168,10 +243,11 @@ for i = 1:length(time.list)-1
         %  ダウンリンクを送信した時刻=scTrans.t(gsReceiveNum+1)の状態量を求める．→　time.list(i+1)まで伝搬して，次時刻の状態量を推定する
         if gsReceiveNum == 0 
             sc_estGs.X_bar1 = scTrans.stateEstGs(:,1);
-            sc_estGs.P1_bar  = sc_estGs.P1;
+            sc_estGs.P_bar1  = sc_estGs.P1;
+            gs2way = 1; %以降地上局が2-wayを取れるようになった
         else
             sc_estGs.Dt1 = scTrans.t(gsReceiveNum+1) - scTrans.t(gsReceiveNum);
-            [sc_estGs.X_bar1, sc_estGs.P1_bar] = Spacecraft.updateState2(sc_estGs.X_hat1,sc_estGs.P1, sc_estGs.Dt1,scEst.mu);
+            [sc_estGs.X_bar1, sc_estGs.P_bar1] = Spacecraft.updateState2(sc_estGs.X_hat1,sc_estGs.P1, sc_estGs.Dt1,scEst.mu);
         end
         % 観測量 往復にかかった時間，downlinkされた方向の方位角，仰角
         sc_estGs.RTLT = (scTrans.tReceive(gsReceiveNum+1) - scTrans.t(gsReceiveNum+1)) + (scRec.t(gsReceiveNum+1) - scRec.tTrans(gsReceiveNum+1));
@@ -179,12 +255,15 @@ for i = 1:length(time.list)-1
         % リファレンスの状態量の時の観測量の計算
         sc_estGs.Y_bar = Spacecraft.calcG2(sc_estGs.X_bar1,scRec.xve(:,gsReceiveNum+1),scRec.xvg(:,gsReceiveNum+1),scTrans.eReceive(:,gsReceiveNum+1),scTrans.gsReceive(:,gsReceiveNum+1),scTrans.t(gsReceiveNum+1) - scRec.t(gsReceiveNum+1), constant);
         sc_estGs.y     = sc_estGs.Y - sc_estGs.Y_bar;
-        sc_estGs.H_childa = Spacecraft.delGdelX2(sc_estGs.X_bar1,scRec.xve(:,gsReceiveNum+1),scRec.xve(:,gsReceiveNum+1),scTrans.eReceive(:,gsReceiveNum+1),scTrans.gsReceive(:,gsReceiveNum+1),scTrans.t(gsReceiveNum+1) - scRec.t(gsReceiveNum+1), constant);
+        sc_estGs.H_childa = Spacecraft.delGdelX2(sc_estGs.X_bar1,scRec.xve(:,gsReceiveNum+1),scRec.xvg(:,gsReceiveNum+1),scTrans.eReceive(:,gsReceiveNum+1),scTrans.gsReceive(:,gsReceiveNum+1),scTrans.t(gsReceiveNum+1) - scRec.t(gsReceiveNum+1), constant);
+        % 観測誤差共分散行列の計算
+        sc_estGs.R1(2,2) = scTrans.angleError(gsReceiveNum+1)^2;
+        sc_estGs.R1(3,3) = sc_estGs.R1(2,2);
         % カルマンゲインの計算
-        sc_estGs.K = sc_estGs.P1_bar * sc_estGs.H_childa.'/(sc_estGs.H_childa*sc_estGs.P1_bar*sc_estGs.H_childa.' + sc_estGs.R1);
+        sc_estGs.K = sc_estGs.P_bar1 * sc_estGs.H_childa.'/(sc_estGs.H_childa*sc_estGs.P_bar1*sc_estGs.H_childa.' + sc_estGs.R1);
         % 状態量の更新
         sc_estGs.X_hat1 = sc_estGs.X_bar1 + sc_estGs.K*sc_estGs.y;
-        sc_estGs.P1 = (eye(6) - sc_estGs.K*sc_estGs.H_childa)*sc_estGs.P1_bar;
+        sc_estGs.P1 = (eye(6) - sc_estGs.K*sc_estGs.H_childa)*sc_estGs.P_bar1;
 
         % ダウンリンクを送信した時刻の状態量から，ダウンリンクを受信した時刻の状態量を求める
         sc_estGs.X_hat2 = sc_estGs.X_hat1;
@@ -208,8 +287,8 @@ end
 figure(1)
 title('clock error of spacecraft')
 hold on
-plot(time.list-time.list(1), error.initialClock - scEst.clockError)
-xlabel('time [s]')
+plot((time.list-time.list(1))/60/60, scEst.resClockError)
+xlabel('time [h]')
 ylabel('clock error [s]')
 hold off
 
@@ -220,27 +299,25 @@ tiledlayout(3,1)
 nexttile
 title('position error of estimated value')
 hold on
-plot(time.list-time.list(1), scEst.state(1,:) - scTrue.state(1,:))
-plot(time.list-time.list(1), scEst.state(2,:) - scTrue.state(2,:))
-plot(time.list-time.list(1), scEst.state(3,:) - scTrue.state(3,:))
-plot(time.list-time.list(1),...
+plot((time.list-time.list(1))/60/60, scEst.state(1,:) - scTrue.state(1,:))
+plot((time.list-time.list(1))/60/60, scEst.state(2,:) - scTrue.state(2,:))
+plot((time.list-time.list(1))/60/60, scEst.state(3,:) - scTrue.state(3,:))
+plot((time.list-time.list(1))/60/60,...
     ( (scEst.state(1,:) - scTrue.state(1,:)).^2 + (scEst.state(2,:) - scTrue.state(2,:)).^2 + (scEst.state(3,:) - scTrue.state(3,:)).^2).^0.5)
-plot(time.list-time.list(1), 450 * ones(length(time.list),1),'g')
-plot(time.list-time.list(1), -450 * ones(length(time.list),1),'g')
-xlabel('time [s]')
+xlabel('time [h]')
 ylabel('position error [km]')
-legend('x', 'y', 'z','length','450km')
+legend('x', 'y', 'z','length')
 % ylim([-1000 1000])
 hold off
 nexttile
 title('velocity error of estimated value')
 hold on
-plot(time.list-time.list(1), scEst.state(4,:) - scTrue.state(4,:))
-plot(time.list-time.list(1), scEst.state(5,:) - scTrue.state(5,:))
-plot(time.list-time.list(1), scEst.state(6,:) - scTrue.state(6,:))
-plot(time.list-time.list(1),...
+plot((time.list-time.list(1))/60/60, scEst.state(4,:) - scTrue.state(4,:))
+plot((time.list-time.list(1))/60/60, scEst.state(5,:) - scTrue.state(5,:))
+plot((time.list-time.list(1))/60/60, scEst.state(6,:) - scTrue.state(6,:))
+plot((time.list-time.list(1))/60/60,...
     ( (scEst.state(4,:) - scTrue.state(4,:)).^2 + (scEst.state(5,:) - scTrue.state(5,:)).^2 + (scEst.state(6,:) - scTrue.state(6,:)).^2).^0.5)
-xlabel('time [s]')
+xlabel('time [h]')
 ylabel('position error [km]')
 legend('x', 'y', 'z','speed')
 % ylim([-1000 1000])
@@ -248,15 +325,13 @@ hold off
 nexttile
 title('downlink direction error')
 hold on
-plot(time.list(1:length(time.list)) - time.list(1), scEst.azmDown - scTrue.azmDown)
-plot(time.list(1:length(time.list))- time.list(1), scEst.elvDown - scTrue.elvDown)
-plot(time.list(1:length(time.list)) - time.list(1), ((scEst.azmDown - scTrue.azmDown).^2 + (scEst.elvDown - scTrue.elvDown).^2).^0.5);
-plot(time.list(1:length(time.list))-time.list(1),   3e-7* ones(length(time.list),1),'g');
-plot(time.list(1:length(time.list))-time.list(1),   -3e-7* ones(length(time.list),1)),'g';
+plot((time.list(1:length(time.list)) - time.list(1))/60/60, scEst.azmDown - scTrue.azmDown)
+plot((time.list(1:length(time.list)) - time.list(1))/60/60, scEst.elvDown - scTrue.elvDown)
+plot((time.list(1:length(time.list)) - time.list(1))/60/60, ((scEst.azmDown - scTrue.azmDown).^2 + (scEst.elvDown - scTrue.elvDown).^2).^0.5);
 hold off
-xlabel('time [s]')
+xlabel('time [h]')
 ylabel('angle [rad]')
-legend('azimuth', 'elevation', 'angle','requirement')
+legend('azimuth', 'elevation', 'angle')
 
 % 地上局の推定値
 figure(3)
@@ -264,25 +339,25 @@ tiledlayout(2,1)
 nexttile
 title('position error of estimated value')
 hold on
-plot(time.list-time.list(1), scEstGs.state(1,:) - scTrue.state(1,:))
-plot(time.list-time.list(1), scEstGs.state(2,:) - scTrue.state(2,:))
-plot(time.list-time.list(1), scEstGs.state(3,:) - scTrue.state(3,:))
-plot(time.list-time.list(1),...
+plot((time.list-time.list(1))/60/60, scEstGs.state(1,:) - scTrue.state(1,:))
+plot((time.list-time.list(1))/60/60, scEstGs.state(2,:) - scTrue.state(2,:))
+plot((time.list-time.list(1))/60/60, scEstGs.state(3,:) - scTrue.state(3,:))
+plot((time.list-time.list(1))/60/60,...
     ( (scEstGs.state(1,:) - scTrue.state(1,:)).^2 + (scEstGs.state(2,:) - scTrue.state(2,:)).^2 + (scEstGs.state(3,:) - scTrue.state(3,:)).^2).^0.5)
-xlabel('time [s]')
+xlabel('time [h]')
 ylabel('position error [km]')
 legend('x', 'y', 'z','length')
 nexttile
 title('velocity error of estimated value')
 hold on
-plot(time.list-time.list(1), scEstGs.state(4,:) - scTrue.state(4,:))
-plot(time.list-time.list(1), scEstGs.state(5,:) - scTrue.state(5,:))
-plot(time.list-time.list(1), scEstGs.state(6,:) - scTrue.state(6,:))
-plot(time.list-time.list(1),...
+plot((time.list-time.list(1))/60/60, scEstGs.state(4,:) - scTrue.state(4,:))
+plot((time.list-time.list(1))/60/60, scEstGs.state(5,:) - scTrue.state(5,:))
+plot((time.list-time.list(1))/60/60, scEstGs.state(6,:) - scTrue.state(6,:))
+plot((time.list-time.list(1))/60/60,...
     ( (scEstGs.state(4,:) - scTrue.state(4,:)).^2 + (scEstGs.state(5,:) - scTrue.state(5,:)).^2 + (scEstGs.state(6,:) - scTrue.state(6,:)).^2).^0.5)
-xlabel('time [s]')
-ylabel('position error [km]')
-legend('x', 'y', 'z','length')
+xlabel('time [h]')
+ylabel('velocity error [km]')
+legend('x', 'y', 'z','speed')
 
 figure(4)
 title('estemated/true position of spacecraft')

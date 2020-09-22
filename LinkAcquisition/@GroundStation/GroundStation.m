@@ -16,6 +16,7 @@ classdef GroundStation < handle
           lengthObserved        % 測距情報
           azmObserved 
           elvObserved
+          angleError            % EKFの観測誤差共分散行列に用いる
           
     end
     methods 

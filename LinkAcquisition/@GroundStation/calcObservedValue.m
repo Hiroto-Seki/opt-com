@@ -15,7 +15,7 @@ QdAccuracy = (gs.qdIj^2 ...
       + 2 * constant.elementaryCharge * obj.receivedPower(i) *gs.qdS * gs.qdBw )^0.5 ...
       / (obj.receivedPower(i) * gs.qdS) * gs.qdFov;
 
-
+obj.angleError(i) = QdAccuracy;
 % 距離情報(時計誤差を含む)
 obj.lengthObserved(i) =  (ltd - error.initialClock + error.randomClock*randn) * constant.lightSpeed;
 % 角度情報(誤差なし)

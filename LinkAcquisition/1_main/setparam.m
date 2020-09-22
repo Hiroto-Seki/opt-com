@@ -24,9 +24,9 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     error.initialClock = 0.5  * randn; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
     error.randomClock        = 1e-8;         %ランダム時計誤差
     % 初期探査機軌道誤差[km]. 1000kmに設定
-    error.scPos0 = randn(3,1) *  1e3;
+    error.scPos0 = randn(3,1) *  2e4;
     % 適当に0.1km/s程度の誤差とする
-    error.scVel0 = randn(3,1) *  1.5e-1;
+    error.scVel0 = randn(3,1) *  2e-1;
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
     % STTの精度
@@ -42,8 +42,8 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     gs.alt  = 1.456;
     %% laser form gs to sc
     % 探索範囲(rad)
-    gs.searchArea     = 5e-6; %±5μrad(だいぶ余裕を持たせている)
-    gs.searchStep     = 1e-6; %探索時の1stepあたりの間隔(rad)
+    gs.searchArea     = 2e-5; %±20μrad(だいぶ余裕を持たせている)
+    gs.searchStep     = 2e-6; %探索時の1stepあたりの間隔(rad)
     gs.searchTimeStep = 2e-2; %適当．SOTAの資料にこれに相当するかは分からないが20msの記述あり
     % 探索1回にかかる時間
     time.obs = (2 * gs.searchArea/gs.searchStep)^2 * gs.searchTimeStep;
@@ -72,7 +72,7 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     sc.qdBw =  2*10^7;   % 帯域幅. 
     sc.qdFov = 200*1e-6; % 視野角 STTの姿勢決定精度が5urad(1sigma) → PAAより大きい方がいいかも 250 uradにしたい...
     sc.qdIj  = (4 * k * scT * sc.qdBw/scRsh)^0.5; %熱雑音電流
-    sc.qdS   = 0.68;     % 受光感度[A/W]
+    sc.qdS   = 0.6;     % 受光感度[A/W]
     sc.qdId  = 1.5*1e-10;   % 暗電流
     
     %% laser from sc to gs
@@ -89,14 +89,14 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     % 地上局
     gs.rAperture = 10; 
     gs.rAntGain = (pi * gs.rAperture/ sc.wavelength)^2  * (1- gs.gamma^2)^2;
-    gs.rEff = 0.7;
+    gs.rEff = 0.5;
     % QD センサに相当するもの(地上局)
-    gsT = 0.65;           % 絶対温度
+    gsT = 1;           % 絶対温度
     gsRsh = 50 * 10^6;     % 並列抵抗
     gs.qdBw =  2.5e8;   % 帯域幅. pulse widthを大きくできれば可能 2e7に設定．仮置きで小さな値を設定
-    gs.qdFov = 5*1e-6;  % 視野角 STTの姿勢決定精度が5urad(1sigma) 
+    gs.qdFov = 200*1e-6;  % 視野角 STTの姿勢決定精度が5urad(1sigma) 
     gs.qdIj  = (4 * k * gsT * sc.qdBw/gsRsh)^0.5; %熱雑音電流
-    gs.qdS   = 0.68;     % 受光感度[A/W]
+    gs.qdS   = 1.16;     % 受光感度[A/W]
     gs.qdId  = 1.6*1e-16;   % 暗電流 dark count=1[kcps]に相当．Large-Area 64-pixel Array of WSi Superconducting　Nanowire Single Photon Detectors　を参考
     
     
@@ -110,32 +110,32 @@ function [constant,time,error,gs,sc,sc_est,sc_estGs] = setparam(SSD)
     %% 探査機が推定するEKFの初期値, 観測誤差分散
     sc_est.X_hat = [0;sc.state0];
     sc_est.P = zeros(7);
-    sc_est.P(1,1) = 10^2;
-    sc_est.P(2,2) = 1000^2;
-    sc_est.P(3,3) = 1000^2;
-    sc_est.P(4,4) = 1000^2;
-    sc_est.P(5,5) = 1e-1^2;
-    sc_est.P(6,6) = 1e-1^2;
-    sc_est.P(7,7) = 1e-1^2;
+    sc_est.P(1,1) = 1;
+    sc_est.P(2,2) = 20000^2;
+    sc_est.P(3,3) = 20000^2;
+    sc_est.P(4,4) = 20000^2;
+    sc_est.P(5,5) = 2e-1^2;
+    sc_est.P(6,6) = 2e-1^2;
+    sc_est.P(7,7) = 2e-1^2;
     sc_est.P_list = zeros(7,7,length(time.list));
     sc_est.P_list(:,:,1) = sc_est.P;
     
-    sc_est.R = [1e-10,0,0,0,0,0;      %観測誤差分散
+    sc_est.R = [1e-9,0,0,0,0,0;      %観測誤差分散
          0,3e-10,0,0,0,0;
          0,0,3e-10,0,0,0;
          0,0,0,1e-24,0,0;
          0,0,0,0,1e-24,0;
          0,0,0,0,0,1e-24];
-    
+
     %% 地上局が推定するEKFの初期値, 観測誤差分散
     % ダウンリンクを受信した時刻の推定値 
     sc_estGs.X_hat2 = sc.state0;
     sc_estGs.P2     = sc_est.P(2:7,2:7);
-    sc_estGs.R2     = sc_est.R;
+%     sc_estGs.R2     = sc_est.R;
     % ダウンリンクを送信した時刻の推定値
     sc_estGs.X_hat1 = sc.state0;
     sc_estGs.P1     = sc_est.P(2:7,2:7); 
-    sc_estGs.R1     = [1e-12,0,0;      %観測誤差分散
+    sc_estGs.R1     = [1e-11,0,0;      %観測誤差分散
                        0,1e-10,0;
                        0,0,1e-10];
     sc_estGs.P_list = zeros(6,6,length(time.list));
