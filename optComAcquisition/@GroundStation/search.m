@@ -10,11 +10,11 @@
 %  gsTrue.direction_ut        %光照射方向
 %  
 
-function [gsTrue,earth] = search(i,gsTrue,earth,gs,time,constant) 
+function [obj,earth] = search(obj,i,earth,gs,time,constant) 
  % 探索方向は，慣性空間での角度．自身の速度は補正していない値．(実際に観測される値ではないが，地上局ならこれくらいできそう)
  % 推定値の方向の初期値(中心となる)
- relXvEst = gsTrue.opnEstTempState_ut - earth.state(:,i) - gsTrue.state(:,i); 
- relXvTrue = gsTrue.opnTrueTempState_ut - earth.state(:,i) - gsTrue.state(:,i);
+ relXvEst = obj.opnEstTempState_ut - earth.state(:,i) - obj.state(:,i); 
+ relXvTrue = obj.opnTrueTempState_ut - earth.state(:,i) - obj.state(:,i);
  estAzm0 = atan2(relXvEst(2),relXvEst(1) );
  estElv0 = atan(relXvEst(3) /(relXvEst(1)^2 + relXvEst(2)^2)^0.5 );
  % 真値の方向の初期値
@@ -44,6 +44,9 @@ function [gsTrue,earth] = search(i,gsTrue,earth,gs,time,constant)
  i_dir = 1; %次の探索方向　1=+azm, 2=+elv, 3=-azm, 4=-elv
  dt = 0;
  tempPointingError = 1;
+ gsTrue_t_ut   = obj.t(i);
+ gsTrue_direction_ut = [estAzm0;estElv0];
+ 
  for j = 1:(2 * gs.searchArea/gs.searchStep)^2
      % 各時刻のAzmとElvを計算．(推定値真値ともに)
      estAzm = estAzm0 + dt * estAzmVel;
@@ -67,7 +70,7 @@ function [gsTrue,earth] = search(i,gsTrue,earth,gs,time,constant)
      % 一番pointingErrorが小さくなったら更新する．
      if pointingError < tempPointingError
          tempPointingError = pointingError;
-         gsTrue_t_ut   = gsTrue.t(i) + dt;
+         gsTrue_t_ut   = obj.t(i) + dt;
          gsTrue_direction_ut = [pointAzm;pointElv];
      end
      % 次時刻ごとに推定値から何step離れた点に照射するか計算
@@ -98,12 +101,12 @@ function [gsTrue,earth] = search(i,gsTrue,earth,gs,time,constant)
 
 
  %% 何番目の送信に対応した状態量なのかを記録する
- gsTrue.ut_counter = gsTrue.ut_counter + 1;
- gsTrue.t_ut(gsTrue.ut_counter) = gsTrue_t_ut;
- gsTrue.direction_ut(:,gsTrue.ut_counter) = gsTrue_direction_ut;
+ obj.ut_counter = obj.ut_counter + 1;
+ obj.t_ut(obj.ut_counter) = gsTrue_t_ut;
+ obj.direction_ut(:,obj.ut_counter) = gsTrue_direction_ut;
   % 送信時刻の地上局の位置速度，地球の位置,速度を求める.
- earth.state_ut(:,gsTrue.ut_counter)  = earth.calcStateAtT_cb(gsTrue.t_ut(gsTrue.ut_counter),time);
- gsTrue.state_ut(:,gsTrue.ut_counter) = gsTrue.calcStateAtT_gs(gsTrue.t_ut(gsTrue.ut_counter),time,constant);
+ earth.state_ut(:,obj.ut_counter)  = earth.calcStateAtT_cb(obj.t_ut(obj.ut_counter),time);
+ obj.state_ut(:,obj.ut_counter) = obj.calcStateAtT_gs(obj.t_ut(obj.ut_counter),time,constant);
  
 
  
