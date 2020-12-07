@@ -6,8 +6,6 @@
 function [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)      
       %% 1way, 2wayに共通
       %% 1wayの測距
-      % 真値
-      obj.lengthTrue_ur(obj.ur_counter)       =  constant.lightSpeed * (obj.t_ur(obj.ur_counter) - obj.gsT_ur(obj.ur_counter));  %クロック誤差が乗っていない
       % 観測値
       obj.lengthObserved_ur(obj.ur_counter)   =  obj.lengthTrue_ur(obj.ur_counter) + constant.lightSpeed * (error.clock0 + error.randomClock * randn);
       
@@ -103,18 +101,12 @@ function [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs
     %% 2way のみ
     if type == 2
 %     % 2wayの測距(往復時間,滞在時間)
-%     
-% 
-% 
-%         
-        
+        obj.ur2w_counter = obj.ur2w_counter + 1;
+        obj.length2wObserved_ur(obj.ur_counter) = (obj.t_ur(obj.ur_counter) - obj.t_dt(obj.ur2w_counter) + error.randomClock * randn )*constant.lightSpeed ;
+        obj.durationAtGs(obj.ur_counter) = gsTrue.t_ut(obj.ur_counter) - gsTrue.t_dr(obj.ur2w_counter);
     end
     
-%     %% デバッグ用
-%     if obj.ur_counter == 1
-%         obj.directionObserved_ur(:,obj.ur_counter) = [-2.31299146310835;0.0537783527729165];
-%         obj.accelObseved_ur(:,obj.ur_counter) = [-4.2978349706686E-08;-5.67575832982138E-08;2.69770856565111E-09];
-%     end
+
     
     
 

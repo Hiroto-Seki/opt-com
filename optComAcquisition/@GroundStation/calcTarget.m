@@ -11,9 +11,9 @@
 % opn_t : 
 % opn_state      : 
 
-function [opn_t,opn_state] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
+function [opn_t,opn_state,lightTime] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
      % 伝搬遅延誤差許容値
-     relTimeDelayError = 1e-12;
+     relTimeDelayError = 1e-15;
      timeDelayErrorTemp = 10;
      % 伝搬遅延の計算 
      timeDelayTemp = 1000; %初期化.
@@ -30,5 +30,6 @@ function [opn_t,opn_state] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
      end
      opn_t    = t + timeDelayTemp;
      opn_state = xvsc;
+     lightTime = timeDelayTemp;
 
 end

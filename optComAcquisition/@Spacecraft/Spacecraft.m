@@ -21,6 +21,9 @@ classdef Spacecraft < handle
           attStateObserved_ur    %t_urに対応する姿勢 
           lengthTrue_ur          %距離の真値
           lengthObserved_ur      %観測される距離
+          ur2w_counter         %2wayが観測された回数
+          length2wObserved_ur%観測される距離(2way)
+          durationAtGs           %地上局が受信してから送信するまでの時間
           directionTrue_ur       %誤差がない時の慣性空間上での見かけの方向(azimuth,elevation)
           directionObserved_ur   %観測結果から計算される慣性空間上での見かけの方向(sttとqdの誤差が含まれる)
           directionAccuracy_ur   %観測誤差共分散行列の計算にしようする．測角の精度
@@ -42,8 +45,11 @@ classdef Spacecraft < handle
           % scEstByGsBatch にあるもの (推定に使う) ------
           X                      % 状態量の推定値をまとめたベクトル 
           Y                      % 観測値
+          y                      % Y - Y*
           P                      % 誤差共分散行列
-          R                      % 観測誤差共分散行列
+          R2wGs                      % 観測誤差共分散行列(gsの観測)
+          R1wSc                    % 観測誤差共分散行列(scの観測)
+          R2wSc                    % 観測誤差共分散行列(scの観測)
           H                      % batchの時使う
           P_list                 % 観測誤差共分散行列のリスト
           X_dt                   % scEstByGsEkfが使用するダウンリンクを送信した時刻の推定状態量
@@ -61,7 +67,7 @@ classdef Spacecraft < handle
         xvAtT = calcStateAtT_sc(obj,t,time)  
         obj = receiveUplink(obj,gsTrue,earth,constant,time) %uplinkを受信する．その時の観測量を求める
         [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type) %観測量の計算 obj = scTrue, type=1:1way, type=2:2way
-        observationUpdateBySc(obj,scTrue,constant,type) % (宇宙機による)EKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
+        observationUpdateBySc(obj,scTrue,earth,gsTrue,constant,type) % (宇宙機による)EKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         [obj,gsTrue,eTrue] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,eTrue,scAtT,time,constant) % obj = scTrue
         observationUpdateByGs(obj,gsTrue,earth,constant) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新
         
@@ -72,9 +78,11 @@ classdef Spacecraft < handle
         A  = delFdelX(xv,mu) %運動方程式の微分
         [roll, pitch, yaw,P] = attDetermination(stt,sttError,qd,qdError,directionEstI,scfl)
         Y_star = calcG1w_ur(X_star,xve,xvg,constant,mu) % 推定値の時の観測量を計算(1way, 宇宙機による推定)
+        Y_star = calcG2w_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,mu)
         Y_star = calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,mu) % 推定値の時の観測量を計算(2way, 地上局による推定)
         [X, P] = timeUpdate(X, P, mu, Dt, dt)
         H = delGdelX1w_ur(X_star,xve,xvg,constant,mu)   % 観測方程式の微分(1way, 宇宙機による推定)
+        H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,mu)
         H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,mu);  % 観測方程式の微分(2way, 地上局による推定)
         [opn_t,opn_stateE,opn_stateGs] = calcTarget(t,gs,e,scAtT,time,constant) % ダウンリンクが届く時刻とその時刻の地球,地上局の位置を求める
 %           xvAtT = calcStateAtT_sc(spacecraft,t,time)

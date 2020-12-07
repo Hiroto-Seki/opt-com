@@ -4,12 +4,12 @@ function  xvAtT = calcStateAtT_gs(obj,t,time,constant)
     if t < obj.t(length(obj.t))
         closeTimeIndex = floor( (t - obj.t(1) )/ time.simDt ) + 1;
         closeTimeOffset = t - obj.t(closeTimeIndex);      % 一番近い時刻から伝搬しなければいけない時間
-        xvsc = obj.state(:,closeTimeIndex);
-        xvAtT = GroundStation.earthRotation(xvsc(1:3), closeTimeOffset, constant);
+        xvg = obj.state(:,closeTimeIndex);
+        xvAtT = GroundStation.earthRotation(xvg(1:3), closeTimeOffset, constant);
      % 最終時刻までのリストに収まっていない時
     else
         restTime = t -  obj.t(length(obj.t)); 
-        xvsc =  obj.state(:,length(obj.t));
-        xvAtT = earthRotation(xvsc(1:3), restTime, constant);
+        xvg =  obj.state(:,length(obj.t));
+        xvAtT = GroundStation.earthRotation(xvg(1:3), restTime, constant);
     end
 end

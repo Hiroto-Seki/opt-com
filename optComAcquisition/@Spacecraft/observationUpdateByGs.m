@@ -25,9 +25,11 @@ function observationUpdateByGs(obj,gsTrue,earth,constant)
     % X_starとP_barを取得
     X_star = obj.X_dt;
     P_bar  = obj.P_dt;
-%     % Rを取得．QDセンサーの精度を反映
-%     obj.R(1,1) = gsTrue.directionAccuracy_dr(dr_counter)^2;
-%     obj.R(2,2) = obj.R(1,1);
+    % Rを取得．QDセンサーの精度を反映
+    R = obj.R2wGs;
+    R(1,1) = gsTrue.directionAccuracy_dr(dr_counter)^2;
+    R(2,2) = R(1,1);
+    obj.R2wGs = R;
     %% Yを取得. 
     Y = [gsTrue.directionObserved_dr(:,dr_counter);... % 測角
          gsTrue.scAccel_dr(:,dr_counter);...       % 加速度計
@@ -42,14 +44,16 @@ function observationUpdateByGs(obj,gsTrue,earth,constant)
     end
     
     
+    
     % Hを計算
     H = Spacecraft.delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,obj.mu);
     % Kを計算
-    K = P_bar * H.'/(H*P_bar*H.' + obj.R);
+    K = P_bar * H.'/(H*P_bar*H.' + R);
     % XとPを計算
     X = X_star + K * y;
     P = (eye(7) - K * H)*P_bar;
     obj.X_dt = X;
     obj.P_dt = P;
+    obj.y    = y;
 
 end

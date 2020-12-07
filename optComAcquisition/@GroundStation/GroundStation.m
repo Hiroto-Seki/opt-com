@@ -41,7 +41,7 @@ classdef GroundStation < handle
             obj.t   = time.list;
             bodyFixed = cspice_georec(gs.lat,gs.lon,gs.alt,constant.earthRadius,constant.earthF);
             bodyFixed = [bodyFixed;0;0;0]; 
-            xform_ec2IAU = cspice_sxform('IAU_EARTH','ECLIPJ2000',time.list);
+            xform_ec2IAU = cspice_sxform('IAU_EARTH','ECLIPJ2000', time.t0Ephemeris +time.list );
             % get ehemeris data of the ground station in ECLIPJ2000, earth center
             obj.state = zeros(6,time.stepNum+1);
             for i_1 = 1: time.stepNum+1
@@ -53,7 +53,7 @@ classdef GroundStation < handle
         obj = calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error) % 観測量の計算
     end
     methods(Static)
-        [opn_t,opn_state] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
+        [opn_t,opn_state,lightTime] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
 
         xv = earthRotation(pos0, t, constant) % t秒後の状態量の計算
     end 

@@ -20,8 +20,8 @@ function opn = calcTarget(t,gsTrue,earth,scAtT,time,constant)
      timeDelayTemp = 1000;
      while timeDelayErrorTemp > relTimeDelayError
          % 伝搬時間後の状態量を求める
-        xve  = earth.calcStateAtT_cb(t,time);
-        xvgs = gsTrue.calcStateAtT_gs(t,time,constant);  
+        xve  = earth.calcStateAtT_cb(t + timeDelayTemp,time);
+        xvgs = gsTrue.calcStateAtT_gs(t + timeDelayTemp,time,constant);  
         timeDelayNew = 1/constant.lightSpeed * ...
          ((xve(1) + xvgs(1) - scAtT(1))^2 + ...
           (xve(2) + xvgs(2) - scAtT(2))^2 +....

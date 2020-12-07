@@ -3,7 +3,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     constant.sunMu         = SSD.GM(10);      % km^3/s^2 gravity constant of the sun
     constant.earthMu       = SSD.GM(399);     % km^3/s^2 gravity constant of the 
     constant.saturnMu      = SSD.GM(799);     %[km/s^2]
-    constant.lightSpeed    = 299792.458 ;      % [km/s] light speed 
+    constant.lightSpeed    = 299792.458 ;     % [km/s] light speed 
     constant.earthRadius   = SSD.r(399);      % [km] earth radius
     constant.earthRotation = 2*pi/24/60/60;   % [rad/s] earth rotation speed
     constant.eathAxis      = 23.4/180*pi;     % inclination of the earth axis
@@ -14,11 +14,12 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     
     %% parameter related to time
     % simulation timeStep[s]
-    time.simDt = 10 ;
+    time.simDt = 10;
     % number of time step
     time.stepNum = 2160; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
+    time.t0Ephemeris = 0;
     % 基準となる時刻のリスト
     time.list = linspace(time.t0,time.t0+time.simDt * time.stepNum,time.stepNum+1);
     
@@ -28,16 +29,16 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-8;         %ランダム時計誤差
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 2e4  ; %変更した 
+    error.scPosSigma = 1e4; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 5e-1  ; %変更した
+    error.scVelSigma = 1e-1; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
     % STTの精度
     error.stt = 10 * 10^-6 ; %ISSL unit→10urad(cross bore sight), ASTRO APS(2kg,5W程度)→1arcsec以下(4.85urad)
     % 参考: https://blog.satsearch.co/2019-11-26-star-trackers-the-cutting-edge-celestial-navigation-products-available-on-the-global-space-marketplace
     % 加速度センサの精度. 擾乱とかの方が大きいかも・・
-    error.accel = 1e-7;   
+    error.accel = 1e-12; %ちょっとサイズが大きいけど https://www.researchgate.net/publication/268554054_High-performance_Accelerometer_for_On-orbit_Spacecraft_Autonomy  
     % duration time(探査機が光を受けて返すまでの時間)の誤差
     error.duration = 1e-10;                    % 高精度にできると仮定
     
@@ -49,8 +50,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     % 探索範囲(rad)
     gs.searchArea     = (error.scPosSigma/(SSD.AU*10)) * 3 ; %10AUくらいを想定．3sigmaをカバーする
 %     gs.searchArea     = 2e-5; % デバッグ用
-    gs.searchStep     = 2e-6; %探索時の1stepあたりの間隔(rad)
-    gs.searchTimeStep = 2e-2; %適当．SOTAの資料にこれに相当するかは分からないが20msの記述あり
+    gs.searchStep     = 2e-6 ; %探索時の1stepあたりの間隔(rad)
+    gs.searchTimeStep = 2e-2 ;  %適当．SOTAの資料にこれに相当するかは分からないが20msの記述あり
     % 探索1回にかかる時間
     time.obs = (2 * gs.searchArea/gs.searchStep)^2 * gs.searchTimeStep;
     % 探索1回にかかる時間がシミュレーションの何stepに相当するか
@@ -79,7 +80,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     scT = 298;             % 絶対温度
     scRsh = 200 * 10^6;     % 並列抵抗
     sc.qdBw =  2*10^7;   % 帯域幅. 
-    sc.qdFov = 200*1e-6 ; % 視野角 STTの姿勢決定精度が5urad(1sigma) → PAAより大きい方がいい
+    sc.qdFov = 200*1e-6; % 視野角 STTの姿勢決定精度が5urad(1sigma) → PAAより大きい方がいい
     sc.qdIj  = (4 * k * scT * sc.qdBw/scRsh)^0.5; %熱雑音電流
     sc.qdS   = 0.6;     % 受光感度[A/W]
     sc.qdId  = 1.5*1e-10;   % 暗電流
@@ -104,7 +105,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     gsT = 1;           % 絶対温度
     gsRsh = 50 * 10^6;     % 並列抵抗
     gs.qdBw =  2.5e8;   % 帯域幅. pulse widthを大きくできれば可能 2e7に設定．仮置きで小さな値を設定
-    gs.qdFov = 200*1e-6;  % 視野角 STTの姿勢決定精度が5urad(1sigma) 
+    gs.qdFov = 200*1e-6  ;  % 視野角 STTの姿勢決定精度が5urad(1sigma) 
     gs.qdIj  = (4 * k * gsT * sc.qdBw/gsRsh)^0.5; %熱雑音電流
     gs.qdS   = 1.16;     % 受光感度[A/W]
     gs.qdId  = 1.6*1e-16;   % 暗電流 dark count=1[kcps]に相当．Large-Area 64-pixel Array of WSi Superconducting　Nanowire Single Photon Detectors　を参考
@@ -114,9 +115,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     gsTrue = GroundStation(gs,constant,time);
     % 地球
     earth  = CelestialBody(time,constant.sunMu,"Earth");
-    earth.getEphem();
+    earth.getEphem(time);
     % 宇宙機
-    sc.state0 = cspice_spkezr('699', time.t0,'ECLIPJ2000', 'NONE', '10'); %推定値の初期値. とりあえず土星にしている
+    sc.state0 = cspice_spkezr('699', time.t0Ephemeris + time.t0,'ECLIPJ2000', 'NONE', '10'); %推定値の初期値. とりあえず土星にしている
     % 真値(誤差を入れる)
     scTrue                  = Spacecraft(time,constant.sunMu);
     scTrue.state            = sc.state0 + [ 1/3^0.5 * randn(3,1) * error.scPosSigma ; 1/3^0.5 * randn(3,1) * error.scVelSigma ];
@@ -132,24 +133,26 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     %% 推定値 (clockのオフセット + 宇宙機の位置・速度)
     scEstByScEkf.X             = [0;sc.state0];
     scEstByScEkf.P             = [error.clockSigma^2,                                               zeros(1,6);
-                                          zeros(3,1), error.scPosSigma^2 * eye(3),                  zeros(3,3);
-                                                                       zeros(3,4), error.scVelSigma^2 * eye(3)];
+                                          zeros(3,1), 1/3 * error.scPosSigma^2 * eye(3),                  zeros(3,3);
+                                                                       zeros(3,4), 1/3* error.scVelSigma^2 * eye(3)];
     scEstByScEkf.P_list        = zeros(7,7,length(time.list));
     scEstByScEkf.P_list(:,:,1) = scEstByScEkf.P;
-    scEstByScEkf.R = [error.stt^2*eye(2),                                     zeros(2,6);         % 測角 (受信電力で書き換える)
-                              zeros(3,2),                error.accel^2*eye(3),zeros(3,3);         % 加速度計
+    scEstByScEkf.R1wSc = [error.stt^2*eye(2),                                     zeros(2,6);         % 測角 (受信電力で書き換える)
+                              zeros(3,2),    1e0*        error.accel^2*eye(3),zeros(3,3);         % 加速度計
                               zeros(2,5),              gs.searchStep^2*eye(2),zeros(2,1);         % uplinkの送信方向
-                              zeros(1,7),                                          5e-1];         %1wayの測距  
-
+                              zeros(1,7),                                          1e2];          %1wayの測距 おそらくどこかで桁落ち誤差が発生しているので精度を落としている
+    scEstByScEkf.R2wSc =  [scEstByScEkf.R1wSc, zeros(8,1); zeros(1,8), 1e4];% 2wayの測距  
+                          
     scEstByGsEkf.X             = [0;sc.state0];
     scEstByGsEkf.P             = [error.clockSigma^2,                                               zeros(1,6);
-                                          zeros(3,1), error.scPosSigma^2 * eye(3),                  zeros(3,3);
-                                                                       zeros(3,4), error.scVelSigma^2 * eye(3)];
+                                          zeros(3,1), 1/3 * error.scPosSigma^2 * eye(3),                  zeros(3,3);
+                                                                       zeros(3,4), 1/3 * error.scVelSigma^2 * eye(3)];
     scEstByGsEkf.P_list        = zeros(7,7,length(time.list));
     scEstByGsEkf.P_list(:,:,1) = scEstByGsEkf.P;
-    scEstByGsEkf.R = [error.stt^2*eye(2),                                               zeros(2,5);         % 測角 (受信電力で書き換える)
-                              zeros(3,2),error.accel^2*eye(3),                          zeros(3,2);         % 加速度計 
-                              zeros(2,5),        (constant.lightSpeed *error.randomClock)^2*eye(2)];         % 2wayの測距  
+    scEstByGsEkf.R2wGs = [error.stt^2*eye(2),                                           zeros(2,5);         % 測角 (受信電力で書き換える)
+                              zeros(3,2), 1e0* error.accel^2*eye(3),                          zeros(3,2);         % 加速度計 
+                              zeros(1,5),                       1e2,                                    0;
+                              zeros(1,6),                       1e2];         % 2wayの測距  
 
                   
    % 送受信した回数の初期化
@@ -157,6 +160,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
    gsTrue.dr_counter=0;
    scTrue.ur_counter=0;
    scTrue.dt_counter=0;
+   scTrue.ur2w_counter = 0;
    % 初期化
    time.lastSearch = 0;
    time.sc2wayget  = time.list(length(time.list)) + time.simDt * 2;  %大きい値で初期化しておく

@@ -58,20 +58,20 @@ for i = 1:length(time.list)-1
         time.scDt1 = scTrue.t_ur(scTrue.ur_counter) - time.list(i);
         % 観測からの時間
         time.scDt2 = time.list(i+1) - scTrue.t_ur(scTrue.ur_counter);
-%         if time.list(i+1) < time.sc2wayget
+        if time.list(i+1) < time.sc2wayget
             % 観測は1way
             time.obsScType = 1;
-%         % 2wayの観測も得られる時，観測
-%         else
-%             % 観測は2way
-%             time.obsScType = 2;
-% %         end
+        % 2wayの観測も得られる時，観測
+        else
+            % 観測は2way
+            time.obsScType = 2;
+        end
         % 観測までは推定値と共分散を時間伝搬
         [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdate(scEstByScEkf.X, scEstByScEkf.P, scEstByScEkf.mu, time.scDt1,time.simDt);
         % 観測量の計算
         [scTrue,gsTrue] = scTrue.calcObservation_sc(scEstByScEkf,gsTrue,constant,error,sc,gs,time.obsScType); % time.obsScType=1: 1wayの観測, =2:2wayの観測
         % EKFで観測値を用いて推定値のupdate 
-        scEstByScEkf.observationUpdateBySc(scTrue,constant,time.obsScType);
+        scEstByScEkf.observationUpdateBySc(scTrue,earth, gsTrue,constant,time.obsScType);
         % 観測から次ステップまでの推定値と共分散を時間伝搬. 
         [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdate(scEstByScEkf.X, scEstByScEkf.P, scEstByScEkf.mu, time.scDt2,time.simDt);
         % downlink方向の決定. ダウンリンクを受ける時刻も計算
@@ -117,10 +117,7 @@ for i = 1:length(time.list)-1
     scEstByGsEkf.clockError(i+1)= error.clock0- scEstByGsEkf.X(1); %残りの誤差
     scEstByGsEkf.state(:,i+1)= scEstByGsEkf.X(2:7);
     scEstByGsEkf.P_list(:,:,i+1) = scEstByGsEkf.P;
-       
+    disp(i) 
 end
 
-figure(1)
-hold on
-plot(scEstByScEkf.state(1,:)-scTrue.state(1,:))
-% plot(scEstByGsEkf.state(1,:)-scTrue.state(1,:))
+showResult(scTrue,scEstByScEkf,scEstByGsEkf);
