@@ -3,7 +3,7 @@
 % 出力
 % 中間パラメーター
 
-function [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)      
+function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)      
       %% 1way, 2wayに共通
       %% 1wayの測距
       % 観測値
@@ -15,8 +15,6 @@ function [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs
                    + 1/constant.lightSpeed * obj.state_ur(4:6,obj.ur_counter) * norm(obj.eState_ur(1:3,obj.ur_counter) +  obj.gsState_ur(1:3,obj.ur_counter) - obj.state_ur(1:3,obj.ur_counter)) ; 
       % 正規化する
       directionTrueI_normalized = directionTrueI/norm(directionTrueI);
-      %地上局→宇宙機の相対ベクトル．
-      gs2scTruePos = - (obj.eState_ur(1:3,obj.ur_counter) +  obj.gsState_ur(1:3,obj.ur_counter) - obj.state_ur(1:3,obj.ur_counter));
       %宇宙機の姿勢の真値(推定はしない) だいたい地上局方向に光学系の座標系が向くように設定する.(厳密には一致させなくても良い)
       % 姿勢は，宇宙機の軌道の推定値をもとに決定している. 軌道はここでは推定しない
       directionEstI = ( obj.eState_ur(1:3,obj.ur_counter) +  obj.gsState_ur(1:3,obj.ur_counter) -scEst.X(2:4))...
@@ -30,9 +28,6 @@ function [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs
       % 光学系(Fight Laser-communication Terminal)座標系での真の見かけのuplink受信方向(見かけの相対位置)
       directionTrueFLT =  (Spacecraft.rotation(rollTrue,pitchTrue,yawTrue,1))\directionTrueI; 
 %       directionTrueFLT_normalized =  (Spacecraft.rotation(rollTrue,pitchTrue,yawTrue,1))\directionTrueI_normalized; 
-      % 送信機のpointing誤差を計算する
-      gsTrue.pointingError_ut(obj.ur_counter) = ((atan2(gs2scTruePos(2),gs2scTruePos(1)) - obj.transDirection_ur(1,obj.ur_counter))^2 ...
-                                                + (atan(gs2scTruePos(3) /(gs2scTruePos(1)^2 + gs2scTruePos(2)^2)^0.5) - obj.transDirection_ur(2,obj.ur_counter))^2)^0.5;
       % pointingLossの計算
       Lp = calcPointingLoss(gsTrue.pointingError_ut(obj.ur_counter),gs.gamma,gs.alpha,gs.tAperture,gs.wavelength);
       % 自由空間損失
@@ -85,8 +80,8 @@ function [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs
       % FLT座標系から，慣性座標系に直す(姿勢決定誤差がのる)
       directionEstI_normalizedNew = (Spacecraft.rotation(rollEst,pitchEst,yawEst,1))* directionEstFLT_normalized;
       % 見かけのuplink方向を記録する
-      obj.directionTrue_ur(:,obj.ur_counter) = [ atan2( directionTrueI_normalized(2),directionTrueI_normalized(1) ); atan(directionTrueI_normalized(3))];
-      obj.directionObserved_ur(:,obj.ur_counter) = [ atan2( directionEstI_normalizedNew(2),directionEstI_normalizedNew(1) ); atan(directionEstI_normalizedNew(3))];  
+      obj.directionTrue_ur(:,obj.ur_counter) = [ atan2( directionTrueI_normalized(2),directionTrueI_normalized(1) ); asin(directionTrueI_normalized(3))];
+      obj.directionObserved_ur(:,obj.ur_counter) = [ atan2( directionEstI_normalizedNew(2),directionEstI_normalizedNew(1) ); asin(directionEstI_normalizedNew(3))];  
       % 姿勢を記録する
       obj.attStateTrue_ur(:,obj.ur_counter) = [rollTrue;pitchTrue;yawTrue];       
       obj.attStateObserved_ur(:,obj.ur_counter) = [rollEst;pitchEst;yawEst]; 
@@ -105,9 +100,5 @@ function [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs
         obj.length2wObserved_ur(obj.ur_counter) = (obj.t_ur(obj.ur_counter) - obj.t_dt(obj.ur2w_counter) + error.randomClock * randn )*constant.lightSpeed ;
         obj.durationAtGs(obj.ur_counter) = gsTrue.t_ut(obj.ur_counter) - gsTrue.t_dr(obj.ur2w_counter);
     end
-    
-
-    
-    
 
 end

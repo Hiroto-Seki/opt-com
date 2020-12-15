@@ -13,7 +13,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(1)
+rng(4)
 
 %% 1.setting parameter and initial state
 [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf] = setparam(SSD);
@@ -39,7 +39,7 @@ for i = 1:length(time.list)-1
         % 推定値周りに探索して，送信時刻,送信方向,送信時の地上局の位置・速度を求める
         [gsTrue,earth] = gsTrue.search(i,earth,gs,time,constant);
         % 宇宙機に届く時刻と，宇宙機が受信する内容を求める
-        scTrue.receiveUplink(gsTrue,earth,constant,time);
+        [scTrue,gsTrue] = scTrue.receiveUplink(gsTrue,earth,constant,time);
         % 初めて，探査機が2wayを観測できる時間を求める
         if gsTrue.dr_counter == 1
             time.sc2wayget = scTrue.t_ur(gsTrue.ut_counter);
@@ -69,7 +69,7 @@ for i = 1:length(time.list)-1
         % 観測までは推定値と共分散を時間伝搬
         [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdate(scEstByScEkf.X, scEstByScEkf.P, scEstByScEkf.mu, time.scDt1,time.simDt);
         % 観測量の計算
-        [scTrue,gsTrue] = scTrue.calcObservation_sc(scEstByScEkf,gsTrue,constant,error,sc,gs,time.obsScType); % time.obsScType=1: 1wayの観測, =2:2wayの観測
+        scTrue.calcObservation_sc(scEstByScEkf,gsTrue,constant,error,sc,gs,time.obsScType); % time.obsScType=1: 1wayの観測, =2:2wayの観測
         % EKFで観測値を用いて推定値のupdate 
         scEstByScEkf.observationUpdateBySc(scTrue,earth, gsTrue,constant,time.obsScType);
         % 観測から次ステップまでの推定値と共分散を時間伝搬. 
@@ -120,4 +120,4 @@ for i = 1:length(time.list)-1
     disp(i) 
 end
 
-showResult(scTrue,scEstByScEkf,scEstByGsEkf);
+showResult(scTrue,scEstByScEkf,scEstByGsEkf,error);

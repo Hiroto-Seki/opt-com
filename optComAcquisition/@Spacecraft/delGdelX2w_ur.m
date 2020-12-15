@@ -105,8 +105,7 @@ function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,mu)
     delElv_ut = ( (DutX^2 + DutY^2)*delDutZ - (DutX * delDutX + DutY * delDutY)*DutZ )...
                 /( (DutX^2 + DutY^2 + DutZ^2) * (DutX^2 + DutY^2)^0.5 ) ;
     % 測距(クロックのオフセットがのっている)
-    delL1w    = [c,0,0,0,0,0,0] + delLu;
-    
+    delL1w    = [c,0,0,0,0,0,0] + delLu;    
     
     %% 2way用
     % xstの微分
@@ -126,5 +125,4 @@ function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,mu)
     %% まとめる
     H = [delAzm_ur;delElv_ur;delAccel;delAzm_ut;delElv_ut;delL1w;delL2w];
     
-
 end

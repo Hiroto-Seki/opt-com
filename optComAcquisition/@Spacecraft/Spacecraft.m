@@ -65,8 +65,8 @@ classdef Spacecraft < handle
         end 
         obj = calcOrbitTwoBody(obj,error)
         xvAtT = calcStateAtT_sc(obj,t,time)  
-        obj = receiveUplink(obj,gsTrue,earth,constant,time) %uplinkを受信する．その時の観測量を求める
-        [obj,gsTrue] = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type) %観測量の計算 obj = scTrue, type=1:1way, type=2:2way
+        [obj,gsTrue] = receiveUplink(obj,gsTrue,earth,constant,time) %uplinkを受信する．その時の観測量を求める
+        obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type) %観測量の計算 obj = scTrue, type=1:1way, type=2:2way
         observationUpdateBySc(obj,scTrue,earth,gsTrue,constant,type) % (宇宙機による)EKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         [obj,gsTrue,eTrue] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,eTrue,scAtT,time,constant) % obj = scTrue
         observationUpdateByGs(obj,gsTrue,earth,constant) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新

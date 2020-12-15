@@ -42,11 +42,18 @@ function observationUpdateByGs(obj,gsTrue,earth,constant)
     for y_i = 1 %1番目は受信側の方位角の測角
         y(y_i) = mod(y(y_i) + pi, 2*pi) - pi;
     end
-    
-    
+    obj.y    = y;
+
     
     % Hを計算
     H = Spacecraft.delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,obj.mu);
+    
+    % 観測を一部無視する場合(1,2wayの測距を無視する)
+    y = y([1 2 3 4 5]);
+    H = H([1 2 3 4 5],:);
+    R = R([1 2 3 4 5],[1 2 3 4 5]);
+    
+    
     % Kを計算
     K = P_bar * H.'/(H*P_bar*H.' + R);
     % XとPを計算
@@ -54,6 +61,6 @@ function observationUpdateByGs(obj,gsTrue,earth,constant)
     P = (eye(7) - K * H)*P_bar;
     obj.X_dt = X;
     obj.P_dt = P;
-    obj.y    = y;
+
 
 end

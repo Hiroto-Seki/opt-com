@@ -63,11 +63,11 @@ function observationUpdateBySc(obj,scTrue,earth, gsTrue,constant,type)
     R(1,1) = scTrue.directionAccuracy_ur(ur_counter)^2;
     R(2,2) = R(1,1);    
 
-%     % 観測を一部無視する場合(2wayの測距を無視する)
-%     y = y(1:7);
-%     H = H(1:7,:);
-%     R = R(1:7,1:7);
-    
+    % 観測を一部無視する場合(1,2wayの測距を無視する)
+    y = y([1 2 3 4 5 6 7]);
+    H = H([1 2 3 4 5 6 7],:);
+    R = R([1 2 3 4 5 6 7],[1 2 3 4 5 6 7]);
+
     
     K = P_bar * H.'/(H*P_bar*H.' + R);
     x = K * y;
@@ -76,11 +76,12 @@ function observationUpdateBySc(obj,scTrue,earth, gsTrue,constant,type)
     P = (eye(7) - K * H)*P_bar;
     obj.X = X;
     obj.P = P;
-    if type == 1
-        obj.R1wSc = R;
-    else
-        obj.R2wSc = R;
-    end
+    obj.H = H;
+% %     if type == 1
+% %         obj.R1wSc = R;
+% %     else
+% %         obj.R2wSc = R;
+% %     end
     
     
 %     if ur_counter == 494

@@ -47,7 +47,7 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant)
  gsTrue_t_ut   = obj.t(i);
  gsTrue_direction_ut = [estAzm0;estElv0];
  
- for j = 1:(2 * gs.searchArea/gs.searchStep)^2
+ for j = 1:ceil((2 * gs.searchArea/gs.searchStep)^2)
      % 各時刻のAzmとElvを計算．(推定値真値ともに)
      estAzm = estAzm0 + dt * estAzmVel;
      estElv = estElv0 + dt * estElvVel;

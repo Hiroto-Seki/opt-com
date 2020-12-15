@@ -9,14 +9,13 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     constant.eathAxis      = 23.4/180*pi;     % inclination of the earth axis
     constant.earthF = 1/298.257223560; % https://topex.ucsd.edu/geodynamics/14gravity1_2.pdf
     constant.elementaryCharge = 1.602 * 1e-19;
-    % 地球・地上局・宇宙機のダイナミクスは無次元化する
     
     
     %% parameter related to time
     % simulation timeStep[s]
     time.simDt = 10;
     % number of time step
-    time.stepNum = 2160; 
+    time.stepNum = 4000; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.t0Ephemeris = 0;
@@ -27,11 +26,11 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     % 初期時計誤差
     error.clockSigma = 1e-1; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
     error.clock0     = error.clockSigma * randn;
-    error.randomClock        = 1e-8;         %ランダム時計誤差
+    error.randomClock        = 1e-7;         %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 1e4; %変更した 
+    error.scPosSigma = 1e3; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 1e-1; %変更した
+    error.scVelSigma = 5e-2; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
     % STTの精度
@@ -50,7 +49,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     % 探索範囲(rad)
     gs.searchArea     = (error.scPosSigma/(SSD.AU*10)) * 3 ; %10AUくらいを想定．3sigmaをカバーする
 %     gs.searchArea     = 2e-5; % デバッグ用
-    gs.searchStep     = 2e-6 ; %探索時の1stepあたりの間隔(rad)
+    gs.searchStep     = min(2e-6, ceil(gs.searchArea/20*1e8)*1e-8 ); %探索時の1stepあたりの間隔(rad)
     gs.searchTimeStep = 2e-2 ;  %適当．SOTAの資料にこれに相当するかは分からないが20msの記述あり
     % 探索1回にかかる時間
     time.obs = (2 * gs.searchArea/gs.searchStep)^2 * gs.searchTimeStep;
@@ -139,9 +138,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     scEstByScEkf.P_list(:,:,1) = scEstByScEkf.P;
     scEstByScEkf.R1wSc = [error.stt^2*eye(2),                                     zeros(2,6);         % 測角 (受信電力で書き換える)
                               zeros(3,2),    1e0*        error.accel^2*eye(3),zeros(3,3);         % 加速度計
-                              zeros(2,5),              gs.searchStep^2*eye(2),zeros(2,1);         % uplinkの送信方向
-                              zeros(1,7),                                          1e2];          %1wayの測距 おそらくどこかで桁落ち誤差が発生しているので精度を落としている
-    scEstByScEkf.R2wSc =  [scEstByScEkf.R1wSc, zeros(8,1); zeros(1,8), 1e4];% 2wayの測距  
+                              zeros(2,5),            (10* gs.searchStep)^2*eye(2),zeros(2,1);         % uplinkの送信方向
+                              zeros(1,7),            (1e0*error.randomClock * constant.lightSpeed)^2];          %1wayの測距 おそらくどこかで桁落ち誤差が発生しているので精度を落としている
+    scEstByScEkf.R2wSc = [scEstByScEkf.R1wSc, zeros(8,1); zeros(1,8),  (1e4 * error.randomClock * constant.lightSpeed)^2];% 2wayの測距  
                           
     scEstByGsEkf.X             = [0;sc.state0];
     scEstByGsEkf.P             = [error.clockSigma^2,                                               zeros(1,6);
@@ -151,8 +150,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     scEstByGsEkf.P_list(:,:,1) = scEstByGsEkf.P;
     scEstByGsEkf.R2wGs = [error.stt^2*eye(2),                                           zeros(2,5);         % 測角 (受信電力で書き換える)
                               zeros(3,2), 1e0* error.accel^2*eye(3),                          zeros(3,2);         % 加速度計 
-                              zeros(1,5),                       1e2,                                    0;
-                              zeros(1,6),                       1e2];         % 2wayの測距  
+                              zeros(1,5),     (1e0*error.randomClock * constant.lightSpeed)^2,                                    0;
+                              zeros(1,6),     (1e0*error.randomClock * constant.lightSpeed)^2];         % 2wayの測距  
 
                   
    % 送受信した回数の初期化
@@ -165,10 +164,5 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
    time.lastSearch = 0;
    time.sc2wayget  = time.list(length(time.list)) + time.simDt * 2;  %大きい値で初期化しておく
    
-%    %% デバッグ用に一部書き換え
-%    scTrue.state = [8.234450995452379e+08; 1.087241104933902e+09; -5.172612235061670e+07; -8.638481441182830; 5.523078074494835; -0.053722923668463];
-%    error.clock0 = -0.32450688259562;
-    %% gs.searchAreaを書き換えた
-%    % 観測値を書き換えた@calcObservation_sc
    
 end

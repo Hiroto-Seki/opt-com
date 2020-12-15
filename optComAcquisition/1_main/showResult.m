@@ -1,14 +1,17 @@
-function showResult(scTrue,scEstByScEkf,scEstByGsEkf)
+function showResult(scTrue,scEstByScEkf,scEstByGsEkf,error)
 
 % 各要素ごとに出力
 figure(1)
 hold on
 title("clock error")
-semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60, abs(scEstByScEkf.clockError))
-semilogy((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, abs(scEstByGsEkf.clockError))
+semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60, scEstByScEkf.clockError)
+semilogy((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, scEstByGsEkf.clockError)
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60, 1 * reshape(scEstByScEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5 )
 semilogy((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, 1 * reshape(scEstByGsEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5 )
-ylim([0,1e-2])
+semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60, - 1 * reshape(scEstByScEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5 )
+semilogy((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, - 1 * reshape(scEstByGsEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5 )
+ylim(1e-2*[-1,1])
+xlabel('time[h]')
 legend('estimated by sc', 'estimated by gs', '1\sigma', '1\sigma')
 
 figure(2)
@@ -27,7 +30,9 @@ plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -1 * reshape(scEstByGsEkf.P_list(
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  3 * reshape(scEstByGsEkf.P_list(2,2,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -3 * reshape(scEstByGsEkf.P_list(2,2,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 legend('error estimated by sc', 'error estimated by gs')
-ylim([-1e4, 1e4])
+ylim(error.scPosSigma*[-1, 1])
+xlabel('time[h]')
+ylabel('position error [km]')
 nexttile
 hold on
 title("position Y error")
@@ -42,7 +47,9 @@ plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -1 * reshape(scEstByGsEkf.P_list(
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  3 * reshape(scEstByGsEkf.P_list(3,3,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -3 * reshape(scEstByGsEkf.P_list(3,3,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 % legend('error estimated by sc', 'error estimated by gs')
-ylim([-1e4, 1e4])
+ylim(error.scPosSigma*[-1, 1])
+xlabel('time[h]')
+ylabel('position error [km]')
 nexttile
 hold on
 title("position Z error")
@@ -57,7 +64,9 @@ plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -1 * reshape(scEstByGsEkf.P_list(
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  3 * reshape(scEstByGsEkf.P_list(4,4,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -3 * reshape(scEstByGsEkf.P_list(4,4,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 % legend('error estimated by sc', 'error estimated by gs')
-ylim([-1e4, 1e4])
+ylim(error.scPosSigma*[-1, 1])
+xlabel('time[h]')
+ylabel('position error [km]')
 nexttile
 hold on
 title("position error")
@@ -72,7 +81,9 @@ plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -1 * (reshape(scEstByGsEkf.P_list
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  3 * (reshape(scEstByGsEkf.P_list(2,2,:), 1, length(scEstByScEkf.t)) + reshape(scEstByGsEkf.P_list(3,3,:), 1, length(scEstByScEkf.t))+ reshape(scEstByGsEkf.P_list(4,4,:), 1, length(scEstByScEkf.t))).^0.5, ':g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -3 * (reshape(scEstByGsEkf.P_list(2,2,:), 1, length(scEstByScEkf.t)) + reshape(scEstByGsEkf.P_list(3,3,:), 1, length(scEstByScEkf.t))+ reshape(scEstByGsEkf.P_list(4,4,:), 1, length(scEstByScEkf.t))).^0.5, ':g')
 % legend('error estimated by sc', 'error estimated by gs')
-ylim([-1e4, 1e4])
+ylim(error.scPosSigma*[-1, 1])
+xlabel('time[h]')
+ylabel('position error [km]')
 
 
 
@@ -93,7 +104,9 @@ plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -1 * reshape(scEstByGsEkf.P_list(
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  3 * reshape(scEstByGsEkf.P_list(5,5,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -3 * reshape(scEstByGsEkf.P_list(5,5,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 legend('error estimated by sc', 'error estimated by gs')
-ylim([-1e-1, 1e-1])
+ylim(error.scVelSigma* [-1, 1])
+xlabel('time[h]')
+ylabel('velocity error [km/s]')
 nexttile
 hold on
 title("velocity Y error")
@@ -108,7 +121,9 @@ plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -1 * reshape(scEstByGsEkf.P_list(
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  3 * reshape(scEstByGsEkf.P_list(6,6,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -3 * reshape(scEstByGsEkf.P_list(6,6,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 % legend('error estimated by sc', 'error estimated by gs')
-ylim([-1e-1, 1e-1])
+ylim(error.scVelSigma* [-1, 1])
+xlabel('time[h]')
+ylabel('velocity error [km/s]')
 nexttile
 hold on
 title("velocity Z error")
@@ -122,7 +137,9 @@ plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  1 * reshape(scEstByGsEkf.P_list(
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -1 * reshape(scEstByGsEkf.P_list(7,7,:), 1, length(scEstByScEkf.t)).^0.5, '--g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  3 * reshape(scEstByGsEkf.P_list(7,7,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -3 * reshape(scEstByGsEkf.P_list(7,7,:), 1, length(scEstByScEkf.t)).^0.5, ':g')
-ylim([-1e-1, 1e-1])
+ylim(error.scVelSigma* [-1, 1])
+xlabel('time[h]')
+ylabel('velocity error [km/s]')
 nexttile
 hold on
 title("velocity error")
@@ -136,7 +153,9 @@ plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  1 * (reshape(scEstByGsEkf.P_list
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -1 * (reshape(scEstByGsEkf.P_list(5,5,:), 1, length(scEstByScEkf.t)) + reshape(scEstByGsEkf.P_list(6,6,:), 1, length(scEstByScEkf.t))+ reshape(scEstByGsEkf.P_list(7,7,:), 1, length(scEstByScEkf.t))).^0.5, '--g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60,  3 * (reshape(scEstByGsEkf.P_list(5,5,:), 1, length(scEstByScEkf.t)) + reshape(scEstByGsEkf.P_list(6,6,:), 1, length(scEstByScEkf.t))+ reshape(scEstByGsEkf.P_list(7,7,:), 1, length(scEstByScEkf.t))).^0.5, ':g')
 plot((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, -3 * (reshape(scEstByGsEkf.P_list(5,5,:), 1, length(scEstByScEkf.t)) + reshape(scEstByGsEkf.P_list(6,6,:), 1, length(scEstByScEkf.t))+ reshape(scEstByGsEkf.P_list(7,7,:), 1, length(scEstByScEkf.t))).^0.5, ':g')
-ylim([-1e-1, 1e-1])
+ylim(error.scVelSigma* [-1, 1])
+xlabel('time[h]')
+ylabel('velocity error [km/s]')
 
 
 
