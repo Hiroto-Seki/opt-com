@@ -11,25 +11,28 @@
 % opn_t : 
 % opn_state      : 
 
-function [opn_t,opn_state,lightTime] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
+function [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
      % 伝搬遅延誤差許容値
-     relTimeDelayError = 1e-15;
-     timeDelayErrorTemp = 10;
+     tol = 1e-13;
+     corr = 1;
+     % イタレーション回数
+     iter = 0;
+     iterMax = 10;
      % 伝搬遅延の計算 
-     timeDelayTemp = 1000; %初期化.
-     while timeDelayErrorTemp > relTimeDelayError
+     dtlt_length = 0; %初期化.
+     while (corr > tol) && (iter < iterMax)
          % 伝搬時間後の状態量を求める 
-         xvsc = spacecraft.calcStateAtT_sc(t + timeDelayTemp,time);
+%          xvsc = spacecraft.calcStateAtT_sc(t + dtlt_length/constant.lightSpeed,time);
+         % 試しにinterpで計算してみる
+         xvsc = interp1(spacecraft.t, spacecraft.state.', t + dtlt_length/constant.lightSpeed, 'spline','extrap').';
          % RLT項を含まない伝搬遅延
-         timeDelayNew = 1/constant.lightSpeed * ...
-         ((eAtT(1) + gsAtT(1) - xvsc(1))^2 + ...
-          (eAtT(2) + gsAtT(2) - xvsc(2))^2 +....
-          (eAtT(3) + gsAtT(3) - xvsc(3))^2)^0.5;
-         timeDelayErrorTemp = abs(timeDelayNew - timeDelayTemp);
-         timeDelayTemp = timeDelayNew; 
+         dtlt_length_New = norm(eAtT(1:3) + gsAtT(1:3) - xvsc(1:3) );
+         corr = abs(dtlt_length_New - dtlt_length);
+         dtlt_length = dtlt_length_New; 
+         iter = iter + 1;
      end
-     opn_t    = t + timeDelayTemp;
-     opn_state = xvsc;
-     lightTime = timeDelayTemp;
-
+     opn_t    = t + dtlt_length/constant.lightSpeed;
+     opn_state = interp1(spacecraft.t, spacecraft.state.', opn_t, 'spline','extrap').';
+%      opn_state = spacecraft.calcStateAtT_sc(opn_t,time);
+     dtlt = dtlt_length/constant.lightSpeed;
 end

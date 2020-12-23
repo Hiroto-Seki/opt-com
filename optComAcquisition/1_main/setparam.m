@@ -3,7 +3,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     constant.sunMu         = SSD.GM(10);      % km^3/s^2 gravity constant of the sun
     constant.earthMu       = SSD.GM(399);     % km^3/s^2 gravity constant of the 
     constant.saturnMu      = SSD.GM(799);     %[km/s^2]
-    constant.lightSpeed    = 299792.458 ;     % [km/s] light speed 
+    constant.lightSpeed    = 299792.458;     % [km/s] light speed 
     constant.earthRadius   = SSD.r(399);      % [km] earth radius
     constant.earthRotation = 2*pi/24/60/60;   % [rad/s] earth rotation speed
     constant.eathAxis      = 23.4/180*pi;     % inclination of the earth axis
@@ -15,7 +15,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     % simulation timeStep[s]
     time.simDt = 10;
     % number of time step
-    time.stepNum = 4000; 
+    time.stepNum = 2400 *3; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.t0Ephemeris = 0;
@@ -26,11 +26,11 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     % 初期時計誤差
     error.clockSigma = 1e-1; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
     error.clock0     = error.clockSigma * randn;
-    error.randomClock        = 1e-7;         %ランダム時計誤差. 帯域幅に相当
+    error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 1e3; %変更した 
+    error.scPosSigma = 1e5; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 5e-2; %変更した
+    error.scVelSigma = 5e-1; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
     % STTの精度
@@ -53,6 +53,10 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     gs.searchTimeStep = 2e-2 ;  %適当．SOTAの資料にこれに相当するかは分からないが20msの記述あり
     % 探索1回にかかる時間
     time.obs = (2 * gs.searchArea/gs.searchStep)^2 * gs.searchTimeStep;
+    
+%     % 上書き(デバッグ用)
+%     time.obs = 1;
+    
     % 探索1回にかかる時間がシミュレーションの何stepに相当するか
     time.obsStep = ceil(time.obs/time.simDt);
     % 地上局のレーザーに関するパラメータ
@@ -138,9 +142,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEk
     scEstByScEkf.P_list(:,:,1) = scEstByScEkf.P;
     scEstByScEkf.R1wSc = [error.stt^2*eye(2),                                     zeros(2,6);         % 測角 (受信電力で書き換える)
                               zeros(3,2),    1e0*        error.accel^2*eye(3),zeros(3,3);         % 加速度計
-                              zeros(2,5),            (10* gs.searchStep)^2*eye(2),zeros(2,1);         % uplinkの送信方向
+                              zeros(2,5),            (1e0* gs.searchStep)^2*eye(2),zeros(2,1);         % uplinkの送信方向
                               zeros(1,7),            (1e0*error.randomClock * constant.lightSpeed)^2];          %1wayの測距 おそらくどこかで桁落ち誤差が発生しているので精度を落としている
-    scEstByScEkf.R2wSc = [scEstByScEkf.R1wSc, zeros(8,1); zeros(1,8),  (1e4 * error.randomClock * constant.lightSpeed)^2];% 2wayの測距  
+    scEstByScEkf.R2wSc = [scEstByScEkf.R1wSc, zeros(8,1); zeros(1,8),  max((1e0 * error.randomClock * constant.lightSpeed)^2, 1e3^2)];% 2wayの測距  
                           
     scEstByGsEkf.X             = [0;sc.state0];
     scEstByGsEkf.P             = [error.clockSigma^2,                                               zeros(1,6);

@@ -9,9 +9,13 @@ function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,mu)
 
     %% 頻繁に出てくるもの
     % 距離(uplink)
-    Lu = ((xvet(1) + xvgt(1) - xvsr(1))^2 + (xvet(2) + xvgt(2) - xvsr(2))^2 +(xvet(3) + xvgt(3) - xvsr(3))^2)^0.5;
+    dru = (xvsr(1:3) - xvet(1:3) - xvgt(1:3));
+    Lu  = norm(dru);
+%     Lu = ((xvet(1) + xvgt(1) - xvsr(1))^2 + (xvet(2) + xvgt(2) - xvsr(2))^2 +(xvet(3) + xvgt(3) - xvsr(3))^2)^0.5;
     % 距離(downlink)
-    Ld = ((xver(1) + xvgr(1) - xst(1))^2 + (xver(2) + xvgr(2) - xst(2))^2 +(xver(3) + xvgr(3) - xst(3))^2)^0.5;
+    drd = (xst(1:3) - xver(1:3) - xvgr(1:3));
+    Ld  = norm(drd);
+%     Ld = ((xver(1) + xvgr(1) - xst(1))^2 + (xver(2) + xvgr(2) - xst(2))^2 +(xver(3) + xvgr(3) - xst(3))^2)^0.5;
     
     % 太陽からの距離
     R = (xvsr(1)^2 + xvsr(2)^2 + xvsr(3)^2)^0.5;

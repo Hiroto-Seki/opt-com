@@ -8,9 +8,10 @@ function H = delGdelX1w_ur(X_star,xve,xvg,constant,mu)
 
     %% 頻繁に出てくるもの
     % 距離
-    L = ((xve(1) + xvg(1) - xvs(1))^2 + (xve(2) + xvg(2) - xvs(2))^2 +(xve(3) + xvg(3) - xvs(3))^2)^0.5;
+    dr = xvs(1:3) - xve(1:3) - xvg(1:3);
+    L = norm(dr);
     % 太陽からの距離
-    R = (xvs(1)^2 + xvs(2)^2 + xvs(3)^2)^0.5;
+    R = norm(xvs(1:3));
     % uplinkを受信する方向 (Direction uplink receive)
     DurX = xve(1) + xvg(1) - xvs(1) + xvs(4) * L/c;
     DurY = xve(2) + xvg(2) - xvs(2) + xvs(5) * L/c;
@@ -23,12 +24,8 @@ function H = delGdelX1w_ur(X_star,xve,xvg,constant,mu)
 %% 頻繁に出てくるものの状態量微分
     % Lの微分
     delL(1) = 0;
-    delL(2) = (xvs(1) - xve(1) - xvg(1))/L;
-    delL(3) = (xvs(2) - xve(2) - xvg(2))/L;
-    delL(4) = (xvs(3) - xve(3) - xvg(3))/L;
-    delL(5) = 0;
-    delL(6) = 0;
-    delL(7) = 0;
+    delL(2:4) = dr.'/L;
+    delL(5:7) = 0;
     % Rの微分
     delR(1) = 0;
     delR(2) = xvs(1)/R;

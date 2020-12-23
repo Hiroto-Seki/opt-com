@@ -54,6 +54,12 @@ classdef Spacecraft < handle
           P_list                 % 観測誤差共分散行列のリスト
           X_dt                   % scEstByGsEkfが使用するダウンリンクを送信した時刻の推定状態量
           P_dt                   % scEstByGsEkfが使用するダウンリンクを送信した時刻の誤差共分散行列
+          % ----------UKFに使うもの---------------------
+          x_sp                   % Xのsigma point
+          y_sp                   % シグマポイントに対応するY
+          x_sp_dt
+          
+          
     end
  
     methods 
@@ -68,8 +74,10 @@ classdef Spacecraft < handle
         [obj,gsTrue] = receiveUplink(obj,gsTrue,earth,constant,time) %uplinkを受信する．その時の観測量を求める
         obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type) %観測量の計算 obj = scTrue, type=1:1way, type=2:2way
         observationUpdateBySc(obj,scTrue,earth,gsTrue,constant,type) % (宇宙機による)EKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
+        observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf) % (宇宙機による)UKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         [obj,gsTrue,eTrue] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,eTrue,scAtT,time,constant) % obj = scTrue
         observationUpdateByGs(obj,gsTrue,earth,constant) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新
+        observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf) %% (地上局による)UKFでの観測を用いて推定値と誤差共分散を更新
         
         
     end
@@ -81,10 +89,12 @@ classdef Spacecraft < handle
         Y_star = calcG2w_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,mu)
         Y_star = calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,mu) % 推定値の時の観測量を計算(2way, 地上局による推定)
         [X, P] = timeUpdate(X, P, mu, Dt, dt)
+        [X_new, P_new, x_sp_new] = calcTimeUpdateUkf(x_sp,mu, ukf,Dt,dt, error) % UKFに使う．シグマ点列と誤差共分散を時間更新
         H = delGdelX1w_ur(X_star,xve,xvg,constant,mu)   % 観測方程式の微分(1way, 宇宙機による推定)
         H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,mu)
         H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,mu);  % 観測方程式の微分(2way, 地上局による推定)
         [opn_t,opn_stateE,opn_stateGs] = calcTarget(t,gs,e,scAtT,time,constant) % ダウンリンクが届く時刻とその時刻の地球,地上局の位置を求める
+        X_sp = calcSigmaPoint(X,P,ukf) % シグマ点列の計算
 %           xvAtT = calcStateAtT_sc(spacecraft,t,time)
 %         [scTrue,gsTrue] = calcObservedValue(scTrue,gsTrue,eTrue,i,constant,time,gs,sc,error)  %one wayでの誤差ありの観測量を計算する
 %         [scTrue,gsTrue] = calcObservedValue2way(scTrue,gsTrue,eTrue,i,constant,time,gs,sc,error,scTrans,gsReceiveNum); % 2wayの観測    

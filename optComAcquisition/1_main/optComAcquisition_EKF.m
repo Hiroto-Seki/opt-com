@@ -13,7 +13,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(4)
+rng(2)
 
 %% 1.setting parameter and initial state
 [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf] = setparam(SSD);
@@ -65,6 +65,7 @@ for i = 1:length(time.list)-1
         else
             % 観測は2way
             time.obsScType = 2;
+%             time.obsScType = 1;
         end
         % 観測までは推定値と共分散を時間伝搬
         [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdate(scEstByScEkf.X, scEstByScEkf.P, scEstByScEkf.mu, time.scDt1,time.simDt);
@@ -97,20 +98,24 @@ for i = 1:length(time.list)-1
         % 送信時刻の状態量を推定する．まず，送信時刻のアプリオリな状態量を得る
         if gsTrue.dr_counter == 1 % 初めての観測の時. 実際に送信した時刻は推定値からクロックのオフセットの分だけずれている
             % 探査機からのdownlinkがどの時刻のものと推定されているか
-            time.scEst1stDl = scTrue.t_dt(1) - error.clock0;
-            % time.scEst1stDlでの地上局が推定している宇宙機の状態量と誤差共分散行列を求める
-            time.gsDt1 = time.scEst1stDl - time.list(i);
+% %             time.scDtEstByGs = scTrue.t_dt(1) - error.clock0;
+            time.scDtEstByGs = scTrue.t_dt(1) + scEstByGsEkf.clockError(i);
+            % time.scDtEstByGsでの地上局が推定している宇宙機の状態量と誤差共分散行列を求める
+            time.gsDt1 = time.scDtEstByGs - time.list(i);
             [scEstByGsEkf.X_dt, scEstByGsEkf.P_dt] = Spacecraft.timeUpdate(scEstByGsEkf.X, scEstByGsEkf.P, scEstByGsEkf.mu, time.gsDt1, time.simDt);        
-        else %前の観測があった時刻から推定値を更新する %更新の間隔には，クロックのオフセットは乗らない
-            time.gsDt1 = scTrue.t_dt(gsTrue.dr_counter) - scTrue.t_dt(gsTrue.dr_counter-1);
+        else %前の観測があった時刻から推定値を更新する %更新の間隔には，クロックのオフセットは乗らない         
+            time.scDtEstByGsNew = scTrue.t_dt(gsTrue.dr_counter) + scEstByGsEkf.clockError(i);
+            time.gsDt1 = time.scDtEstByGsNew - time.scDtEstByGs;
+            time.scDtEstByGs = time.scDtEstByGsNew;
+% %             time.gsDt1 = scTrue.t_dt(gsTrue.dr_counter) - scTrue.t_dt(gsTrue.dr_counter-1);
             [scEstByGsEkf.X_dt, scEstByGsEkf.P_dt] = Spacecraft.timeUpdate(scEstByGsEkf.X_dt, scEstByGsEkf.P_dt, scEstByGsEkf.mu, time.gsDt1, time.simDt);             
         end
         % 観測量の計算
         gsTrue.calcObservation_gs(scTrue,earth,constant,gs,sc,error);
         % EKFで観測量から推定量を計算する
         scEstByGsEkf.observationUpdateByGs(gsTrue,earth,constant);
-        % 時刻time.list(i+1)での推定値と誤差共分散を求める(結果に使う, clockのオフセットの残差がのる)
-        time.gsDt2 = time.list(i+1) - (scTrue.t_dt(gsTrue.dr_counter) - (error.clock0 - scEstByGsEkf.X_dt(1))) ;
+        % 時刻time.list(i+1)での推定値と誤差共分散を求める(結果に使う)
+        time.gsDt2 = time.list(i+1) - time.scDtEstByGs;
         [scEstByGsEkf.X, scEstByGsEkf.P] = Spacecraft.timeUpdate(scEstByGsEkf.X_dt, scEstByGsEkf.P_dt, scEstByGsEkf.mu, time.gsDt2, time.simDt);
     end
     % 推定値を記録していく

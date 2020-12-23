@@ -53,7 +53,7 @@ classdef GroundStation < handle
         obj = calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error) % 観測量の計算
     end
     methods(Static)
-        [opn_t,opn_state,lightTime] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
+        [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
 
         xv = earthRotation(pos0, t, constant) % t秒後の状態量の計算
     end 

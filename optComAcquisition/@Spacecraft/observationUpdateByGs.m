@@ -48,10 +48,10 @@ function observationUpdateByGs(obj,gsTrue,earth,constant)
     % Hを計算
     H = Spacecraft.delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,obj.mu);
     
-    % 観測を一部無視する場合(1,2wayの測距を無視する)
-    y = y([1 2 3 4 5]);
-    H = H([1 2 3 4 5],:);
-    R = R([1 2 3 4 5],[1 2 3 4 5]);
+%     % 観測を一部無視する場合(1,2wayの測距を無視する)
+%     y = y([1 2 3 4 5]);
+%     H = H([1 2 3 4 5],:);
+%     R = R([1 2 3 4 5],[1 2 3 4 5]);
     
     
     % Kを計算
