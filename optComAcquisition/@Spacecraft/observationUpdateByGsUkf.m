@@ -22,7 +22,7 @@ function observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf)
     y_sp = zeros(length(Y),size(x_sp,2));
     for i = 1:size(x_sp,2)
         x_spi = x_sp(:,i);
-        y_sp(:,i) = Spacecraft.calcG_dr(x_spi,xv_ut,xv_dr,dtAtSc,constant,obj.mu);
+        y_sp(:,i) = Spacecraft.calcG_dr(x_spi,xv_ut,xv_dr,dtAtSc,constant);
         if i == 1
             y_mean = ukf.w0_m * y_sp(:,i);
         else
@@ -58,19 +58,26 @@ function observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf)
    for k = length(v):-1:1
         if ukf.sigmaN < abs(v(k))/sqrt(Pvv(k,k))
             % 観測を棄却する
+%             v(k) = 0;
             v(k) = [];
             Pvv(k,:) = [];
             Pvv(:,k) = [];
             Pxy(:,k) = [];
         end
-    end
-    %% カルマンゲインの計算
-    K = Pxy /Pvv;
+   end
     
-    %% 状態ベクトルと共分散行列の観測更新
-    obj.X_dt = x_mean + K * v;
-    obj.P_dt = obj.P_dt - K *Pxy.';
-    
+   % 有効な観測がない時は例外処理
+   if isempty(v)
+       obj.X_dt = x_mean;
+       obj.P_dt = obj.P_dt;
+   else
+       %% カルマンゲインの計算
+       K = Pxy /Pvv;
+       %% 状態ベクトルと共分散行列の観測更新
+       obj.X_dt = x_mean + K * v;
+       obj.P_dt = obj.P_dt - K *Pxy.';
+   end   
+       
     % デバッグ用に記録
     obj.y = v;  
 

@@ -5,7 +5,7 @@
 % xvg: uplinkを送信した時刻の地上局
 
 
-function Y_star = calcG1w_ur(X_star,xve,xvg,constant,mu)
+function Y_star = calcG1w_ur(X_star,xve,xvg,constant)
 deltaT = X_star(1);
 xvs    = X_star(2:7);
 %% 測角(受信)
@@ -14,7 +14,7 @@ direction_ur = xve(1:3) + xvg(1:3) - xvs(1:3)...
 azm_ur = atan2(direction_ur(2), direction_ur(1));
 elv_ur = atan(direction_ur(3)/(direction_ur(1)^2 +direction_ur(2)^2)^0.5);
 %% 加速度
-velAccel = CelestialBody.twobody(xvs,mu,0);
+velAccel = CelestialBody.twobody(xvs,constant.sunMu,0);
 accel    = velAccel(4:6);
 %% 測角(送信)
 direction_ut = xvs(1:3) - xve(1:3) - xvg(1:3);

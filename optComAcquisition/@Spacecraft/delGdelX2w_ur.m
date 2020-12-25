@@ -1,7 +1,7 @@
 % 探査機が推定するEKFのための観測式の微分を求める
 
 
-function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,mu)
+function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant)
     deltaT = X_star(1);
     xvsr    = X_star(2:7);
     xst     = X_star(2:4) - dt2w* X_star(5:7);
@@ -103,7 +103,7 @@ function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,mu)
     delElv_ur = ( (DurX^2 + DurY^2)*delDurZ - (DurX * delDurX + DurY * delDurY)*DurZ )...
                 /( (DurX^2 + DurY^2 + DurZ^2) * (DurX^2 + DurY^2)^0.5 ) ;
     % 加速度
-    delAccel  = -mu * ( delRsc * R^-3 - 3 * Rsc * R^-4 * delR);
+    delAccel  = -constant.sunMu * ( delRsc * R^-3 - 3 * Rsc * R^-4 * delR);
     % 送信方向
     delAzm_ut = (delDutY * DutX - delDutX * DutY)/(DutX^2 + DutY^2);
     delElv_ut = ( (DutX^2 + DutY^2)*delDutZ - (DutX * delDutX + DutY * delDutY)*DutZ )...

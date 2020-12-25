@@ -6,7 +6,7 @@ classdef CelestialBody < handle
         % 全てのオブジェクトに共通のプロパティ
           name               % 名前
           t                  % 基準時刻
-          mu                 % 中心天体
+%           mu                 % 中心天体
           state              % 基準時刻に対応する状態量
         % earthのみにあるプロパティ(送受信に関するパラメーター)
           t_ut       
@@ -15,13 +15,13 @@ classdef CelestialBody < handle
           state_dr
     end
     methods 
-        function obj = CelestialBody(time,mu,Name) %コンストラクタ 
+        function obj = CelestialBody(time,Name) %コンストラクタ 
             obj.t     = time.list;
-            obj.mu = mu;
+%             obj.mu = mu;
             obj.name = Name;
         end  
         getEphem(obj,time)  % 真値の場合はエフェメリスから状態量を取得する
-        xvAtT = calcStateAtT_cb(obj,t,time) 
+        xvAtT = calcStateAtT_cb(obj,t,time,constant) 
     end
     methods(Static)
         xv = twobody(xv, mu, a_pertubation) % 運動方程式. 宇宙機も，同じダイナミクスに従う

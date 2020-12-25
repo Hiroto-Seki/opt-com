@@ -10,13 +10,14 @@
 %  gsTrue.direction_ut        %光照射方向
 %  
 
-function [obj,earth] = search(obj,i,earth,gs,time,constant) 
+function [obj,earth] = search(obj,i,earth,gs,time,constant,error) 
  % 探索方向は，慣性空間での角度．自身の速度は補正していない値．(実際に観測される値ではないが，地上局ならこれくらいできそう)
  % 推定値の方向の初期値(中心となる)
  relXvEst = obj.opnEstTempState_ut - earth.state(:,i) - obj.state(:,i); 
  relXvTrue = obj.opnTrueTempState_ut - earth.state(:,i) - obj.state(:,i);
  estAzm0 = atan2(relXvEst(2),relXvEst(1) );
  estElv0 = atan(relXvEst(3) /(relXvEst(1)^2 + relXvEst(2)^2)^0.5 );
+
  % 真値の方向の初期値
  trueAzm0  = atan2(relXvTrue(2),relXvTrue(1) );
  trueElv0 = atan(relXvTrue(3) /(relXvTrue(1)^2 + relXvTrue(2)^2)^0.5 );
@@ -51,8 +52,8 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant)
      % 各時刻のAzmとElvを計算．(推定値真値ともに)
      estAzm = estAzm0 + dt * estAzmVel;
      estElv = estElv0 + dt * estElvVel;
-     pointAzm = estAzm + i_azm * gs.searchStep;
-     pointElv = estElv + i_elv * gs.searchStep;
+     pointAzm = estAzm + i_azm * gs.searchStep + randn * error.gsPoint;
+     pointElv = estElv + i_elv * gs.searchStep + randn * error.gsPoint;
      trueAzm = trueAzm0 + dt * trueAzmVel;
      trueElv = trueElv0 + dt * trueElvVel;
      % plot用に格納
@@ -105,7 +106,7 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant)
  obj.t_ut(obj.ut_counter) = gsTrue_t_ut;
  obj.direction_ut(:,obj.ut_counter) = gsTrue_direction_ut;
   % 送信時刻の地上局の位置速度，地球の位置,速度を求める.
- earth.state_ut(:,obj.ut_counter)  = earth.calcStateAtT_cb(obj.t_ut(obj.ut_counter),time);
+ earth.state_ut(:,obj.ut_counter)  = earth.calcStateAtT_cb(obj.t_ut(obj.ut_counter),time,constant);
  obj.state_ut(:,obj.ut_counter) = obj.calcStateAtT_gs(obj.t_ut(obj.ut_counter),time,constant);
  
 

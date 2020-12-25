@@ -88,7 +88,7 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
 
          
     %% 加速度
-    velAccel = CelestialBody.twobody(obj.state_ur(:,obj.ur_counter),obj.mu,0);
+    velAccel = CelestialBody.twobody(obj.state_ur(:,obj.ur_counter),constant.sunMu,0);
     obj.accelTrue_ur(:,obj.ur_counter) = velAccel(4:6);
     obj.accelObseved_ur(:,obj.ur_counter) = (Spacecraft.rotation(rollEst,pitchEst,yawEst,1)) * ( (Spacecraft.rotation(rollTrue,pitchTrue,yawTrue,1))\obj.accelTrue_ur(:,obj.ur_counter)) + randn(3,1) *  error.accel;
     

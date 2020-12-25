@@ -4,7 +4,7 @@ function [obj,gsTrue] = receiveUplink(obj,gsTrue,earth,constant,time)
     %% gsTrue.ut_counter番目のuplinkを宇宙機が受信する時刻と状態量を求める
     ut_counter = gsTrue.ut_counter;
     [obj.t_ur(ut_counter),obj.state_ur(:,ut_counter),dtlt] ...
-        = GroundStation.calcTarget(gsTrue.t_ut(ut_counter),gsTrue.state_ut(:,ut_counter),earth.state_ut(:,ut_counter),obj,time,constant); 
+        = GroundStation.calcTarget(gsTrue.t_ut(ut_counter),gsTrue.state_ut(:,ut_counter),earth.state_ut(:,ut_counter),[],obj,time,constant,"true value"); 
 %     % 確認する
 %     distance_t = (obj.t_ur(ut_counter) - gsTrue.t_ut(ut_counter))*constant.lightSpeed;
 %     distance_r = norm(gsTrue.state_ut(1:3,ut_counter) + earth.state_ut(1:3,ut_counter) - obj.state_ur(1:3,ut_counter));

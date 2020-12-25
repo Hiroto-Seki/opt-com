@@ -7,7 +7,7 @@
 %     % 宇宙機が受信してから送信するまでの時間
 %     dtAtSc = gsTrue.durationAtSc(dr_counter);
 
-function Y_star = calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,mu)
+function Y_star = calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant)
 deltaT = X_star(1);
 xvs_dt    = X_star(2:7);
 % xs_ur(宇宙機がuplinkを受信する時の位置)
@@ -19,7 +19,7 @@ direction_dr = xvs_dt(1:3) - xv_dr(1:3)...
 azm_dr = atan2(direction_dr(2), direction_dr(1));
 elv_dr = atan(direction_dr(3)/(direction_dr(1)^2 +direction_dr(2)^2)^0.5);
 %% 加速度
-velAccel = CelestialBody.twobody(xvs_dt,mu,0);
+velAccel = CelestialBody.twobody(xvs_dt,constant.sunMu,0);
 accel    = velAccel(4:6);
 % 測距(1way)
 length1w = norm(xvs_dt(1:3) - xv_dr(1:3)) - deltaT * constant.lightSpeed;

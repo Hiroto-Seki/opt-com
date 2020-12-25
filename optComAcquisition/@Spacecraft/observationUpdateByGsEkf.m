@@ -11,7 +11,7 @@
 % X      : 更新した推定値
 % P      : 更新した誤差共分散行列
 
-function observationUpdateByGs(obj,gsTrue,earth,constant)
+function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
     % 何度目の観測か
     dr_counter = gsTrue.dr_counter;
     %% 必要な変数を取得
@@ -36,7 +36,7 @@ function observationUpdateByGs(obj,gsTrue,earth,constant)
          gsTrue.lengthObserved_dr(dr_counter);...
          gsTrue.length2wObserved_dr(dr_counter)];    % 測距(1way)
     %% Y_starを計算
-    Y_star = Spacecraft.calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,obj.mu);
+    Y_star = Spacecraft.calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);
     y = Y - Y_star; 
     % 角度の不連続性を解消
     for y_i = 1 %1番目は受信側の方位角の測角
@@ -46,19 +46,30 @@ function observationUpdateByGs(obj,gsTrue,earth,constant)
 
     
     % Hを計算
-    H = Spacecraft.delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,obj.mu);
+    H = Spacecraft.delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);
     
-%     % 観測を一部無視する場合(1,2wayの測距を無視する)
-%     y = y([1 2 3 4 5]);
-%     H = H([1 2 3 4 5],:);
-%     R = R([1 2 3 4 5],[1 2 3 4 5]);
+    % 観測残差及び残差検定
+    for k = length(y):-1:1
+        S = (H*P_bar*H.' + R);
+        if ekf.sigmaN < abs(y(k))/sqrt(S(k,k)) %3シグマに設定している
+            y(k) = [];
+            H(k,:) = [];
+            R(k,:) = [];
+            R(:,k) = [];
+        end  
+    end
     
-    
-    % Kを計算
-    K = P_bar * H.'/(H*P_bar*H.' + R);
-    % XとPを計算
-    X = X_star + K * y;
-    P = (eye(7) - K * H)*P_bar;
+   %% 有効な観測がない時は例外処理をする
+   if isempty(y)
+       X = X_star;
+       P = P_bar;
+   else
+       % Kを計算
+       K = P_bar * H.'/(H*P_bar*H.' + R);
+       % XとPを計算
+       X = X_star + K * y;
+       P = (eye(7) - K * H)*P_bar;
+   end
     obj.X_dt = X;
     obj.P_dt = P;
 

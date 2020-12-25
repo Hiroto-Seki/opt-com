@@ -1,14 +1,18 @@
-function Y_star = calcG2w_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,mu)
+function Y_star = calcG2w_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,time)
 deltaT = X_star(1);
 xvsr    = X_star(2:7);
-xst    = X_star(2:4) - dt2w * X_star(5:7);
+
+% ここを書き換える
+xvst   = Spacecraft.timeUpdate_sc(xvsr,constant.sunMu, -dt2w, time.simDt);
+xst = xvst(1:3);
+% xst    = X_star(2:4) - dt2w * X_star(5:7);
 %% 測角(受信)
 direction_ur = xvet(1:3) + xvgt(1:3) - xvsr(1:3)...
                 + norm(xvet(1:3) + xvgt(1:3) - xvsr(1:3)) * xvsr(4:6)/ constant.lightSpeed;
 azm_ur = atan2(direction_ur(2), direction_ur(1));
 elv_ur = atan(direction_ur(3)/(direction_ur(1)^2 +direction_ur(2)^2)^0.5);
 %% 加速度
-velAccel = CelestialBody.twobody(xvsr,mu,0);
+velAccel = CelestialBody.twobody(xvsr,constant.sunMu,0);
 accel    = velAccel(4:6);
 %% 測角(送信)
 direction_ut = xvsr(1:3) - xvet(1:3) - xvgt(1:3);

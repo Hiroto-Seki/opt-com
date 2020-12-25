@@ -1,6 +1,5 @@
 % 概要: time.list分の探査機の位置を伝搬して求めていく
-function calcOrbitTwoBody(obj,dynamicsError)
-    mu = obj.mu;
+function calcOrbitTwoBody(obj,sunMu,dynamicsError)
     % 初期値
     state0 = obj.state;
     %まずはobjを初期化
@@ -12,10 +11,10 @@ function calcOrbitTwoBody(obj,dynamicsError)
     for j = 2:length(obj.t)
         timestep = obj.t(j) - obj.t(j-1);
         a_pertubation = [dynamicsError * randn ; dynamicsError * randn; dynamicsError * randn];
-        k1 = CelestialBody.twobody(xv,mu,a_pertubation);
-        k2 = CelestialBody.twobody(xv+0.5*timestep*k1,mu,a_pertubation);
-        k3 = CelestialBody.twobody(xv+0.5*timestep*k2,mu,a_pertubation);
-        k4 = CelestialBody.twobody(xv+timestep*k3,mu,a_pertubation);
+        k1 = CelestialBody.twobody(xv,sunMu,a_pertubation);
+        k2 = CelestialBody.twobody(xv+0.5*timestep*k1,sunMu,a_pertubation);
+        k3 = CelestialBody.twobody(xv+0.5*timestep*k2,sunMu,a_pertubation);
+        k4 = CelestialBody.twobody(xv+timestep*k3,sunMu,a_pertubation);
         xv = xv + timestep/6*(k1+2*k2+2*k3+k4); 
         obj.state(:,j) = xv;
     end

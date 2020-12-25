@@ -1,6 +1,6 @@
 % 地上局が推定するEKFのための観測式の微分を求める
 
-function H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,mu)
+function H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant)
     deltaT = X_star(1);
     xvs    = X_star(2:7);
     c = constant.lightSpeed;
@@ -76,7 +76,7 @@ function H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant,mu)
     delElv_dr = (delD_drZ * (d_drX^2 + d_drY^2) - d_drZ * ( d_drX * delD_drX + d_drY * delD_drY  ))...
         / ((d_drX^2 + d_drY^2 + d_drZ^2) * (d_drX^2 + d_drY^2)^0.5 );
     % 加速度
-    delAccel  = - mu * ( delRsc * R^-3 - 3 *  R^-4 * Rsc  * delR);
+    delAccel  = - constant.sunMu * ( delRsc * R^-3 - 3 *  R^-4 * Rsc  * delR);
     % 1wayの測距(クロックのオフセットがのっている)
     delL1w    = [-c,0,0,0,0,0,0] + delLd;
     % 2wayの測距

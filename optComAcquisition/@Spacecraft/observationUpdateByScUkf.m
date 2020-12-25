@@ -1,5 +1,5 @@
 
-function observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf)
+function observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,time)
     % 何度目の観測か
     ur_counter = scTrue.ur_counter;
     ur2w_counter = scTrue.ur2w_counter;
@@ -37,10 +37,10 @@ function observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf)
         x_spi = x_sp(:,i);
         % 観測によって場合分け
         if type == 1
-            y_sp(:,i) = Spacecraft.calcG1w_ur(x_spi,xve_ut,xvg_ut,constant,obj.mu);
+            y_sp(:,i) = Spacecraft.calcG1w_ur(x_spi,xve_ut,xvg_ut,constant);
         else
             y_sp(:,i) = Spacecraft.calcG2w_ur(x_spi,xve_ut,xvg_ut,xve_dr,xvg_dr,...
-                                        dtAtGs, dt2w,constant,obj.mu);
+                                        dtAtGs, dt2w,constant,time);
         end
         if i == 1
             y_mean = ukf.w0_m * y_sp(:,i);
@@ -79,19 +79,26 @@ function observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf)
     for k = length(v):-1:1
         if ukf.sigmaN < abs(v(k))/sqrt(Pvv(k,k))
             % 観測を棄却する
+%             v(k) = 0;
             v(k) = [];
             Pvv(k,:) = [];
             Pvv(:,k) = [];
             Pxy(:,k) = [];
         end
     end
-    %% カルマンゲインの計算
-    K = Pxy /Pvv;
     
-    %% 状態ベクトルと共分散行列の観測更新
-    obj.X = x_mean + K * v;
-    obj.P = obj.P - K *Pxy.';
-    
+    %有効な観測がない時は例外処理
+   if isempty(v)
+       obj.X = x_mean;
+       obj.P = obj.P;
+   else
+        %% カルマンゲインの計算
+        K = Pxy /Pvv;
+
+        %% 状態ベクトルと共分散行列の観測更新
+        obj.X = x_mean + K * v;
+        obj.P = obj.P - K *Pxy.';
+   end      
     % デバッグ用に記録
     obj.y = v;
 

@@ -49,12 +49,13 @@ classdef GroundStation < handle
             end
         end
         xvAtT = calcStateAtT_gs(obj,t,time,constant) % 時刻tでの状態量を得る
-        [obj,earth] = search(obj,i,earth,gs,time,constant) 
+        [obj,earth] = search(obj,i,earth,gs,time,constant,error) 
         obj = calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error) % 観測量の計算
+        
     end
     methods(Static)
-        [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,spacecraft,time,constant)
-
+        [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,scAtT,spacecraft,time,constant,valueType)
         xv = earthRotation(pos0, t, constant) % t秒後の状態量の計算
+        [time,R1wSc,R2wSc] = setSearchArea(time,gs,SSD,scEstByGsSeqP,R1wSc,R2wSc,error) %1回の観測にかかる時間を求める
     end 
 end

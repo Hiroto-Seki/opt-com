@@ -1,15 +1,15 @@
 % ある時刻の地球など(CelestialBodyのオブジェクト)の状態量を計算する
-function  xvAtT = calcStateAtT_cb(obj,t,time)
+function  xvAtT = calcStateAtT_cb(obj,t,time,constant)
 % 最終時刻までのリスト内に収まっている時
 if t < obj.t(length(obj.t))
     closeTimeIndex = floor( (t - obj.t(1) )/ time.simDt ) + 1;
     closeTimeOffset = t - obj.t(closeTimeIndex);      % 一番近い時刻から伝搬しなければいけない時間
     % spacecraftについて伝搬時刻後(temp)時間後の状態量を得る
     xvsc = obj.state(:,closeTimeIndex);
-    k1sc = obj.twobody(xvsc,obj.mu,0);
-    k2sc = obj.twobody(xvsc+0.5*closeTimeOffset*k1sc,obj.mu,0);
-    k3sc = obj.twobody(xvsc+0.5*closeTimeOffset*k2sc,obj.mu,0);
-    k4sc = obj.twobody(xvsc+closeTimeOffset*k3sc,obj.mu,0);
+    k1sc = obj.twobody(xvsc,constant.sunMu,0);
+    k2sc = obj.twobody(xvsc+0.5*closeTimeOffset*k1sc,constant.sunMu,0);
+    k3sc = obj.twobody(xvsc+0.5*closeTimeOffset*k2sc,constant.sunMu,0);
+    k4sc = obj.twobody(xvsc+closeTimeOffset*k3sc,constant.sunMu,0);
     xvsc = xvsc + closeTimeOffset/6*(k1sc+2*k2sc+2*k3sc+k4sc); 
  % 最終時刻までのリストに収まっていない時
 else
@@ -23,10 +23,10 @@ else
         else
             timeStep = restTime;
         end
-        k1sc = obj.twobody(xvsc,obj.mu,0);
-        k2sc = obj.twobody(xvsc+0.5*timeStep*k1sc,obj.mu,0);
-        k3sc = obj.twobody(xvsc+0.5*timeStep*k2sc,obj.mu,0);
-        k4sc = obj.twobody(xvsc+timeStep*k3sc,obj.mu,0);
+        k1sc = obj.twobody(xvsc,constant.sunMu,0);
+        k2sc = obj.twobody(xvsc+0.5*timeStep*k1sc,constant.sunMu,0);
+        k3sc = obj.twobody(xvsc+0.5*timeStep*k2sc,constant.sunMu,0);
+        k4sc = obj.twobody(xvsc+timeStep*k3sc,constant.sunMu,0);
         xvsc = xvsc + timeStep/6*(k1sc+2*k2sc+2*k3sc+k4sc);
         restTime = restTime - time.simDt;
     end           

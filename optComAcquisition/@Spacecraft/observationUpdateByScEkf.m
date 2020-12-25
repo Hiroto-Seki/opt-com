@@ -11,7 +11,7 @@
 % X      : 更新した推定値
 % P      : 更新した誤差共分散行列
 
-function observationUpdateBySc(obj,scTrue,earth, gsTrue,constant,type)
+function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ekf)
     % 何度目の観測か
     ur_counter = scTrue.ur_counter;
     ur2w_counter = scTrue.ur2w_counter;
@@ -30,8 +30,8 @@ function observationUpdateBySc(obj,scTrue,earth, gsTrue,constant,type)
             scTrue.accelObseved_ur(:,ur_counter);...       % 加速度計
             scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
             scTrue.lengthObserved_ur(ur_counter)];         % 測距
-        Y_star = Spacecraft.calcG1w_ur(X_star,xve_ut,xvg_ut,constant,obj.mu);
-        H = Spacecraft.delGdelX1w_ur(X_star,xve_ut,xvg_ut,constant,obj.mu);
+        Y_star = Spacecraft.calcG1w_ur(X_star,xve_ut,xvg_ut,constant);
+        H = Spacecraft.delGdelX1w_ur(X_star,xve_ut,xvg_ut,constant);
         R = obj.R1wSc;
     else %2wayの観測
         Y = [scTrue.directionObserved_ur(:,ur_counter);... % 測角
@@ -47,11 +47,11 @@ function observationUpdateBySc(obj,scTrue,earth, gsTrue,constant,type)
         Y_star = Spacecraft.calcG2w_ur(X_star,xve_ut,xvg_ut,...
                                         xve_dr,xvg_dr,...
                                         dtAtGs, dt2w,...
-                                        constant,obj.mu);
+                                        constant,time);
         H = Spacecraft.delGdelX2w_ur(X_star,xve_ut,xvg_ut,...
                                         xve_dr,xvg_dr,...
                                         dt2w,...
-                                        constant,obj.mu);
+                                        constant);
         R = obj.R2wSc;
     end
     y = Y - Y_star;
@@ -63,29 +63,32 @@ function observationUpdateBySc(obj,scTrue,earth, gsTrue,constant,type)
     R(1,1) = scTrue.directionAccuracy_ur(ur_counter)^2;
     R(2,2) = R(1,1);    
 
-% %     % 観測を一部無視する場合(2wayの測距を無視する)
-    y = y([1 2 3 4 5 6 7 8]);
-    H = H([1 2 3 4 5 6 7 8],:);
-    R = R([1 2 3 4 5 6 7 8],[1 2 3 4 5 6 7 8]);
-
+    % 観測残差及び残差検定
+    for k = length(y):-1:1
+        S = (H*P_bar*H.' + R);
+        if ekf.sigmaN < abs(y(k))/sqrt(S(k,k))
+            y(k) = [];
+            H(k,:) = [];
+            R(k,:) = [];
+            R(:,k) = [];
+        end  
+    end
     
-    K = P_bar * H.'/(H*P_bar*H.' + R);
-    x = K * y;
-    % XとPを計算
-    X = X_star +x;
-    P = (eye(7) - K * H)*P_bar;
+    % 有効な観測がない時は例外処理
+   if isempty(y)
+       X = X_star;
+       P = P_bar;
+   else
+        K = P_bar * H.'/(H*P_bar*H.' + R);
+        x = K * y;
+        % XとPを計算
+        X = X_star +x;
+        P = (eye(7) - K * H)*P_bar;
+   end
+    
     obj.X = X;
     obj.P = P;
     obj.H = H;
-% %     if type == 1
-% %         obj.R1wSc = R;
-% %     else
-% %         obj.R2wSc = R;
-% %     end
-    
-    
-%     if ur_counter == 494
-%         disp("stop")
-%     end
+
 
 end
