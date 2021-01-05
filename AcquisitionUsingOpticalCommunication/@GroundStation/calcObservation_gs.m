@@ -43,17 +43,16 @@
     % 観測誤差の計算
     pointingError_dt = scTrue.pointingError_dt(dr_counter);
     % 指向誤差損失
-    Lp = calcPointingLoss(pointingError_dt,sc.gamma,sc.alpha,sc.aperture,sc.wavelength);
+    Lp = calcPointingLoss(pointingError_dt,sc.gamma,sc.alpha,sc.aperture,sc.wavelength_down);
     % 自由空間損失
-    Ls = (sc.wavelength/(4 * pi * (norm(gs2scD(1:3))  * 1e3)))^2;
+    Ls = (sc.wavelength_down/(4 * pi * (norm(gs2scD(1:3))  * 1e3)))^2;
     % 受信電力の計算
-    obj.receivedPower_dr(dr_counter) = sc.peakPower * sc.tAntGain * sc.tEff * Lp * Ls * sc.atmosphereEff *  gs.rAntGain * gs.rEff; 
+    obj.receivedPower_dr(dr_counter) = sc.slotPower * sc.tAntGain * sc.tEff * Lp * Ls * sc.atmosphereEff *  gs.rAntGain * gs.rEff; 
     qdIl = obj.receivedPower_dr(dr_counter) * gs.qdS; %入射光による電流
-    qdIn = (gs.qdIj^2 ...
-          + 2 * constant.elementaryCharge * gs.qdId * gs.qdBw ...
-          + 2 * constant.elementaryCharge * obj.receivedPower_dr(dr_counter) *gs.qdS * gs.qdBw )^0.5; %ノイズ由来の電流
+    Snr = (gs.qdGain * qdIl)^2 /...
+          (gs.qdGain^2 * 2 * constant.elementaryCharge * (qdIl + gs.qdId) * gs.qdBw * gs.qdF + gs.qdIj^2);
     % 観測誤差(地上局はQDの精度=慣性空間での測角精度とする)
-    obj.directionAccuracy_dr(dr_counter) = gs.qdFov * (qdIn/qdIl);
+    obj.directionAccuracy_dr(dr_counter) = gs.qdFov /Snr;
     obj.directionObserved_dr(:,dr_counter) = obj.directionTrue_dr(:,dr_counter) + randn(2,1) * obj.directionAccuracy_dr(dr_counter);
     
     % 加速度

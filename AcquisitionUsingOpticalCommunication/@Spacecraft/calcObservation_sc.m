@@ -29,30 +29,33 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
       directionTrueFLT =  (Spacecraft.rotation(rollTrue,pitchTrue,yawTrue,1))\directionTrueI; 
 %       directionTrueFLT_normalized =  (Spacecraft.rotation(rollTrue,pitchTrue,yawTrue,1))\directionTrueI_normalized; 
       % pointingLossの計算
-      Lp = calcPointingLoss(gsTrue.pointingError_ut(obj.ur_counter),gs.gamma,gs.alpha,gs.tAperture,gs.wavelength);
+      Lp = calcPointingLoss(gsTrue.pointingError_ut(obj.ur_counter),gs.gamma,gs.alpha,gs.tAperture,gs.wavelength_up);
       % 自由空間損失
-      Ls = (gs.wavelength/(4 * pi * (obj.lengthTrue_ur(obj.ur_counter)  * 1e3)))^2;
+      Ls = (gs.wavelength_up/(4 * pi * (obj.lengthTrue_ur(obj.ur_counter)  * 1e3)))^2;
       % 受信電力強度
-      obj.receivedPower_ur(obj.ur_counter) = gs.peakPower * gs.tAntGain * gs.tEff * Lp * Ls * gs.atmosphereEff *  sc.rAntGain * sc.rEff; 
+      obj.receivedPower_ur(obj.ur_counter) = gs.slotPower * gs.tAntGain * gs.tEff * Lp * Ls * gs.atmosphereEff *  sc.rAntGain * sc.rEff; 
       % QDセンサーの精度 
       qdIl = obj.receivedPower_ur(obj.ur_counter) * sc.qdS; %入射光による電流
-      qdIn = (sc.qdIj^2 ...
-          + 2 * constant.elementaryCharge * sc.qdId * sc.qdBw ...
-          + 2 * constant.elementaryCharge * obj.receivedPower_ur(obj.ur_counter) *sc.qdS * sc.qdBw )^0.5; %ノイズ由来の電流
+      Snr = (sc.qdGain * qdIl)^2 /...
+          (sc.qdGain^2 * 2 * constant.elementaryCharge * (qdIl + sc.qdId) * sc.qdBw * sc.qdF + sc.qdIj^2);
       % QDセンサーの値(x,y)を姿勢の真値から求める. 誤差を含む
       qdXY_noError = - sc.fL /(directionTrueFLT(3)*1e3) * (directionTrueFLT(1:2)*1e3); %単位がmであることに注意
       % もし，QDセンサー内に入らなかったら警告
       if norm(qdXY_noError) > sc.qdPhi
           disp("Uplink doesn't enter the FOV of QD")
       end 
+      % SN比が要求に満たなかった場合も警告
+      if sc.reqSnr_up > Snr
+          disp("Uplink of signal to noise ratio is too low")
+      end 
       % ノイズ電流に起因するスポット位置を受光スポット内にランダムに生成する
       qdRandom_R     = sqrt(rand * sc.qdPhi^2);
       qdRandom_theta = -pi + (2* pi) * rand;
       qdXY_Random    = qdRandom_R * [cos(qdRandom_theta);sin(qdRandom_theta)];
-      qdXY_observed  = (qdIl * qdXY_noError + qdIn * qdXY_Random)/( qdIl + qdIn ); %QDセンサーの誤差を含むQDセンサー上の観測値
+      qdXY_observed  = (qdIl^2 * qdXY_noError + qdIl^2/Snr * qdXY_Random)/( qdIl^2 + qdIl^2/Snr ); %QDセンサーの誤差を含むQDセンサー上の観測値
       
       % 姿勢決定に使うので，qdセンサーの観測精度を見積もる(おそらくqdIL,qdInの大きさは，uplinkの信号がON-OFFしてるので切り分けられる)
-      qdError = (qdIn/qdIl)*sc.qdPhi;
+      qdError = sc.qdPhi/Snr;
       
       %% 宇宙機の姿勢を推定する
       % 　※宇宙機の軌道の推定値が悪いと，qdセンサーの値を姿勢に変換する精度も落ちてしまうので，宇宙機の軌道の精度が悪い場合は，sttのみの観測を使い，宇宙機の軌道の精度がいい場合は，qdも姿勢決定にしようする
@@ -63,7 +66,7 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
           % STT, QDセンサー, uplinkに入っている状態量から，宇宙機の姿勢を求める
           [rollEst, pitchEst, yawEst,P_att] = Spacecraft.attDetermination(sttObserved,error.stt,qdXY_observed,qdError,directionEstI,sc.fL);
           % directionの測角精度(観測誤差共分散行列に使用する)
-          obj.directionAccuracy_ur(obj.ur_counter) = sqrt((P_att(1)^2 + P_att(2)^2 + P_att(3)^2)/2  + ((qdIn/qdIl)*sc.qdFov)^2);
+          obj.directionAccuracy_ur(obj.ur_counter) = sqrt((P_att(1)^2 + P_att(2)^2 + P_att(3)^2)/2  + ((1/Snr)*sc.qdFov)^2);
 % % % %           % 推定によって，sttのみの観測より良くなっているか確認する
 %           estError = ((rollEst - rollTrue)^2 + (pitchEst - pitchTrue)^2 + (yawEst - yawTrue)^2)^0.5;
 %           sttError = norm([rollTrue;pitchTrue;yawTrue] - sttObserved);
@@ -71,7 +74,7 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
           rollEst  = sttObserved(1);
           pitchEst = sttObserved(2);
           yawEst   = sttObserved(3);
-          obj.directionAccuracy_ur(obj.ur_counter) = sqrt(error.stt^2 * 3/2  + ((qdIn/qdIl)*sc.qdFov)^2);
+          obj.directionAccuracy_ur(obj.ur_counter) = sqrt(error.stt^2 * 3/2  + ((1/Snr)*sc.qdFov)^2);
       end
       %% QD座標系での観測値を慣性座標系での値に変換する．(TrueDirectionIに近くなっていると嬉しい. 視線方向の成分には, 姿勢推定誤差+軌道推定誤差がのる)
       % qd座標系での観測をFLT座標系に変換して正規化する
