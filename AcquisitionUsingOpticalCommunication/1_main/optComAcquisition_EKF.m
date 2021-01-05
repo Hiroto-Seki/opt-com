@@ -13,7 +13,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(3)
+rng(1)
 
 %% 1.setting parameter and initial state
 [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,~] = setparam(SSD);
@@ -49,8 +49,12 @@ for i = 1:length(time.list)-1
         time.lastSearch = i;      
     end
     %% 5 宇宙機での状態量の推定 & Downlink
-    %% 観測がある場合, 1wayの観測がある場合，2wayの観測がある場合で場合分け      
-    if time.list(i+1) < scTrue.t_ur(scTrue.ur_counter + 1) % 次の時刻まで観測がなかった場合
+    %% 観測がある場合, 1wayの観測がある場合，2wayの観測がある場合で場合分け
+    % 探索範囲が広くて伝播時間より，探索に時間がかかると，scTrue.t_ur(scTrue.ur_counter +
+    % 1)が定義されていないので，場合わけ．送信回数=受信回数になっている(この時は, time.lits(i)~(i+1)の間に観測がない)
+    if gsTrue.ut_counter == scTrue.ur_counter
+        [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdateEkf(scEstByScEkf.X, scEstByScEkf.P, constant, time.simDt,time.simDt,error);   
+    elseif time.list(i+1) < scTrue.t_ur(scTrue.ur_counter + 1) % 次の時刻まで観測がなかった場合
         % 状態量と誤差共分散行列を伝搬
         [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdateEkf(scEstByScEkf.X, scEstByScEkf.P, constant, time.simDt,time.simDt,error);   
     else % 観測があった時
@@ -89,6 +93,9 @@ for i = 1:length(time.list)-1
     % gsTrue.t_dr(gsTrue.dr_counter)が定義できないので，定義できるようになる前は場合を分けている
     if time.list(i+1) < scTrue.t_ur(1)
         % 状態量と誤差共分散行列を伝搬
+        [scEstByGsEkf.X, scEstByGsEkf.P] = Spacecraft.timeUpdateEkf(scEstByGsEkf.X, scEstByGsEkf.P, constant, time.simDt,time.simDt,error);
+    % 次のダウンリンク送信までに時間がかかっている場合は，ダウンリンクが受信されるまでに，次のダウンリンク時間が定義されない
+    elseif scTrue.dt_counter == gsTrue.dr_counter
         [scEstByGsEkf.X, scEstByGsEkf.P] = Spacecraft.timeUpdateEkf(scEstByGsEkf.X, scEstByGsEkf.P, constant, time.simDt,time.simDt,error);
     % 次の時刻まで観測がなかった時
     elseif time.list(i+1) < gsTrue.t_dr(gsTrue.dr_counter + 1)

@@ -29,7 +29,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 1e4; %変更した 
+    error.scPosSigma = 1e5; %変更した 
     % 適当に0.1km/s程度の誤差とする
     error.scVelSigma = 1e0; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
