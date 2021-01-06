@@ -26,13 +26,18 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
     X_star = obj.X_dt;
     P_bar  = obj.P_dt;
     % Rを取得．QDセンサーの精度を反映
-    R = obj.R2wGs;
-    R(1,1) = gsTrue.directionAccuracy_dr(dr_counter)^2;
+    R = obj.R([1,2,3,4,5,6,7,10,11,12,13],[1,2,3,4,5,6,7,10,11,12,13]);
+    % これにより，1~2:宇宙機受信測角, 3~4:地上局送信測角, 5~7:宇宙機加速度, 8~9:地上局受信測角, 10:1wayの測距,
+    % 11:2wayの測距
+    R(1,1) = gsTrue.scRecAngleAccuracy_dr(dr_counter)^2;
     R(2,2) = R(1,1);
-    obj.R2wGs = R;
+    R(8,8) = gsTrue.directionAccuracy_dr(dr_counter)^2;
+    R(9,9) = R(8,8);
     %% Yを取得. 
-    Y = [gsTrue.directionObserved_dr(:,dr_counter);... % 測角
+    Y = [gsTrue.scRecAngle_dr(:,dr_counter);... 
+         gsTrue.transUpAngle_dr(:,dr_counter);...
          gsTrue.scAccel_dr(:,dr_counter);...       % 加速度計
+         gsTrue.directionObserved_dr(:,dr_counter);... % 測角
          gsTrue.lengthObserved_dr(dr_counter);...
          gsTrue.length2wObserved_dr(dr_counter)];    % 測距(1way)
     %% Y_starを計算
@@ -44,11 +49,10 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
     end
     obj.y    = y;
 
-    
     % Hを計算
     H = Spacecraft.delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);
     
-    % 観測残差及び残差検定
+%     観測残差及び残差検定
     for k = length(y):-1:1
         S = (H*P_bar*H.' + R);
         if ekf.sigmaN < abs(y(k))/sqrt(S(k,k)) %3シグマに設定している
@@ -65,7 +69,8 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
        P = P_bar;
    else
        % Kを計算
-       K = P_bar * H.'/(H*P_bar*H.' + R);
+%        K = P_bar * H.'/(H*P_bar*H.' + R);
+       K = P_bar * H.'* pinv(H*P_bar*H.' + R);
        % XとPを計算
        X = X_star + K * y;
        P = (eye(7) - K * H)*P_bar;

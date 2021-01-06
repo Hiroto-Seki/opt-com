@@ -30,7 +30,14 @@ function [obj,gsTrue,earth] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,
     % 送信した時刻での宇宙機の状態量(真値)を求める．(地上局での観測量の計算に用いる)
     obj.t_dt(dt_counter) = t;
     obj.state_dt(:,dt_counter) = scTrueAtT;
-    obj.accel_dt(:,dt_counter) = obj.accelObseved_ur(:,dt_counter);
+    
+    % 宇宙機の観測量をdownlinkして地上局と共有する(To Do: uplink受信時刻とDownlink送信時刻の差分を補正した方がいいが，interpを使うと逆にブレるので，時間差が小さいので，今回は補正しない)
+    obj.accel_dt(:,dt_counter)   = obj.accelObseved_ur(:,dt_counter); %加速度
+    obj.recUpAngle_dt(:,dt_counter) = obj.directionObserved_ur(:,dt_counter); %uplinkの受信角度
+    obj.transUpAngle_dt(:,dt_counter) = obj.transDirection_ur(:,dt_counter);
+    % 観測の分散も送信する
+    obj.recUpAngleAccuracy_dt(dt_counter) = obj.directionAccuracy_ur(dt_counter);
+    
     
     % 時刻tで宇宙機(真値)から送信された光が地上局に届く時刻とその時刻での地球・地上局の位置・速度を求める
     opnDownTrue = Spacecraft.calcTarget(t,gsTrue,earth,scTrueAtT,time,constant);

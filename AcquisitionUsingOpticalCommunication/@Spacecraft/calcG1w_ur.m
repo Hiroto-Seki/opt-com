@@ -23,6 +23,6 @@ elv_ut = atan(direction_ut(3)/(direction_ut(1)^2 +direction_ut(2)^2)^0.5);
 % 測距(1way)
 length1w = norm(xve(1:3) + xvg(1:3) - xvs(1:3)) + deltaT * constant.lightSpeed;
 
-Y_star = [azm_ur; elv_ur; accel; azm_ut; elv_ut;length1w];
+Y_star = [azm_ur; elv_ur; azm_ut; elv_ut; accel;length1w];
 end
 

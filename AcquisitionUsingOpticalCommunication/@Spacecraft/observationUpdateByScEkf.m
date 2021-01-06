@@ -23,20 +23,27 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
     xve_ut = earth.state_ut(:,ur_counter);
     xvg_ut = gsTrue.state_ut(:,ur_counter);
     
-        
+    % Rの書き換え
+    % 1,2要素目の観測は，1wayでも2wayでもuplinkの測角になっている．
+    obj.R(1,1) = scTrue.directionAccuracy_ur(ur_counter)^2;
+    obj.R(2,2) = obj.R(1,1);
+    
+    
+    
+    
     %% YとY_star,H取得. 観測によって場合分け
-    if type == 1 %1wayの観測
+    if type == 1 %1wayの観測 (1,2,3,4,5,6,7,8)の観測を得られる
         Y = [scTrue.directionObserved_ur(:,ur_counter);... % 測角
-            scTrue.accelObseved_ur(:,ur_counter);...       % 加速度計
             scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
+            scTrue.accelObseved_ur(:,ur_counter);...       % 加速度計
             scTrue.lengthObserved_ur(ur_counter)];         % 測距
         Y_star = Spacecraft.calcG1w_ur(X_star,xve_ut,xvg_ut,constant);
         H = Spacecraft.delGdelX1w_ur(X_star,xve_ut,xvg_ut,constant);
-        R = obj.R1wSc;
-    else %2wayの観測
+        R = obj.R(1:8,1:8);
+    else %2wayの観測 (1,2,3,4,5,6,7,8,9,10,11)の観測を得られる．(10,11はuplink内容に含まれる)
         Y = [scTrue.directionObserved_ur(:,ur_counter);... % 測角
-            scTrue.accelObseved_ur(:,ur_counter);...       % 加速度計
             scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
+            scTrue.accelObseved_ur(:,ur_counter);...       % 加速度計
             scTrue.lengthObserved_ur(ur_counter);          % 測距1way
             scTrue.length2wObserved_ur(ur_counter);];      % 測距2way
         % 観測方程式に出てくるもの
@@ -52,7 +59,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
                                         xve_dr,xvg_dr,...
                                         dt2w,...
                                         constant);
-        R = obj.R2wSc;
+        R = obj.R(1:9,1:9);
     end
     y = Y - Y_star;
     obj.y = y;
@@ -60,9 +67,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
     for y_i = [1,6] %1番目は受信側の方位角の測角，6番目は送信側の方位角の測角
         y(y_i) = mod(y(y_i) + pi, 2*pi) - pi;
     end
-    R(1,1) = scTrue.directionAccuracy_ur(ur_counter)^2;
-    R(2,2) = R(1,1);    
-
+      
     % 観測残差及び残差検定
     for k = length(y):-1:1
         S = (H*P_bar*H.' + R);
@@ -79,7 +84,8 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
        X = X_star;
        P = P_bar;
    else
-        K = P_bar * H.'/(H*P_bar*H.' + R);
+%         K = P_bar * H.'/(H*P_bar*H.' + R);
+        K = P_bar * H.'* pinv(H*P_bar*H.' + R);
         x = K * y;
         % XとPを計算
         X = X_star +x;
@@ -88,7 +94,5 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
     
     obj.X = X;
     obj.P = P;
-    obj.H = H;
-
 
 end

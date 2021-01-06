@@ -101,7 +101,7 @@ function H = delGdelX1w_ur(X_star,xve,xvg,constant)
     delL1w    = [c,0,0,0,0,0,0] + delL;
     
     %% まとめる
-    H = [delAzm_ur;delElv_ur;delAccel;delAzm_ut;delElv_ut;delL1w];
+    H = [delAzm_ur;delElv_ur;delAzm_ut;delElv_ut;delAccel;delL1w];
     
 
 end

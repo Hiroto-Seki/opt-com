@@ -1,4 +1,4 @@
-% 宇宙機がuplinkを受信する時の，推定値に対応する観測量を計算する
+% 宇宙機がuplinkを送信する時の，推定値に対応する観測量を計算する
 % 入力
 %     % uplinkを送信した時の地球+地上局の位置・速度
 %     xv_ut = earth.state_ut(:,dr_counter) +  gsTrue.state_ut(:,dr_counter);
@@ -10,10 +10,11 @@
 function Y_star = calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant)
 deltaT = X_star(1);
 xvs_dt    = X_star(2:7);
-% xs_ur(宇宙機がuplinkを受信する時の位置)
-xs_ur = xvs_dt(1:3) - dtAtSc * xvs_dt(4:6);
+% xs_ur(宇宙機がuplinkを受信する時の位置). 速度は短時間で変わっていないと考える
+xvs_ur = [xvs_dt(1:3) - dtAtSc * xvs_dt(4:6);xvs_dt(4:6)] ;
 
-%% 測角(受信)
+
+%% 測角(地上局受信)
 direction_dr = xvs_dt(1:3) - xv_dr(1:3)...
                 + norm(xvs_dt(1:3) - xv_dr(1:3)) * xv_dr(4:6)/ constant.lightSpeed;
 azm_dr = atan2(direction_dr(2), direction_dr(1));
@@ -24,7 +25,19 @@ accel    = velAccel(4:6);
 % 測距(1way)
 length1w = norm(xvs_dt(1:3) - xv_dr(1:3)) - deltaT * constant.lightSpeed;
 % 測距(2way)
-length2w = norm(xvs_dt(1:3) - xv_dr(1:3)) + norm(xs_ur - xv_ut(1:3)) + dtAtSc * constant.lightSpeed;
+length2w = norm(xvs_dt(1:3) - xv_dr(1:3)) + norm(xvs_ur(1:3) - xv_ut(1:3)) + dtAtSc * constant.lightSpeed;
 
-Y_star = [azm_dr; elv_dr; accel;length1w;length2w];
+%% downlinkに載っている情報に対応させる
+%% 測角(uplinkの宇宙機受信)
+direction_ur = xv_ut(1:3) - xvs_ur(1:3)...
+                + norm(xv_ut(1:3) - xvs_ur(1:3)) * xvs_ur(4:6)/ constant.lightSpeed;
+azm_ur = atan2(direction_ur(2), direction_ur(1));
+elv_ur = atan(direction_ur(3)/(direction_ur(1)^2 +direction_ur(2)^2)^0.5);
+%% 測角(uplinkの地上局送信)
+direction_ut = xvs_ur(1:3) - xv_ut(1:3);
+azm_ut = atan2(direction_ut(2), direction_ut(1));
+elv_ut = atan(direction_ut(3)/(direction_ut(1)^2 +direction_ut(2)^2)^0.5);
+
+
+Y_star = [azm_ur;elv_ur;azm_ut;elv_ut; accel;azm_dr; elv_dr; length1w;length2w];
 end

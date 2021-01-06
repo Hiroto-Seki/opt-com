@@ -23,5 +23,5 @@ length1w = norm(xvet(1:3) + xvgt(1:3) - xvsr(1:3)) + deltaT * constant.lightSpee
 % 測距(2way)
 length2w = norm(xvet(1:3) + xvgt(1:3) - xvsr(1:3)) + norm(xver(1:3) + xvgr(1:3) - xst(1:3)) + dtAtGs * constant.lightSpeed;
 
-Y_star = [azm_ur; elv_ur; accel; azm_ut; elv_ut;length1w;length2w];
+Y_star = [azm_ur; elv_ur; azm_ut; elv_ut; accel;length1w;length2w];
 end

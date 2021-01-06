@@ -31,6 +31,10 @@ classdef GroundStation < handle
           directionAccuracy_dr %測角の精度
           directionObserved_dr %downlinkで観測される測角情報
           scAccel_dr           %downlinkされる宇宙機の加速度情報
+          scRecAngle_dr        %downlinkされる宇宙機の測角
+          scRecAngleAccuracy_dr%上の精度
+          transUpAngle_dr      %downlinkされる地上局のuplinkでの送信方向
+          transUpAngleAccuracy_dr %上の精度
     end
     methods 
         function obj = GroundStation(gs,constant,time) 
@@ -56,6 +60,6 @@ classdef GroundStation < handle
     methods(Static)
         [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,scAtT,spacecraft,time,constant,valueType)
         xv = earthRotation(pos0, t, constant) % t秒後の状態量の計算
-        [time,R1wSc,R2wSc] = setSearchArea(time,gs,SSD,scEstByGsSeqP,R1wSc,R2wSc,error) %1回の観測にかかる時間を求める
+        [time,R] = setSearchArea(time,gs,SSD,scEstByGsSeqP,R,error) %1回の観測にかかる時間を求める
     end 
 end

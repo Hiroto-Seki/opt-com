@@ -16,7 +16,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % simulation timeStep[s]
     time.simDt = 10;
     % number of time step
-    time.stepNum = 3000; 
+    time.stepNum = 2400; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.t0Ephemeris = 0;
@@ -31,11 +31,11 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
     error.scPosSigma = 1e5; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 1e0; %変更した
+    error.scVelSigma = 1e-1; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
     % STTの精度
-    error.stt = 10 * 10^-6 ; %ISSL unit→10urad(cross bore sight), ASTRO APS(2kg,5W程度)→1arcsec以下(4.85urad)
+    error.stt = 4.85 * 10^-6 ; %ISSL unit→10urad(cross bore sight), ASTRO APS(2kg,5W程度)→1arcsec以下(4.85urad)
     % 参考: https://blog.satsearch.co/2019-11-26-star-trackers-the-cutting-edge-celestial-navigation-products-available-on-the-global-space-marketplace
     % 加速度センサの精度. 擾乱とかの方が大きいかも・・
     error.accel = 1e-12; %ちょっとサイズが大きいけど https://www.researchgate.net/publication/268554054_High-performance_Accelerometer_for_On-orbit_Spacecraft_Autonomy  
@@ -171,33 +171,55 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
                                                                        zeros(3,4), 1/3* error.scVelSigma^2 * eye(3)];
     scEstByScSeq.P_list        = zeros(7,7,length(time.list));
     scEstByScSeq.P_list(:,:,1) = scEstByScSeq.P;
-    scEstByScSeq.R1wSc = [error.stt^2*eye(2),                                     zeros(2,6);         % 測角 (受信電力で書き換える)
-                              zeros(3,2),    1e0*        error.accel^2*eye(3),zeros(3,3);         % 加速度計
-                              zeros(2,5),       (gs.searchStep^2+error.gsPoint^2)*eye(2),zeros(2,1);         % uplinkの送信方向
-                              zeros(1,7),            (1e0*error.randomClock * constant.lightSpeed)^2];          %1wayの測距 おそらくどこかで桁落ち誤差が発生しているので精度を落としている
-    scEstByScSeq.R2wSc = [scEstByScSeq.R1wSc, zeros(8,1); zeros(1,8),  max((1e0 * error.randomClock * constant.lightSpeed)^2, 1e3^2)];% 2wayの測距  
+    
+    % 観測値の順番
+    % 1:宇宙機のuplink受信測角(方位角), 交換する
+    % 2:宇宙機のuplink受信測角(仰角), 交換する
+    % 3:地上局のuplink送信測角(方位角),交換する
+    % 4:地上局のuplink送信測角(方位角),交換する
+    % 5:宇宙機の加速度X, 交換する
+    % 6:宇宙機の加速度Y, 交換する
+    % 7:宇宙機の加速度Z, 交換する
+    % 8:1wayUpの測距, 交換しない
+    % 9:2wayUpの測距, 交換しない
+    % 10:地上局のdownlink受信測角(方位角),交換する
+    % 11:地上局のdownlink受信測角(方位角),交換する
+    % 12:1wayDownの測距,　交換しない
+    % 13:2wayDownの測距, 交換しない
+    
+    scEstByScSeq.R    = [error.stt^2*eye(2),                                                    zeros(2,11);
+                                 zeros(2,2),           (gs.searchStep^2+error.gsPoint^2)*eye(2), zeros(2,9);
+                                 zeros(3,4),                               error.accel^2*eye(3), zeros(3,6);
+                                 zeros(2,7), (error.randomClock * constant.lightSpeed)^2*eye(2), zeros(2,4);
+                                 zeros(2,9),                                 error.stt^2*eye(2), zeros(2,2);
+                                zeros(2,11),             (error.randomClock * constant.lightSpeed)^2*eye(2)];
+    
+%     scEstByScSeq.R1wSc = [error.stt^2*eye(2),                                     zeros(2,6);         % 測角 (受信電力で書き換える)
+%                               zeros(3,2),    1e0*        error.accel^2*eye(3),zeros(3,3);         % 加速度計
+%                               zeros(2,5),       (gs.searchStep^2+error.gsPoint^2)*eye(2),zeros(2,1);         % uplinkの送信方向
+%                               zeros(1,7),            (1e0*error.randomClock * constant.lightSpeed)^2];          %1wayの測距 おそらくどこかで桁落ち誤差が発生しているので精度を落としている
+%     scEstByScSeq.R2wSc = [scEstByScSeq.R1wSc, zeros(8,1); zeros(1,8),  max((1e0 * error.randomClock * constant.lightSpeed)^2, 1e3^2)];% 2wayの測距  
                           
-    scEstByGsSeq.X             = [0;sc.state0];
-    scEstByGsSeq.P             = [error.clockSigma^2,                                               zeros(1,6);
-                                          zeros(3,1), 1/3 * error.scPosSigma^2 * eye(3),                  zeros(3,3);
-                                                                       zeros(3,4), 1/3 * error.scVelSigma^2 * eye(3)];
+    scEstByGsSeq.X             = scEstByScSeq.X;
+    scEstByGsSeq.P             = scEstByScSeq.P;
     scEstByGsSeq.P_list        = zeros(7,7,length(time.list));
     scEstByGsSeq.P_list(:,:,1) = scEstByGsSeq.P;
-    scEstByGsSeq.R2wGs = [error.stt^2*eye(2),                                           zeros(2,5);         % 測角 (受信電力で書き換える)
-                              zeros(3,2), 1e0* error.accel^2*eye(3),                          zeros(3,2);         % 加速度計 
-                              zeros(1,5),     (1e0*error.randomClock * constant.lightSpeed)^2,                                    0;
-                              zeros(1,6),     (1e0*error.randomClock * constant.lightSpeed)^2];         % 2wayの測距  
+    scEstByGsSeq.R             = scEstByScSeq.R;
+%     scEstByGsSeq.R2wGs = [error.stt^2*eye(2),                                           zeros(2,5);         % 測角 (受信電力で書き換える)
+%                               zeros(3,2), 1e0* error.accel^2*eye(3),                          zeros(3,2);         % 加速度計 
+%                               zeros(1,5),     (1e0*error.randomClock * constant.lightSpeed)^2,                                    0;
+%                               zeros(1,6),     (1e0*error.randomClock * constant.lightSpeed)^2];         % 2wayの測距  
 
                           
     % EKFに使用するパラメーター
-    ekf.sigmaN = 2;
+    ekf.sigmaN = 3;
     
     
     % UKFに使用するパラメーター
     ukf.n = 7; % 推定する状態量の数(クロックオフセット，位置3・速度3)
     ukf.alpha = 0.5; % 0~1の間
     % 棄却シグマ値レベル．どのくらいが妥当なのか？？→とりあえず全て3シグマにしておく
-    ukf.sigmaN = 2;
+    ukf.sigmaN = 3;
     
     ukf.kappa  = 3 - ukf.n;
     ukf.lambda = ukf.alpha^2 * (ukf.n + ukf.kappa) - ukf.n;

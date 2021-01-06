@@ -38,7 +38,11 @@ classdef Spacecraft < handle
           dt_counter             % downlinkを送信した回数を数える 
           t_dt                   % downlinkを送信した時刻  
           state_dt               % downlinkを送信した時刻の状態量(観測量の計算に用いる)
-          accel_dt               % downlinkに載っている，送信時の加速度
+          accel_dt               % downlinkに載っている，宇宙機の観測量(宇宙機の加速度)
+          recUpAngle_dt             % downlinkに載っている，宇宙機の観測量(uplinkの受信角度)
+          recUpAngleAccuracy_dt       % 上の精度
+          transUpAngle_dt           % downlinkに載っている，宇宙機の観測量(uplinkの送信角度)
+          transUpAngleAccuracy_dt     % 上の精度
           pointingError_dt       % downlinkの送信方向誤差
           tRec_dt                % downlinkが受信されるはずの時刻
           % --------- scEstByScEkf, scEstByGsEkf, scEstByScBatch,
@@ -47,9 +51,7 @@ classdef Spacecraft < handle
           Y                      % 観測値
           y                      % Y - Y*
           P                      % 誤差共分散行列
-          R2wGs                      % 観測誤差共分散行列(gsの観測)
-          R1wSc                    % 観測誤差共分散行列(scの観測)
-          R2wSc                    % 観測誤差共分散行列(scの観測)
+          R                  % 観測誤差共分散行列(gsの観測)
           H                      % batchの時使う
           P_list                 % 観測誤差共分散行列のリスト
           X_dt                   % scEstByGsEkfが使用するダウンリンクを送信した時刻の推定状態量

@@ -81,9 +81,74 @@ function H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant)
     delL1w    = [-c,0,0,0,0,0,0] + delLd;
     % 2wayの測距
     delL2w    = delLd + delLd;
+       
+    %% uplinkに関するもの
+    % uplinkの送信方向
+    d_utX  = xvs(1) - xvs(4) * dtAtSc - xv_ut(1);
+    d_utY  = xvs(2) - xvs(5) * dtAtSc - xv_ut(2);
+    d_utZ  = xvs(3) - xvs(6) * dtAtSc - xv_ut(3);
+    % d_utXの微分
+    delD_utX(1) = 0;
+    delD_utX(2) = 1;
+    delD_utX(3) = 0;
+    delD_utX(4) = 0;
+    delD_utX(5) = -dtAtSc;
+    delD_utX(6) = 0;
+    delD_utX(7) = 0;
+    % d_utYの微分
+    delD_utY(1) = 0;
+    delD_utY(2) = 0;
+    delD_utY(3) = 1;
+    delD_utY(4) = 0;
+    delD_utY(5) = 0;
+    delD_utY(6) = -dtAtSc;
+    delD_utY(7) = 0;
+    % d_utZの微分
+    delD_utZ(1) = 0;
+    delD_utZ(2) = 0;
+    delD_utZ(3) = 0;
+    delD_utZ(4) = 1;
+    delD_utZ(5) = 0;
+    delD_utZ(6) = 0;
+    delD_utZ(7) = -dtAtSc; 
+    % 方位角
+    delAzm_ut = (delD_utY * d_utX - delD_utX * d_utY)/(d_utX^2 + d_utY^2);
+    % 仰角
+    delElv_ut = (delD_utZ * (d_utX^2 + d_utY^2) - d_utZ * ( d_utX * delD_utX + d_utY * delD_utY  ))...
+        / ((d_utX^2 + d_utY^2 + d_utZ^2) * (d_utX^2 + d_utY^2)^0.5 );
     
-
-    H = [delAzm_dr;delElv_dr;delAccel;delL1w;delL2w];
-    
-
+    % uplinkの受信方向
+    d_urX  =  xv_ut(1) - (xvs(1) - xvs(4) * dtAtSc) + xvs(4)/c * lu;
+    d_urY  =  xv_ut(2) - (xvs(2) - xvs(5) * dtAtSc) + xvs(5)/c * lu;
+    d_urZ  =  xv_ut(3) - (xvs(3) - xvs(6) * dtAtSc) + xvs(6)/c * lu;
+    % d_urXの微分
+    delD_urX(1) =                     xvs(4) * delLu(1)/c;
+    delD_urX(2) = -1 +                xvs(4) * delLu(2)/c;
+    delD_urX(3) =                     xvs(4) * delLu(3)/c;
+    delD_urX(4) =                     xvs(4) * delLu(4)/c;
+    delD_urX(5) = dtAtSc + 1/c * lu + xvs(4) * delLu(5)/c;
+    delD_urX(6) =                     xvs(4) * delLu(6)/c;
+    delD_urX(7) =                     xvs(4) * delLu(7)/c;
+    % d_urYの微分
+    delD_urY(1) =                     xvs(5) * delLu(1)/c;
+    delD_urY(2) =                     xvs(5) * delLu(2)/c;
+    delD_urY(3) = -1 +                xvs(5) * delLu(3)/c;
+    delD_urY(4) =                     xvs(5) * delLu(4)/c;
+    delD_urY(5) =                     xvs(5) * delLu(5)/c;
+    delD_urY(6) = dtAtSc + 1/c * lu + xvs(5) * delLu(6)/c;
+    delD_urY(7) =                     xvs(5) * delLu(7)/c;
+    % d_urZの微分
+    delD_urZ(1) =                     xvs(6) * delLu(1)/c;
+    delD_urZ(2) =                     xvs(6) * delLu(2)/c;
+    delD_urZ(3) =                     xvs(6) * delLu(3)/c;
+    delD_urZ(4) = -1+                 xvs(6) * delLu(4)/c;
+    delD_urZ(5) =                     xvs(6) * delLu(5)/c;
+    delD_urZ(6) =                     xvs(6) * delLu(6)/c;
+    delD_urZ(7) = dtAtSc + 1/c * lu + xvs(6) * delLu(7)/c;
+    % 方位角
+    delAzm_ur = (delD_urY * d_urX - delD_urX * d_urY)/(d_urX^2 + d_urY^2);
+    % 仰角
+    delElv_ur = (delD_urZ * (d_urX^2 + d_urY^2) - d_urZ * ( d_urX * delD_urX + d_urY * delD_urY  ))...
+        / ((d_urX^2 + d_urY^2 + d_urZ^2) * (d_urX^2 + d_urY^2)^0.5 );
+    H = [delAzm_ur; delElv_ur;delAzm_ut;delElv_ut; delAccel;delAzm_dr;delElv_dr;delL1w;delL2w];
 end

@@ -55,8 +55,12 @@
     obj.directionAccuracy_dr(dr_counter) = gs.qdFov /Snr;
     obj.directionObserved_dr(:,dr_counter) = obj.directionTrue_dr(:,dr_counter) + randn(2,1) * obj.directionAccuracy_dr(dr_counter);
     
-    % 加速度
+    % downlinkに載っている情報
     obj.scAccel_dr(:,dr_counter) = scTrue.accel_dt(:,dr_counter);
+    obj.scRecAngle_dr(:,dr_counter) = scTrue.recUpAngle_dt(:,dr_counter); %uplinkの受信角度
+    obj.transUpAngle_dr(:,dr_counter) = scTrue.transUpAngle_dt(:,dr_counter);
+    obj.scRecAngleAccuracy_dr(dr_counter) = scTrue.recUpAngleAccuracy_dt(dr_counter);    
+    
 
     % 測距(1way) % クロックのオフセットは乗っている
     obj.lengthTrue_dr(dr_counter) = (t_dr - t_dt) * constant.lightSpeed;
