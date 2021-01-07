@@ -67,7 +67,7 @@
     obj.lengthObserved_dr(dr_counter) = obj.lengthTrue_dr(dr_counter) + ( - error.clock0  + randn * error.randomClock) * constant.lightSpeed;
 
     % 測距(2way). 宇宙機の受信してから送信するのにかかる時間を含めている
-    obj.length2wObserved_dr(dr_counter) = (t_dr - t_ut) * constant.lightSpeed;
+    obj.length2wObserved_dr(dr_counter) = (t_dr - t_ut) * constant.lightSpeed + randn * error.randomClock * constant.lightSpeed;
     
     obj.durationAtSc(dr_counter) = t_dt - t_ur;
 

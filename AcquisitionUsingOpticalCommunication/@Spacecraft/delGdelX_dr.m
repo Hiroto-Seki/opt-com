@@ -150,5 +150,18 @@ function H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant)
     % 仰角
     delElv_ur = (delD_urZ * (d_urX^2 + d_urY^2) - d_urZ * ( d_urX * delD_urX + d_urY * delD_urY  ))...
         / ((d_urX^2 + d_urY^2 + d_urZ^2) * (d_urX^2 + d_urY^2)^0.5 );
-    H = [delAzm_ur; delElv_ur;delAzm_ut;delElv_ut; delAccel;delAzm_dr;delElv_dr;delL1w;delL2w];
+    
+%     H = [delAzm_ur; delElv_ur;delAzm_ut;delElv_ut; delAccel;delAzm_dr;delElv_dr;delL1w;delL2w];
+    
+    H.azm_ur      = delAzm_ur;
+    H.elv_ur      = delElv_ur;
+    H.azm_ut      = delAzm_ut;
+    H.elv_ut      = delElv_ut;
+    H.accel_ur    = delAccel;
+    H.azm_dr      = delAzm_dr;
+    H.elv_dr      = delElv_dr;
+    H.length1w_dr = delL1w;
+    H.length2w_dr = delL2w;
+    
+    
 end

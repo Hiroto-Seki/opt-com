@@ -12,14 +12,11 @@ classdef GroundStation < handle
           t_ut             %uplinkを送信した時刻
           state_ut         %uplinkを送信した時刻の状態量
           direction_ut     %uplinkの方向(1:azimuth,2:elevation)
-          pointingError_ut %uplinkの送信指向誤差
+          directionAccuracy_ut %uplinkの方向の精度(Rに使う)
+          pointingError_ut %uplinkの送信指向誤差(回線計算に使う)
           ut2w_counter     %宇宙機が2wayの観測をできる何番目のuplinkか
           ut2w_counterList %宇宙機が2wayの観測をできる何番目のuplinkか(何度目のダウンリンク直後の探索の送信か)を格納する
                            %ut_counter番目の要素が何番目の宇宙機が2wayの観測をできる何番目のuplinkかに対応させる
-%           t_ut2w           %ut2w_counterのuplinkの時刻
-%           state_ut2w       %ut2w_counterのuplinkの状態量
-%           recDownAngle_ut  %地上局の観測(downlink受信方向)をuplinkで送信する.
-%           recDownAngleAccuracy_ut %上の精度
           % 探索に関するパラメーター
           opnEstTempT_ut
           opnEstTempState_ut
@@ -67,6 +64,6 @@ classdef GroundStation < handle
     methods(Static)
         [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,scAtT,spacecraft,time,constant,valueType)
         xv = earthRotation(pos0, t, constant) % t秒後の状態量の計算
-        [time,R] = setSearchArea(time,gs,SSD,scEstByGsSeqP,R,error) %1回の観測にかかる時間を求める
+        [time,R] = setSearchArea(time,gs,SSD,scEstByGsSeqP,error) %1回の観測にかかる時間を求める
     end 
 end

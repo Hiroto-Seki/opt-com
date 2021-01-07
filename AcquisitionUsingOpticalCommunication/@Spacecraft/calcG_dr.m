@@ -38,6 +38,17 @@ direction_ut = xvs_ur(1:3) - xv_ut(1:3);
 azm_ut = atan2(direction_ut(2), direction_ut(1));
 elv_ut = atan(direction_ut(3)/(direction_ut(1)^2 +direction_ut(2)^2)^0.5);
 
+% Y_star = [azm_ur;elv_ur;azm_ut;elv_ut; accel;azm_dr; elv_dr; length1w;length2w];
 
-Y_star = [azm_ur;elv_ur;azm_ut;elv_ut; accel;azm_dr; elv_dr; length1w;length2w];
+Y_star.azm_ur      = azm_ur;
+Y_star.elv_ur      = elv_ur;
+Y_star.azm_ut      = azm_ut;
+Y_star.elv_ut      = elv_ut;
+Y_star.accel_ur    = accel;
+Y_star.azm_dr      = azm_dr;
+Y_star.elv_dr      = elv_dr;
+Y_star.length1w_dr =length1w;
+Y_star.length2w_dr =length2w;
+
+
 end

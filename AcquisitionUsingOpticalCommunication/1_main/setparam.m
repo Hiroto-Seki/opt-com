@@ -29,9 +29,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 1e4; %変更した 
+    error.scPosSigma = 5e2; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 1e-1; %変更した
+    error.scVelSigma = 5e-2; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
     % STTの精度
@@ -172,7 +172,38 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     scEstByScSeq.P_list        = zeros(7,7,length(time.list));
     scEstByScSeq.P_list(:,:,1) = scEstByScSeq.P;
     
-    % 観測値の順番
+    
+   % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
+   scEstByScSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
+   scEstByScSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度
+   scEstByScSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
+   scEstByScSeq.useObs.length1w_ur =1;   %地上局→宇宙機の1way測距
+   scEstByScSeq.useObs.length2w_ur =1;   %宇宙機→地上局→宇宙機の2way測距
+   scEstByScSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
+   scEstByScSeq.useObs.length1w_dr =0;   %宇宙機→地上局の1way測距       (0になる)
+   scEstByScSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の1way測距 (0になる)
+   
+  % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
+   scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
+   scEstByGsSeq.useObs.direction_ut =0;  %uplinkを地上局が送信する角度
+   scEstByGsSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
+   scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
+   scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
+   scEstByGsSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
+   scEstByGsSeq.useObs.length1w_dr =1;   %宇宙機→地上局の1way測距
+   scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の1way測距
+    
+   scEstByScSeq.R.direction_ur = error.stt^2;
+   scEstByScSeq.R.direction_ut = (gs.searchStep^2+error.gsPoint^2);
+   scEstByScSeq.R.accel_ur     = error.accel^2;
+   scEstByScSeq.R.length1w_ur  = (error.randomClock * constant.lightSpeed)^2;
+   scEstByScSeq.R.length2w_ur  = (error.randomClock * constant.lightSpeed)^2;
+   scEstByScSeq.R.direction_dr = error.stt^2;  %downlinkを地上局が受信する角度
+   scEstByScSeq.R.length1w_dr  = (error.randomClock * constant.lightSpeed)^2;   %宇宙機→地上局の1way測距
+   scEstByScSeq.R.length2w_dr  = (error.randomClock * constant.lightSpeed)^2;   %地上局→宇宙機→地上局の1way測距  
+   
+   
+   % 観測値の順番
     % 1:宇宙機のuplink受信測角(方位角), 交換する
     % 2:宇宙機のuplink受信測角(仰角), 交換する
     % 3:地上局のuplink送信測角(方位角),交換する
@@ -187,28 +218,19 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % 12:1wayDownの測距,　交換しない
     % 13:2wayDownの測距, 交換しない
     
-    scEstByScSeq.R    = [error.stt^2*eye(2),                                                    zeros(2,11);
-                                 zeros(2,2),           (gs.searchStep^2+error.gsPoint^2)*eye(2), zeros(2,9);
-                                 zeros(3,4),                               error.accel^2*eye(3), zeros(3,6);
-                                 zeros(2,7), (error.randomClock * constant.lightSpeed)^2*eye(2), zeros(2,4);
-                                 zeros(2,9),                                 error.stt^2*eye(2), zeros(2,2);
-                                zeros(2,11),             (error.randomClock * constant.lightSpeed)^2*eye(2)];
+%     scEstByScSeq.R    = [error.stt^2*eye(2),                                                    zeros(2,11);
+%                                  zeros(2,2),           (gs.searchStep^2+error.gsPoint^2)*eye(2), zeros(2,9);
+%                                  zeros(3,4),                               error.accel^2*eye(3), zeros(3,6);
+%                                  zeros(2,7), (error.randomClock * constant.lightSpeed)^2*eye(2), zeros(2,4);
+%                                  zeros(2,9),                                 error.stt^2*eye(2), zeros(2,2);
+%                                 zeros(2,11),             (error.randomClock * constant.lightSpeed)^2*eye(2)];
     
-%     scEstByScSeq.R1wSc = [error.stt^2*eye(2),                                     zeros(2,6);         % 測角 (受信電力で書き換える)
-%                               zeros(3,2),    1e0*        error.accel^2*eye(3),zeros(3,3);         % 加速度計
-%                               zeros(2,5),       (gs.searchStep^2+error.gsPoint^2)*eye(2),zeros(2,1);         % uplinkの送信方向
-%                               zeros(1,7),            (1e0*error.randomClock * constant.lightSpeed)^2];          %1wayの測距 おそらくどこかで桁落ち誤差が発生しているので精度を落としている
-%     scEstByScSeq.R2wSc = [scEstByScSeq.R1wSc, zeros(8,1); zeros(1,8),  max((1e0 * error.randomClock * constant.lightSpeed)^2, 1e3^2)];% 2wayの測距  
                           
     scEstByGsSeq.X             = scEstByScSeq.X;
     scEstByGsSeq.P             = scEstByScSeq.P;
     scEstByGsSeq.P_list        = zeros(7,7,length(time.list));
     scEstByGsSeq.P_list(:,:,1) = scEstByGsSeq.P;
     scEstByGsSeq.R             = scEstByScSeq.R;
-%     scEstByGsSeq.R2wGs = [error.stt^2*eye(2),                                           zeros(2,5);         % 測角 (受信電力で書き換える)
-%                               zeros(3,2), 1e0* error.accel^2*eye(3),                          zeros(3,2);         % 加速度計 
-%                               zeros(1,5),     (1e0*error.randomClock * constant.lightSpeed)^2,                                    0;
-%                               zeros(1,6),     (1e0*error.randomClock * constant.lightSpeed)^2];         % 2wayの測距  
 
                           
     % EKFに使用するパラメーター
@@ -228,9 +250,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     ukf.wi_m   = 1/(2*(ukf.n + ukf.lambda));
     ukf.w0_c   = ukf.lambda/(ukf.n + ukf.lambda) + (1- ukf.alpha^2 + ukf.beta);
     ukf.wi_c   = 1/(2*(ukf.n + ukf.lambda));  
-                          
-                          
-                          
+                                                  
    % 送受信した回数の初期化
    gsTrue.ut_counter=0;
    gsTrue.dr_counter=0;
@@ -240,7 +260,6 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scTrue.ur2w_counter = 0;
    % 初期化
    time.lastSearch = 0;
-   time.sc2wayget  = time.list(length(time.list)) + time.simDt * 2;  %大きい値で初期化しておく
    
-   
+
 end

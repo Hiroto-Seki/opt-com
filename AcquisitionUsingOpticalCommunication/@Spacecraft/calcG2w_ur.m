@@ -29,7 +29,18 @@ direction_dr = xvst(1:3) - xver(1:3) - xvgr(1:3)...
 
 azm_dr   =  atan2(direction_dr(2), direction_dr(1));
 elv_dr   =  atan(direction_dr(3)/(direction_dr(1)^2 +direction_dr(2)^2)^0.5);
-            
-            
-Y_star = [azm_ur; elv_ur; azm_ut; elv_ut; accel;length1w;length2w;azm_dr;elv_dr];
+
+Y_star.azm_ur      = azm_ur;
+Y_star.elv_ur      = elv_ur;
+Y_star.azm_ut      = azm_ut;
+Y_star.elv_ut      = elv_ut;
+Y_star.accel_ur    = accel;
+Y_star.length1w_ur = length1w;
+Y_star.length2w_ur = length2w;
+Y_star.azm_dr      = azm_dr;
+Y_star.elv_dr      = elv_dr;
+
+
+
+% Y_star = [azm_ur; elv_ur; azm_ut; elv_ut; accel;length1w;length2w;azm_dr;elv_dr];
 end

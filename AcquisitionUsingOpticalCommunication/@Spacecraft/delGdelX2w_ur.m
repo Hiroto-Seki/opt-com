@@ -161,7 +161,19 @@ function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant)
     delAzm_dr = (delDdrY * DdrX - delDdrX * DdrY)/(DdrX^2 + DdrY^2);
     delElv_dr = ( (DdrX^2 + DdrY^2)*delDdrZ - (DdrX * delDdrX + DdrY * delDdrY)*DdrZ )...
                 /( (DdrX^2 + DdrY^2 + DdrZ^2) * (DdrX^2 + DdrY^2)^0.5 ) ;
-    %% まとめる
-    H = [delAzm_ur;delElv_ur;delAzm_ut;delElv_ut;delAccel;delL1w;delL2w;delAzm_dr;delElv_dr];
+%     %% まとめる
+%     H = [delAzm_ur;delElv_ur;delAzm_ut;delElv_ut;delAccel;delL1w;delL2w;delAzm_dr;delElv_dr];
+    
+    H.azm_ur      = delAzm_ur;
+    H.elv_ur      = delElv_ur;
+    H.azm_ut      = delAzm_ut;
+    H.elv_ut      = delElv_ut;
+    H.accel_ur    = delAccel;
+    H.length1w_ur = delL1w;
+    H.length2w_ur = delL2w;
+    H.azm_dr      = delAzm_dr;
+    H.elv_dr      = delElv_dr;
+    
+    
     
 end

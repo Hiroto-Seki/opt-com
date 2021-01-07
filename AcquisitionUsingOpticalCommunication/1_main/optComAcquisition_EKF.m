@@ -13,7 +13,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(2)
+rng(1)
 
 %% 1.setting parameter and initial state
 [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,~] = setparam(SSD);
@@ -31,7 +31,7 @@ for i = 1:length(time.list)-1
     % 探索を開始するtime.stepの計算
     if  i == 1  || i == time.lastSearch + time.obsStep
         % 探索範囲の設定. 今回の探索にかかる時間=次の探索が始まる時間を求める．
-        [time,scEstByScEkf.R] = GroundStation.setSearchArea(time,gs,SSD,scEstByGsEkf.P,scEstByScEkf.R,error);
+        [time,gsTrue.directionAccuracy_ut(gsTrue.ut_counter + 1)] = GroundStation.setSearchArea(time,gs,SSD,scEstByGsEkf.P,error);
         % 地上局が推定している探査機の軌道から目標方向と到達時刻を計算する
         [gsTrue.opnEstTempT_ut,gsTrue.opnEstTempState_ut] ...
             = GroundStation.calcTarget(time.list(i),gsTrue.state(:,i),earth.state(:,i),scEstByGsEkf.state(:,i),scEstByGsEkf,time,constant,"estimated value");
@@ -42,10 +42,6 @@ for i = 1:length(time.list)-1
         [gsTrue,earth] = gsTrue.search(i,earth,gs,time,constant,error);
         % 宇宙機に届く時刻と，宇宙機が受信する内容を求める
         [scTrue,gsTrue] = scTrue.receiveUplink(gsTrue,earth,constant,time);
-%         % 初めて，探査機が2wayを観測できる時間を求める
-%         if gsTrue.dr_counter == 1
-%             time.sc2wayget = scTrue.t_ur(gsTrue.ut_counter);
-%         end
         % 今回のuplinkが宇宙機側で2wayの何回目の観測に使えるか
         if gsTrue.dr_counter > gsTrue.ut2w_counter
             gsTrue.ut2w_counter = gsTrue.dr_counter;
