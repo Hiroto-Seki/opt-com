@@ -42,12 +42,26 @@ for i = 1:length(time.list)-1
         [gsTrue,earth] = gsTrue.search(i,earth,gs,time,constant,error);
         % 宇宙機に届く時刻と，宇宙機が受信する内容を求める
         [scTrue,gsTrue] = scTrue.receiveUplink(gsTrue,earth,constant,time);
-        % 初めて，探査機が2wayを観測できる時間を求める
-        if gsTrue.dr_counter == 1
-            time.sc2wayget = scTrue.t_ur(gsTrue.ut_counter);
+%         % 初めて，探査機が2wayを観測できる時間を求める
+%         if gsTrue.dr_counter == 1
+%             time.sc2wayget = scTrue.t_ur(gsTrue.ut_counter);
+%         end
+        % 今回のuplinkが宇宙機側で2wayの何回目の観測に使えるか
+        if gsTrue.dr_counter > gsTrue.ut2w_counter
+            gsTrue.ut2w_counter = gsTrue.dr_counter;
+            gsTrue.ut2w_counterList(gsTrue.ut_counter) = gsTrue.ut2w_counter;
+        else
+            gsTrue.ut2w_counterList(gsTrue.ut_counter) = 0;
         end
         time.lastSearch = i;      
     end
+    % 地上局のuplinkが宇宙機側で2wayの何番目の観測として使えるのかの判定(毎時刻やる？？)
+    % 地上局のuplink送信の時刻: gsTrue.t_ut(gsTrue.ut_counter)
+    % 直前のdownlink受信の時刻: gsTrue.t_dr(gsTrue.dr_counter)
+    % if gsTrue.t_ut(gsTrue.ut_counter) > gsTrue.t_dr(gsTrue.dr_counter)
+    % このuplinkは，gsTrue.dr_counter番目のsc2way観測に使えるものである
+    
+    
     %% 5 宇宙機での状態量の推定 & Downlink
     %% 観測がある場合, 1wayの観測がある場合，2wayの観測がある場合で場合分け
     % 探索範囲が広くて伝播時間より，探索に時間がかかると，scTrue.t_ur(scTrue.ur_counter +
@@ -64,7 +78,7 @@ for i = 1:length(time.list)-1
         time.scDt1 = scTrue.t_ur(scTrue.ur_counter) - time.list(i);
         % 観測からの時間
         time.scDt2 = time.list(i+1) - scTrue.t_ur(scTrue.ur_counter);
-        if time.list(i+1) < time.sc2wayget
+        if gsTrue.ut2w_counterList(scTrue.ur_counter) == 0
             % 観測は1way
             time.obsScType = 1;
         % 2wayの観測も得られる時，観測

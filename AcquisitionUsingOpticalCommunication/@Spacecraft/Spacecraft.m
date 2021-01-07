@@ -34,15 +34,17 @@ classdef Spacecraft < handle
           eState_ur              %uplinkに載っている，送信時刻の地球の状態量   
           gsState_ur             %uplinkに載っている, 送信時刻の地上局の状態量
           transDirection_ur      %uplinkに載っている，送信方向(誤差を持つ)
+          recDownAngle_ur        %uplinkに載っている，地上局の観測量(downlinkの測角)
+          recDownAngleAccuracy_ur%上の精度
           % ----------scTrueにあるもの(送信に関するもの)--------
           dt_counter             % downlinkを送信した回数を数える 
           t_dt                   % downlinkを送信した時刻  
           state_dt               % downlinkを送信した時刻の状態量(観測量の計算に用いる)
           accel_dt               % downlinkに載っている，宇宙機の観測量(宇宙機の加速度)
-          recUpAngle_dt             % downlinkに載っている，宇宙機の観測量(uplinkの受信角度)
-          recUpAngleAccuracy_dt       % 上の精度
-          transUpAngle_dt           % downlinkに載っている，宇宙機の観測量(uplinkの送信角度)
-          transUpAngleAccuracy_dt     % 上の精度
+          recUpAngle_dt          % downlinkに載っている，宇宙機の観測量(uplinkの受信角度)
+          recUpAngleAccuracy_dt  % 上の精度
+          transUpAngle_dt        % downlinkに載っている，宇宙機の観測量(uplinkの送信角度)
+          transUpAngleAccuracy_dt% 上の精度
           pointingError_dt       % downlinkの送信方向誤差
           tRec_dt                % downlinkが受信されるはずの時刻
           % --------- scEstByScEkf, scEstByGsEkf, scEstByScBatch,

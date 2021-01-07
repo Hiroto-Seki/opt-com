@@ -4,7 +4,10 @@
 function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant)
     deltaT = X_star(1);
     xvsr    = X_star(2:7);
+    
+    % ちゃんと伝搬してもいいけど，この近似のままの方が微分しやすい
     xst     = X_star(2:4) - dt2w* X_star(5:7);
+    
     c = constant.lightSpeed;
 
     %% 頻繁に出てくるもの
@@ -125,8 +128,40 @@ function H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant)
     
     %2wayの測距の微分
     delL2w = delLd + delLu;
-
+    
+    %% 地上局の観測(ダウンリンクの受信方向)の微分を求める
+    DdrX = (xst(1) - xver(1) - xvgr(1)) + (xver(4) + xvgr(4)) * Ld/c;
+    DdrY = (xst(2) - xver(2) - xvgr(2)) + (xver(5) + xvgr(5)) * Ld/c;
+    DdrZ = (xst(3) - xver(3) - xvgr(3)) + (xver(6) + xvgr(6)) * Ld/c;
+    % DdrXの微分
+    delDdrX(1) = delXst(1,1) + (xver(4) + xvgr(4)) * delLd(1)/c;
+    delDdrX(2) = delXst(1,2) + (xver(4) + xvgr(4)) * delLd(2)/c;
+    delDdrX(3) = delXst(1,3) + (xver(4) + xvgr(4)) * delLd(3)/c;
+    delDdrX(4) = delXst(1,4) + (xver(4) + xvgr(4)) * delLd(4)/c;
+    delDdrX(5) = delXst(1,5) + (xver(4) + xvgr(4)) * delLd(5)/c;
+    delDdrX(6) = delXst(1,6) + (xver(4) + xvgr(4)) * delLd(6)/c;
+    delDdrX(7) = delXst(1,7) + (xver(4) + xvgr(4)) * delLd(7)/c;
+    % DdrYの微分
+    delDdrY(1) = delXst(2,1) + (xver(5) + xvgr(5)) * delLd(1)/c;
+    delDdrY(2) = delXst(2,2) + (xver(5) + xvgr(5)) * delLd(2)/c;
+    delDdrY(3) = delXst(2,3) + (xver(5) + xvgr(5)) * delLd(3)/c;
+    delDdrY(4) = delXst(2,4) + (xver(5) + xvgr(5)) * delLd(4)/c;
+    delDdrY(5) = delXst(2,5) + (xver(5) + xvgr(5)) * delLd(5)/c;
+    delDdrY(6) = delXst(2,6) + (xver(5) + xvgr(5)) * delLd(6)/c;
+    delDdrY(7) = delXst(2,7) + (xver(5) + xvgr(5)) * delLd(7)/c;   
+    % DdrZの微分
+    delDdrZ(1) = delXst(3,1) + (xver(6) + xvgr(6)) * delLd(1)/c;
+    delDdrZ(2) = delXst(3,2) + (xver(6) + xvgr(6)) * delLd(2)/c;
+    delDdrZ(3) = delXst(3,3) + (xver(6) + xvgr(6)) * delLd(3)/c;
+    delDdrZ(4) = delXst(3,4) + (xver(6) + xvgr(6)) * delLd(4)/c;
+    delDdrZ(5) = delXst(3,5) + (xver(6) + xvgr(6)) * delLd(5)/c;
+    delDdrZ(6) = delXst(3,6) + (xver(6) + xvgr(6)) * delLd(6)/c;
+    delDdrZ(7) = delXst(3,7) + (xver(6) + xvgr(6)) * delLd(7)/c;
+    
+    delAzm_dr = (delDdrY * DdrX - delDdrX * DdrY)/(DdrX^2 + DdrY^2);
+    delElv_dr = ( (DdrX^2 + DdrY^2)*delDdrZ - (DdrX * delDdrX + DdrY * delDdrY)*DdrZ )...
+                /( (DdrX^2 + DdrY^2 + DdrZ^2) * (DdrX^2 + DdrY^2)^0.5 ) ;
     %% まとめる
-    H = [delAzm_ur;delElv_ur;delAzm_ut;delElv_ut;delAccel;delL1w;delL2w];
+    H = [delAzm_ur;delElv_ur;delAzm_ut;delElv_ut;delAccel;delL1w;delL2w;delAzm_dr;delElv_dr];
     
 end

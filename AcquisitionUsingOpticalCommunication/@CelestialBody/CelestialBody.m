@@ -11,6 +11,7 @@ classdef CelestialBody < handle
         % earthのみにあるプロパティ(送受信に関するパラメーター)
           t_ut       
           state_ut
+%           state_ut2w         
           t_dr
           state_dr
     end

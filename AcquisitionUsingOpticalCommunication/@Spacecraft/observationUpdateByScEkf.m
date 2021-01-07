@@ -45,7 +45,8 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
             scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
             scTrue.accelObseved_ur(:,ur_counter);...       % 加速度計
             scTrue.lengthObserved_ur(ur_counter);          % 測距1way
-            scTrue.length2wObserved_ur(ur_counter);];      % 測距2way
+            scTrue.length2wObserved_ur(ur_counter);        % 測距2way
+            scTrue.recDownAngle_ur(:,ur_counter)];         % uplinkされる，地上局での観測  
         % 観測方程式に出てくるもの
         xve_dr = earth.state_dr(:,ur2w_counter);
         xvg_dr = gsTrue.state_dr(:,ur2w_counter);
@@ -59,7 +60,12 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
                                         xve_dr,xvg_dr,...
                                         dt2w,...
                                         constant);
-        R = obj.R(1:9,1:9);
+        % Rの書き換え
+        obj.R(10,10) = scTrue.recDownAngleAccuracy_ur(ur_counter)^2;
+        obj.R(11,11) = obj.R(10,10);
+        R = obj.R(1:11,1:11);
+        
+        
     end
     y = Y - Y_star;
     obj.y = y;

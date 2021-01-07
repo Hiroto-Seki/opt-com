@@ -29,7 +29,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 1e5; %変更した 
+    error.scPosSigma = 1e4; %変更した 
     % 適当に0.1km/s程度の誤差とする
     error.scVelSigma = 1e-1; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
@@ -42,7 +42,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % duration time(探査機が光を受けて返すまでの時間)の誤差
     error.duration = 1e-10;                    % 高精度にできると仮定
     % 地上局のポインティング精度
-    error.gsPoint = 20*1e-9; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
+    error.gsPoint = 1*1e-7; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
     
     %% ground station
     gs.lat  = 36.1325063*cspice_rpd();
@@ -234,6 +234,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    % 送受信した回数の初期化
    gsTrue.ut_counter=0;
    gsTrue.dr_counter=0;
+   gsTrue.ut2w_counter = 0;
    scTrue.ur_counter=0;
    scTrue.dt_counter=0;
    scTrue.ur2w_counter = 0;

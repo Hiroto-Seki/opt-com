@@ -13,6 +13,13 @@ classdef GroundStation < handle
           state_ut         %uplinkを送信した時刻の状態量
           direction_ut     %uplinkの方向(1:azimuth,2:elevation)
           pointingError_ut %uplinkの送信指向誤差
+          ut2w_counter     %宇宙機が2wayの観測をできる何番目のuplinkか
+          ut2w_counterList %宇宙機が2wayの観測をできる何番目のuplinkか(何度目のダウンリンク直後の探索の送信か)を格納する
+                           %ut_counter番目の要素が何番目の宇宙機が2wayの観測をできる何番目のuplinkかに対応させる
+%           t_ut2w           %ut2w_counterのuplinkの時刻
+%           state_ut2w       %ut2w_counterのuplinkの状態量
+%           recDownAngle_ut  %地上局の観測(downlink受信方向)をuplinkで送信する.
+%           recDownAngleAccuracy_ut %上の精度
           % 探索に関するパラメーター
           opnEstTempT_ut
           opnEstTempState_ut

@@ -109,6 +109,7 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant,error)
  earth.state_ut(:,obj.ut_counter)  = earth.calcStateAtT_cb(obj.t_ut(obj.ut_counter),time,constant);
  obj.state_ut(:,obj.ut_counter) = obj.calcStateAtT_gs(obj.t_ut(obj.ut_counter),time,constant);
  
+ 
 
  
 end

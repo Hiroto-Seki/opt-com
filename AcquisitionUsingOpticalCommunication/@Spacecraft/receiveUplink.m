@@ -17,6 +17,8 @@ function [obj,gsTrue] = receiveUplink(obj,gsTrue,earth,constant,time)
     obj.transDirection_ur(:,ut_counter)  =  gsTrue.direction_ut(:,ut_counter);       %uplinkに載っている，送信方向(誤差を持つ)
     obj.lengthTrue_ur(ut_counter)        =  dtlt*constant.lightSpeed;                %クロック誤差が乗っていないいない測距情報
     
+    
+    
     %% 送信機のpointing誤差の計算
     trueDirection_ut = obj.state_ur(:,ut_counter) - obj.eState_ur(:,ut_counter) - obj.gsState_ur(:,ut_counter);
     

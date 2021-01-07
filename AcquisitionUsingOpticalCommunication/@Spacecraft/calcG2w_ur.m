@@ -23,5 +23,13 @@ length1w = norm(xvet(1:3) + xvgt(1:3) - xvsr(1:3)) + deltaT * constant.lightSpee
 % 測距(2way)
 length2w = norm(xvet(1:3) + xvgt(1:3) - xvsr(1:3)) + norm(xver(1:3) + xvgr(1:3) - xst(1:3)) + dtAtGs * constant.lightSpeed;
 
-Y_star = [azm_ur; elv_ur; azm_ut; elv_ut; accel;length1w;length2w];
+% 地上局の観測(ダウンリンクの受信)
+direction_dr = xvst(1:3) - xver(1:3) - xvgr(1:3)...
+                + norm(xvst(1:3) - xver(1:3) - xvgr(1:3)) * (xver(4:6) + xvgr(4:6))/ constant.lightSpeed;
+
+azm_dr   =  atan2(direction_dr(2), direction_dr(1));
+elv_dr   =  atan(direction_dr(3)/(direction_dr(1)^2 +direction_dr(2)^2)^0.5);
+            
+            
+Y_star = [azm_ur; elv_ur; azm_ut; elv_ut; accel;length1w;length2w;azm_dr;elv_dr];
 end
