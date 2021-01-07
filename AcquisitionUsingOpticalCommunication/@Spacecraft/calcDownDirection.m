@@ -37,7 +37,7 @@ function [obj,gsTrue,earth] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,
     obj.transUpAngle_dt(:,dt_counter) = obj.transDirection_ur(:,dt_counter);
     % 観測の分散も送信する
     obj.recUpAngleAccuracy_dt(dt_counter) = obj.directionAccuracy_ur(dt_counter);
-    
+    obj.transUpAngleAccuracy_dt(dt_counter) = gsTrue.directionAccuracy_ut(dt_counter);
     
     % 時刻tで宇宙機(真値)から送信された光が地上局に届く時刻とその時刻での地球・地上局の位置・速度を求める
     opnDownTrue = Spacecraft.calcTarget(t,gsTrue,earth,scTrueAtT,time,constant);

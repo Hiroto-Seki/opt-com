@@ -28,6 +28,8 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
     % Rを取得．QDセンサーの精度を反映
     obj.R.direction_ur = gsTrue.scRecAngleAccuracy_dr(dr_counter)^2;
     obj.R.direction_dr = gsTrue.directionAccuracy_dr(dr_counter)^2;
+    obj.R.direction_ut = gsTrue.transUpAngleAccuracy_dr(dr_counter)^2;
+    
     %% Yを取得. 
     Y.direction_ur = gsTrue.scRecAngle_dr(:,dr_counter); % 測角
     Y.direction_ut = gsTrue.transUpAngle_dr(:,dr_counter);     % uplink方向

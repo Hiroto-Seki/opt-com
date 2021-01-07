@@ -59,6 +59,7 @@
     obj.scAccel_dr(:,dr_counter) = scTrue.accel_dt(:,dr_counter);
     obj.scRecAngle_dr(:,dr_counter) = scTrue.recUpAngle_dt(:,dr_counter); %uplinkの受信角度
     obj.transUpAngle_dr(:,dr_counter) = scTrue.transUpAngle_dt(:,dr_counter);
+    obj.transUpAngleAccuracy_dr(:,dr_counter) = scTrue.transUpAngleAccuracy_dt(:,dr_counter);
     obj.scRecAngleAccuracy_dr(dr_counter) = scTrue.recUpAngleAccuracy_dt(dr_counter);    
     
 

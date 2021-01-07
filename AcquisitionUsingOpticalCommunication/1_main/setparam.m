@@ -185,7 +185,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    
   % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
    scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
-   scEstByGsSeq.useObs.direction_ut =0;  %uplinkを地上局が送信する角度
+   scEstByGsSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度
    scEstByGsSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
    scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
    scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
