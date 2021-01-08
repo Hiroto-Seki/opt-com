@@ -1,8 +1,8 @@
 % 1回の観測(探索)にかかる時間
-function [time,directionAccuracy_ut] = setSearchArea(time,gs,SSD,scEstByGsSeqP,error)
+function [gs,time,directionAccuracy_ut] = setSearchArea(time,gs,SSD,scEstByGsSeqP,error)
     % 推定値の分散から，探索が必要な範囲を決定
     posError = (scEstByGsSeqP(2,2) + scEstByGsSeqP(3,3) + scEstByGsSeqP(4,4))^0.5;
-    gs.searchArea     = (posError/(SSD.AU*10)) * 3 ; %10AUくらいを想定．3sigmaをカバーする
+    gs.searchArea     = (max(posError,200)/(SSD.AU*10)) * 3 ; %10AUくらいを想定．3sigmaをカバーする. 最低限200kmくらいはカバーする
     gs.searchStep     = min(0.8e-6, ceil(gs.searchArea/20*1e8)*1e-8 ); %探索時の1stepあたりの間隔(rad)
     %% 送る情報量から，1回のuplinkにかかる時間を求める
     % 今は仮で情報量を置いておく
@@ -13,6 +13,6 @@ function [time,directionAccuracy_ut] = setSearchArea(time,gs,SSD,scEstByGsSeqP,e
     % 探索1回にかかる時間がシミュレーションの何stepに相当するか
     time.obsStep = ceil(time.obs/time.simDt);
     % 観測誤差共分散の計算
-    directionAccuracy_ut = (gs.searchStep ^2 + error.gsPoint^2)^0.5; 
+    directionAccuracy_ut = (gs.searchStep ^2 )^0.5; 
     
 end

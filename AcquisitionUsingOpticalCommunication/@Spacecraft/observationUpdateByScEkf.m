@@ -80,9 +80,9 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
     y = Yv - YStarv;
     obj.y = y;
     % ここで，方位角の測角の部分で2piの不連続を回避するためにの計算をする．
-    for y_i = [1,6] %1番目は受信側の方位角の測角，6番目は送信側の方位角の測角
-        y(y_i) = mod(y(y_i) + pi, 2*pi) - pi;
-    end
+%     for y_i = [1,6] %1番目は受信側の方位角の測角，6番目は送信側の方位角の測角
+%         y(y_i) = mod(y(y_i) + pi, 2*pi) - pi;
+%     end
       
     % 観測残差及び残差検定
     for k = length(y):-1:1

@@ -64,6 +64,6 @@ classdef GroundStation < handle
     methods(Static)
         [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,scAtT,spacecraft,time,constant,valueType)
         xv = earthRotation(pos0, t, constant) % t秒後の状態量の計算
-        [time,R] = setSearchArea(time,gs,SSD,scEstByGsSeqP,error) %1回の観測にかかる時間を求める
+        [gs,time,R] = setSearchArea(time,gs,SSD,scEstByGsSeqP,error) %1回の観測にかかる時間を求める
     end 
 end

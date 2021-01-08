@@ -29,20 +29,20 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 5e2; %変更した 
+    error.scPosSigma = 1e2; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 5e-2; %変更した
+    error.scVelSigma = 1e-2; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
     error.dynamics = 1e-10;
     % STTの精度
-    error.stt = 4.85 * 10^-6 ; %ISSL unit→10urad(cross bore sight), ASTRO APS(2kg,5W程度)→1arcsec以下(4.85urad)
+    error.stt = 4.85 * 10^-6 * 0.358 ; %ISSL unit→10urad(cross bore sight), ASTRO APS(2kg,5W程度)→1arcsec以下(4.85urad)
     % 参考: https://blog.satsearch.co/2019-11-26-star-trackers-the-cutting-edge-celestial-navigation-products-available-on-the-global-space-marketplace
     % 加速度センサの精度. 擾乱とかの方が大きいかも・・
     error.accel = 1e-12; %ちょっとサイズが大きいけど https://www.researchgate.net/publication/268554054_High-performance_Accelerometer_for_On-orbit_Spacecraft_Autonomy  
     % duration time(探査機が光を受けて返すまでの時間)の誤差
     error.duration = 1e-10;                    % 高精度にできると仮定
-    % 地上局のポインティング精度
-    error.gsPoint = 1*1e-7; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
+    % 地上局のポインティング精度. 
+    error.gsPoint = 0.2*1e-7; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
     
     %% ground station
     gs.lat  = 36.1325063*cspice_rpd();
@@ -191,10 +191,10 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
    scEstByGsSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
    scEstByGsSeq.useObs.length1w_dr =1;   %宇宙機→地上局の1way測距
-   scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の1way測距
+   scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の2way測距
     
    scEstByScSeq.R.direction_ur = error.stt^2;
-   scEstByScSeq.R.direction_ut = (gs.searchStep^2+error.gsPoint^2);
+   scEstByScSeq.R.direction_ut = (gs.searchStep^2);
    scEstByScSeq.R.accel_ur     = error.accel^2;
    scEstByScSeq.R.length1w_ur  = (error.randomClock * constant.lightSpeed)^2;
    scEstByScSeq.R.length2w_ur  = (error.randomClock * constant.lightSpeed)^2;
@@ -218,12 +218,6 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % 12:1wayDownの測距,　交換しない
     % 13:2wayDownの測距, 交換しない
     
-%     scEstByScSeq.R    = [error.stt^2*eye(2),                                                    zeros(2,11);
-%                                  zeros(2,2),           (gs.searchStep^2+error.gsPoint^2)*eye(2), zeros(2,9);
-%                                  zeros(3,4),                               error.accel^2*eye(3), zeros(3,6);
-%                                  zeros(2,7), (error.randomClock * constant.lightSpeed)^2*eye(2), zeros(2,4);
-%                                  zeros(2,9),                                 error.stt^2*eye(2), zeros(2,2);
-%                                 zeros(2,11),             (error.randomClock * constant.lightSpeed)^2*eye(2)];
     
                           
     scEstByGsSeq.X             = scEstByScSeq.X;

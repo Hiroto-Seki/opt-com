@@ -31,7 +31,7 @@ for i = 1:length(time.list)-1
     % 探索を開始するtime.stepの計算
     if  i == 1  || i == time.lastSearch + time.obsStep
         % 探索範囲の設定. 今回の探索にかかる時間=次の探索が始まる時間を求める．
-        [time,gsTrue.directionAccuracy_ut(gsTrue.ut_counter + 1)] = GroundStation.setSearchArea(time,gs,SSD,scEstByGsEkf.P,error);
+        [gs,time,gsTrue.directionAccuracy_ut(gsTrue.ut_counter + 1)] = GroundStation.setSearchArea(time,gs,SSD,scEstByGsEkf.P,error);
         % 地上局が推定している探査機の軌道から目標方向と到達時刻を計算する
         [gsTrue.opnEstTempT_ut,gsTrue.opnEstTempState_ut] ...
             = GroundStation.calcTarget(time.list(i),gsTrue.state(:,i),earth.state(:,i),scEstByGsEkf.state(:,i),scEstByGsEkf,time,constant,"estimated value");
