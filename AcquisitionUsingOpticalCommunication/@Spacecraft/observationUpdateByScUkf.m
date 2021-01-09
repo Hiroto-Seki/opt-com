@@ -2,6 +2,7 @@
 function observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,time)
     % 何度目の観測か
     ur_counter = scTrue.ur_counter;
+    % 何度目のダウンリンクを2wayに使っているか(0の場合は2wayはできていない)
     ur2w_counter = scTrue.ur2w_counter;
     % シグマ点列を取得
     x_sp   = obj.x_sp;
@@ -21,7 +22,7 @@ function observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,tim
     if type ==2
         xve_dr = earth.state_dr(:,ur2w_counter);
         xvg_dr = gsTrue.state_dr(:,ur2w_counter);
-        dtAtGs = gsTrue.t_ut(ur_counter) - gsTrue.t_dr(ur2w_counter);
+        dtAtGs = scTrue.durationAtGs(ur_counter);
         dt2w  = scTrue.t_ur(ur_counter) - scTrue.t_dt(ur2w_counter);        
     end
     %% 観測値を取得
@@ -109,7 +110,10 @@ function observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,tim
 
     %% 観測残差及び残差検定
     v = Yv - y_meanV;
-       
+    
+    % デバッグ用に記録
+    obj.y = v;
+    
     for k = length(v):-1:1
         if ukf.sigmaN < abs(v(k))/sqrt(Pvv(k,k))
             % 観測を棄却する
@@ -132,7 +136,6 @@ function observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,tim
         obj.X = x_mean + K * v;
         obj.P = obj.P - K *Pxy.';
    end      
-    % デバッグ用に記録
-    obj.y = v;
+
 
 end

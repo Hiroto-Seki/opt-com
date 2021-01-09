@@ -96,9 +96,8 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
     %% 2way のみ
     if type == 2
 %     % 2wayの測距(往復時間,滞在時間)
-        obj.ur2w_counter = obj.ur2w_counter + 1;
         obj.length2wObserved_ur(obj.ur_counter) = (obj.t_ur(obj.ur_counter) - obj.t_dt(obj.ur2w_counter) + error.randomClock * randn )*constant.lightSpeed ;
-        obj.durationAtGs(obj.ur_counter) = gsTrue.t_ut(obj.ur_counter) - gsTrue.t_dr(obj.ur2w_counter);
+        obj.durationAtGs(obj.ur_counter) = gsTrue.t_ut(obj.ur_counter) - gsTrue.t_dr(obj.ur2w_counter) + error.randomClock * randn;
       % 地上局の観測量も送信されている
       obj.recDownAngle_ur(:,obj.ur_counter) = gsTrue.directionObserved_dr(:,obj.ur2w_counter);
       obj.recDownAngleAccuracy_ur(obj.ur_counter) = gsTrue.directionAccuracy_dr(obj.ur2w_counter);

@@ -175,7 +175,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     
    % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
    scEstByScSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
-   scEstByScSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度
+   scEstByScSeq.useObs.direction_ut =0;  %uplinkを地上局が送信する角度
    scEstByScSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
    scEstByScSeq.useObs.length1w_ur =1;   %地上局→宇宙機の1way測距
    scEstByScSeq.useObs.length2w_ur =1;   %宇宙機→地上局→宇宙機の2way測距
@@ -185,46 +185,28 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    
   % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
    scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
-   scEstByGsSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度
+   scEstByGsSeq.useObs.direction_ut =0;  %uplinkを地上局が送信する角度
    scEstByGsSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
-   scEstByGsSeq.useObs.length1w_ur =1;   %地上局→宇宙機の1way測距        (0になる)
-   scEstByGsSeq.useObs.length2w_ur =1;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
+   scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
+   scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
    scEstByGsSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
-   scEstByGsSeq.useObs.length1w_dr =0;   %宇宙機→地上局の1way測距
-   scEstByGsSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の2way測距
+   scEstByGsSeq.useObs.length1w_dr =1;   %宇宙機→地上局の1way測距
+   scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の2way測距
     
    scEstByScSeq.R.direction_ur = error.stt^2;
    scEstByScSeq.R.direction_ut = (gs.searchStep^2);
    scEstByScSeq.R.accel_ur     = error.accel^2;
    scEstByScSeq.R.length1w_ur  = (error.randomClock * constant.lightSpeed)^2;
-   scEstByScSeq.R.length2w_ur  = (error.randomClock * constant.lightSpeed)^2;
+   scEstByScSeq.R.length2w_ur  = (2 * error.randomClock * constant.lightSpeed)^2;
    scEstByScSeq.R.direction_dr = error.stt^2;  %downlinkを地上局が受信する角度
    scEstByScSeq.R.length1w_dr  = (error.randomClock * constant.lightSpeed)^2;   %宇宙機→地上局の1way測距
    scEstByScSeq.R.length2w_dr  = (error.randomClock * constant.lightSpeed)^2;   %地上局→宇宙機→地上局の1way測距  
-   
-   
-   % 観測値の順番
-    % 1:宇宙機のuplink受信測角(方位角), 交換する
-    % 2:宇宙機のuplink受信測角(仰角), 交換する
-    % 3:地上局のuplink送信測角(方位角),交換する
-    % 4:地上局のuplink送信測角(方位角),交換する
-    % 5:宇宙機の加速度X, 交換する
-    % 6:宇宙機の加速度Y, 交換する
-    % 7:宇宙機の加速度Z, 交換する
-    % 8:1wayUpの測距, 交換しない
-    % 9:2wayUpの測距, 交換しない
-    % 10:地上局のdownlink受信測角(方位角),交換する
-    % 11:地上局のdownlink受信測角(方位角),交換する
-    % 12:1wayDownの測距,　交換しない
-    % 13:2wayDownの測距, 交換しない
-    
-    
-                          
-    scEstByGsSeq.X             = scEstByScSeq.X;
-    scEstByGsSeq.P             = scEstByScSeq.P;
-    scEstByGsSeq.P_list        = zeros(7,7,length(time.list));
-    scEstByGsSeq.P_list(:,:,1) = scEstByGsSeq.P;
-    scEstByGsSeq.R             = scEstByScSeq.R;
+                             
+   scEstByGsSeq.X             = scEstByScSeq.X;
+   scEstByGsSeq.P             = scEstByScSeq.P;
+   scEstByGsSeq.P_list        = zeros(7,7,length(time.list));
+   scEstByGsSeq.P_list(:,:,1) = scEstByGsSeq.P;
+   scEstByGsSeq.R             = scEstByScSeq.R;
 
                           
     % EKFに使用するパラメーター

@@ -42,6 +42,7 @@ for i = 1:length(time.list)-1
         % 宇宙機に届く時刻と，宇宙機が受信する内容を求める
         [scTrue,gsTrue] = scTrue.receiveUplink(gsTrue,earth,constant,time);
         % 今回のuplinkが宇宙機側で2wayの何回目の観測に使えるか
+        % i番目ののuplink(gsTrue.ut_counterListのi番目)がj番目(i番目の要素)のdownlinkを利用した2way観測に使える
         if gsTrue.dr_counter > gsTrue.ut2w_counter
             gsTrue.ut2w_counter = gsTrue.dr_counter;
             gsTrue.ut2w_counterList(gsTrue.ut_counter) = gsTrue.ut2w_counter; 
@@ -71,7 +72,8 @@ for i = 1:length(time.list)-1
         else
             % 観測は2way
             time.obsScType = 2;
-%             time.obsScType = 1;
+            % 宇宙機は何度目のdownlinkを2wayに使うか
+            scTrue.ur2w_counter = gsTrue.ut2w_counterList(scTrue.ur_counter);
         end
         % 観測までは推定値と共分散を時間伝搬
         [scEstByScUkf.X, scEstByScUkf.P,~] = Spacecraft.timeUpdateUkf(scEstByScUkf.x_sp,constant, ukf, time.scDt1, time.simDt, error);

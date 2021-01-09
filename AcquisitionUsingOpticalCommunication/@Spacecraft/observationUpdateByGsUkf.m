@@ -76,7 +76,10 @@ function observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf)
     
     %% 観測残差及び残差検定
     v = Yv - y_meanV;
-      
+            
+    % デバッグ用に記録
+    obj.y = v; 
+    
    for k = length(v):-1:1
         if ukf.sigmaN < abs(v(k))/sqrt(Pvv(k,k))
             % 観測を棄却する
@@ -98,9 +101,7 @@ function observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf)
        obj.X_dt = x_mean + K * v;
        obj.P_dt = obj.P_dt - K *Pxy.';
    end   
-       
-    % デバッグ用に記録
-    obj.y = v;  
+ 
 
 
 
