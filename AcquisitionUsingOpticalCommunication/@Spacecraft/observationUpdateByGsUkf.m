@@ -13,52 +13,73 @@ function observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf)
     x_sp   = obj.x_sp_dt;
     % シグマ点列の重み平均を取得
     x_mean = obj.X_dt;
+    
+    %% Rを取得
+    obj.R.direction_ur = gsTrue.scRecAngleAccuracy_dr(dr_counter)^2;
+    obj.R.direction_dr = gsTrue.directionAccuracy_dr(dr_counter)^2;
+    obj.R.direction_ut = gsTrue.transUpAngleAccuracy_dr(dr_counter)^2;
+    
     %% 観測値を取得 
-    Y = [gsTrue.directionObserved_dr(:,dr_counter);... % 測角
-         gsTrue.scAccel_dr(:,dr_counter);...       % 加速度計
-         gsTrue.lengthObserved_dr(dr_counter);...
-         gsTrue.length2wObserved_dr(dr_counter)];    % 測距(1way)
+    Y.direction_ur = gsTrue.scRecAngle_dr(:,dr_counter); % 測角
+    Y.direction_ut = gsTrue.transUpAngle_dr(:,dr_counter);     % uplink方向
+    Y.accel_ur     = gsTrue.scAccel_dr(:,dr_counter);      % 加速度計
+    Y.direction_dr = gsTrue.directionObserved_dr(:,dr_counter);         % uplinkされる，地上局での観測
+    Y.length1w_dr  = gsTrue.lengthObserved_dr(dr_counter);
+    Y.length2w_dr  = gsTrue.length2wObserved_dr(dr_counter);
     %% シグマ点列での観測ベクトルを取得
-    y_sp = zeros(length(Y),size(x_sp,2));
+    % 初期化
+    y_mean.azm_ur = 0;
+    y_mean.elv_ur = 0;
+    y_mean.azm_ut = 0;
+    y_mean.elv_ut = 0;
+    y_mean.accel_ur = zeros(3,1);
+    y_mean.azm_dr = 0;
+    y_mean.elv_dr = 0;
+    y_mean.length1w_dr = 0;
+    y_mean.length2w_dr = 0;
     for i = 1:size(x_sp,2)
         x_spi = x_sp(:,i);
-        y_sp(:,i) = Spacecraft.calcG_dr(x_spi,xv_ut,xv_dr,dtAtSc,constant);
+        y_sp(i) = Spacecraft.calcG_dr(x_spi,xv_ut,xv_dr,dtAtSc,constant);
+        [~,y_spM(:,i),~,~] = Spacecraft.alignReqInfo4Est(Y,y_sp(i),[],obj.R,"2d","ukf",obj.useObs);
         if i == 1
-            y_mean = ukf.w0_m * y_sp(:,i);
+            wm = ukf.w0_m;
         else
-            y_mean = y_mean + ukf.wi_m * y_sp(:,i);
+            wm = ukf.wi_m;
         end
+        y_mean.azm_ur = y_mean.azm_ur + wm * y_sp(i).azm_ur;
+        y_mean.elv_ur = y_mean.elv_ur + wm * y_sp(i).elv_ur;
+        y_mean.azm_ut = y_mean.azm_ut + wm * y_sp(i).azm_ut;
+        y_mean.elv_ut = y_mean.elv_ut + wm * y_sp(i).elv_ut;
+        y_mean.accel_ur = y_mean.accel_ur  + wm * y_sp(i).accel_ur;
+        y_mean.azm_dr = y_mean.azm_dr + wm * y_sp(i).azm_dr;
+        y_mean.elv_dr = y_mean.elv_dr + wm * y_sp(i).elv_dr; 
+        y_mean.length1w_dr = y_mean.length1w_dr + wm * y_sp(i).length1w_dr;
+        y_mean.length2w_dr = y_mean.length2w_dr + wm * y_sp(i).length2w_dr;
     end
+    
+    % Y, Y_meanをベクトル化，Rを行列に
+    [Yv,y_meanV,~,Rm] = Spacecraft.alignReqInfo4Est(Y,y_mean,[],obj.R,"2d","ukf",obj.useObs);
+    
     %% 共分散行列及び相互共分散行列
     for j = 1:size(x_sp,2)
         if j == 1
-            Pvv = ukf.w0_c * (y_sp(:,j) - y_mean) * (y_sp(:,j) - y_mean).';
-            Pxy = ukf.w0_c * (x_sp(:,j) - x_mean) * (y_sp(:,j) - y_mean).';
+            Pvv = ukf.w0_c * (y_spM(:,j) - y_meanV) * (y_spM(:,j) - y_meanV).';
+            Pxy = ukf.w0_c * (x_sp(:,j) - x_mean) * (y_spM(:,j) - y_meanV).';
         else
-            Pvv = Pvv + ukf.wi_c * (y_sp(:,j) - y_mean) * (y_sp(:,j) - y_mean).';
-            Pxy = Pxy + ukf.wi_c * (x_sp(:,j) - x_mean) * (y_sp(:,j) - y_mean).';           
+            Pvv = Pvv + ukf.wi_c * (y_spM(:,j) - y_meanV) * (y_spM(:,j) - y_meanV).';
+            Pxy = Pxy + ukf.wi_c * (x_sp(:,j) - x_mean) * (y_spM(:,j) - y_meanV).';           
         end
     end
-       
-    % Rを取得．QDセンサーの精度を反映
-    R = obj.R2wGs;
-    R(1,1) = gsTrue.directionAccuracy_dr(dr_counter)^2;
-    R(2,2) = R(1,1);
-    obj.R2wGs = R;
+     
     
-    Pvv = Pvv + R;
+    Pvv = Pvv + Rm;
     
     %% 観測残差及び残差検定
-    v = Y - y_mean;
-    
-    % ここで，方位角の測角の部分で2piの不連続を回避するためにの計算をする．
-    for v_i =  1 %1番目は受信側の方位角の測角，6番目は送信側の方位角の測角
-        v(v_i) = mod(v(v_i) + pi, 2*pi) - pi;
-    end    
+    v = Yv - y_meanV;
+      
    for k = length(v):-1:1
         if ukf.sigmaN < abs(v(k))/sqrt(Pvv(k,k))
             % 観測を棄却する
-%             v(k) = 0;
             v(k) = [];
             Pvv(k,:) = [];
             Pvv(:,k) = [];

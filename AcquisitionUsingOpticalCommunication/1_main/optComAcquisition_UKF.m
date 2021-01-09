@@ -12,7 +12,7 @@ spice_loadkernels();
 SSD = spice_setparams();
 % 乱数
 rng('default');
-rng(2)
+rng(4)
 
 %% 1.setting parameter and initial state
 [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScUkf,scEstByGsUkf,~,ukf] = setparam(SSD);
@@ -30,7 +30,7 @@ for i = 1:length(time.list)-1
     % 探索を開始するtime.stepの計算
     if  i == 1  || i == time.lastSearch + time.obsStep
          % 探索範囲の設定. 今回の探索にかかる時間=次の探索が始まる時間を求める．
-        [time,scEstByScUkf.R1wSc,scEstByScUkf.R2wSc] = GroundStation.setSearchArea(time,gs,SSD,scEstByGsUkf.P,scEstByScUkf.R1wSc,scEstByScUkf.R2wSc,error);
+        [gs,time,gsTrue.directionAccuracy_ut(gsTrue.ut_counter + 1)] = GroundStation.setSearchArea(time,gs,SSD,scEstByGsUkf.P,error);
         % 地上局が推定している探査機の軌道から目標方向と到達時刻を計算する
         [gsTrue.opnEstTempT_ut,gsTrue.opnEstTempState_ut] ...
             = GroundStation.calcTarget(time.list(i),gsTrue.state(:,i),earth.state(:,i),scEstByGsUkf.state(:,i),scEstByGsUkf,time,constant,"estimated value");
@@ -41,9 +41,12 @@ for i = 1:length(time.list)-1
         [gsTrue,earth] = gsTrue.search(i,earth,gs,time,constant,error);
         % 宇宙機に届く時刻と，宇宙機が受信する内容を求める
         [scTrue,gsTrue] = scTrue.receiveUplink(gsTrue,earth,constant,time);
-        % 初めて，探査機が2wayを観測できる時間を求める
-        if gsTrue.dr_counter == 1
-            time.sc2wayget = scTrue.t_ur(gsTrue.ut_counter);
+        % 今回のuplinkが宇宙機側で2wayの何回目の観測に使えるか
+        if gsTrue.dr_counter > gsTrue.ut2w_counter
+            gsTrue.ut2w_counter = gsTrue.dr_counter;
+            gsTrue.ut2w_counterList(gsTrue.ut_counter) = gsTrue.ut2w_counter; 
+        else
+            gsTrue.ut2w_counterList(gsTrue.ut_counter) = 0;
         end
         time.lastSearch = i;      
     end
@@ -61,7 +64,7 @@ for i = 1:length(time.list)-1
         time.scDt1 = scTrue.t_ur(scTrue.ur_counter) - time.list(i);
         % 観測からの時間
         time.scDt2 = time.list(i+1) - scTrue.t_ur(scTrue.ur_counter);
-        if time.list(i+1) < time.sc2wayget
+        if gsTrue.ut2w_counterList(scTrue.ur_counter) == 0
             % 観測は1way
             time.obsScType = 1;
         % 2wayの観測も得られる時，観測
@@ -128,8 +131,7 @@ for i = 1:length(time.list)-1
     % 推定値を記録していく
     scEstByGsUkf.clockError(i+1)= error.clock0- scEstByGsUkf.X(1); %残りの誤差
     scEstByGsUkf.state(:,i+1)= scEstByGsUkf.X(2:7);
-    scEstByGsUkf.P_list(:,:,i+1) = scEstByGsUkf.P;
-    disp(i)  
+    scEstByGsUkf.P_list(:,:,i+1) = scEstByGsUkf.P; 
 end
 
 showResult(scTrue,scEstByScUkf,scEstByGsUkf,error);

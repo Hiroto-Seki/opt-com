@@ -55,27 +55,24 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
       qdXY_observed  = (qdIl^2 * qdXY_noError + qdIl^2/Snr * qdXY_Random)/( qdIl^2 + qdIl^2/Snr ); %QDセンサーの誤差を含むQDセンサー上の観測値
       
       % 姿勢決定に使うので，qdセンサーの観測精度を見積もる(おそらくqdIL,qdInの大きさは，uplinkの信号がON-OFFしてるので切り分けられる)
-      qdError = sc.qdPhi/Snr;
+%       qdError = sc.qdPhi/Snr;
       
       %% 宇宙機の姿勢を推定する
       % 　※宇宙機の軌道の推定値が悪いと，qdセンサーの値を姿勢に変換する精度も落ちてしまうので，宇宙機の軌道の精度が悪い場合は，sttのみの観測を使い，宇宙機の軌道の精度がいい場合は，qdも姿勢決定にしようする
       sttObserved = [rollTrue;pitchTrue;yawTrue] + randn(3,1)*error.stt;
       %   軌道の推定値のズレがどの程度観測に影響しそうか
-      directionEstError = (scEst.P(2,2) + scEst.P(3,3) + scEst.P(4,4))^0.5 / obj.lengthObserved_ur(obj.ur_counter);
-      if directionEstError < error.stt % sttの値とQDの値を両方姿勢決定に使う
-          % STT, QDセンサー, uplinkに入っている状態量から，宇宙機の姿勢を求める
-          [rollEst, pitchEst, yawEst,P_att] = Spacecraft.attDetermination(sttObserved,error.stt,qdXY_observed,qdError,directionEstI,sc.fL);
-          % directionの測角精度(観測誤差共分散行列に使用する)
-          obj.directionAccuracy_ur(obj.ur_counter) = sqrt((P_att(1)^2 + P_att(2)^2 + P_att(3)^2)/2  + ((1/Snr)*sc.qdFov)^2);
-% % % %           % 推定によって，sttのみの観測より良くなっているか確認する
-%           estError = ((rollEst - rollTrue)^2 + (pitchEst - pitchTrue)^2 + (yawEst - yawTrue)^2)^0.5;
-%           sttError = norm([rollTrue;pitchTrue;yawTrue] - sttObserved);
-      else
+%       directionEstError = (scEst.P(2,2) + scEst.P(3,3) + scEst.P(4,4))^0.5 / obj.lengthObserved_ur(obj.ur_counter);
+%       if directionEstError < error.stt % sttの値とQDの値を両方姿勢決定に使う
+%           % STT, QDセンサー, uplinkに入っている状態量から，宇宙機の姿勢を求める
+%           [rollEst, pitchEst, yawEst,P_att] = Spacecraft.attDetermination(sttObserved,error.stt,qdXY_observed,qdError,directionEstI,sc.fL);
+%           % directionの測角精度(観測誤差共分散行列に使用する)
+%           obj.directionAccuracy_ur(obj.ur_counter) = sqrt((P_att(1)^2 + P_att(2)^2 + P_att(3)^2)/2  + ((1/Snr)*sc.qdFov)^2);
+%       else
           rollEst  = sttObserved(1);
           pitchEst = sttObserved(2);
           yawEst   = sttObserved(3);
           obj.directionAccuracy_ur(obj.ur_counter) = sqrt(error.stt^2 * 3/2  + ((1/Snr)*sc.qdFov)^2);
-      end
+%       end
       %% QD座標系での観測値を慣性座標系での値に変換する．(TrueDirectionIに近くなっていると嬉しい. 視線方向の成分には, 姿勢推定誤差+軌道推定誤差がのる)
       % qd座標系での観測をFLT座標系に変換して正規化する
       directionEstFLT = [-qdXY_observed;sc.fL]; 

@@ -51,11 +51,6 @@ for i = 1:length(time.list)-1
         end
         time.lastSearch = i;      
     end
-    % 地上局のuplinkが宇宙機側で2wayの何番目の観測として使えるのかの判定(毎時刻やる？？)
-    % 地上局のuplink送信の時刻: gsTrue.t_ut(gsTrue.ut_counter)
-    % 直前のdownlink受信の時刻: gsTrue.t_dr(gsTrue.dr_counter)
-    % if gsTrue.t_ut(gsTrue.ut_counter) > gsTrue.t_dr(gsTrue.dr_counter)
-    % このuplinkは，gsTrue.dr_counter番目のsc2way観測に使えるものである
     
     
     %% 5 宇宙機での状態量の推定 & Downlink
@@ -141,7 +136,7 @@ for i = 1:length(time.list)-1
     scEstByGsEkf.clockError(i+1)= error.clock0- scEstByGsEkf.X(1); %残りの誤差
     scEstByGsEkf.state(:,i+1)= scEstByGsEkf.X(2:7);
     scEstByGsEkf.P_list(:,:,i+1) = scEstByGsEkf.P;
-    disp(i) 
+%     disp(i) 
 end
 
 showResult(scTrue,scEstByScEkf,scEstByGsEkf,error);

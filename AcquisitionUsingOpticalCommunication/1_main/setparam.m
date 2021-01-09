@@ -29,7 +29,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 1e2; %変更した 
+    error.scPosSigma = 5e2; %変更した 
     % 適当に0.1km/s程度の誤差とする
     error.scVelSigma = 1e-2; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機)
@@ -39,8 +39,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % 参考: https://blog.satsearch.co/2019-11-26-star-trackers-the-cutting-edge-celestial-navigation-products-available-on-the-global-space-marketplace
     % 加速度センサの精度. 擾乱とかの方が大きいかも・・
     error.accel = 1e-12; %ちょっとサイズが大きいけど https://www.researchgate.net/publication/268554054_High-performance_Accelerometer_for_On-orbit_Spacecraft_Autonomy  
-    % duration time(探査機が光を受けて返すまでの時間)の誤差
-    error.duration = 1e-10;                    % 高精度にできると仮定
+%     % duration time(探査機が光を受けて返すまでの時間)の誤差
+%     error.duration = 1e-10;                    % 高精度にできると仮定
     % 地上局のポインティング精度. 
     error.gsPoint = 0.2*1e-7; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
     
@@ -179,7 +179,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByScSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
    scEstByScSeq.useObs.length1w_ur =1;   %地上局→宇宙機の1way測距
    scEstByScSeq.useObs.length2w_ur =1;   %宇宙機→地上局→宇宙機の2way測距
-   scEstByScSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
+   scEstByScSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度 
    scEstByScSeq.useObs.length1w_dr =0;   %宇宙機→地上局の1way測距       (0になる)
    scEstByScSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の1way測距 (0になる)
    
@@ -187,11 +187,11 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
    scEstByGsSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度
    scEstByGsSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
-   scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
-   scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
+   scEstByGsSeq.useObs.length1w_ur =1;   %地上局→宇宙機の1way測距        (0になる)
+   scEstByGsSeq.useObs.length2w_ur =1;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
    scEstByGsSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
-   scEstByGsSeq.useObs.length1w_dr =1;   %宇宙機→地上局の1way測距
-   scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の2way測距
+   scEstByGsSeq.useObs.length1w_dr =0;   %宇宙機→地上局の1way測距
+   scEstByGsSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の2way測距
     
    scEstByScSeq.R.direction_ur = error.stt^2;
    scEstByScSeq.R.direction_ut = (gs.searchStep^2);

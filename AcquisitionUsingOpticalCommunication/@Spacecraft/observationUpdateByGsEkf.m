@@ -50,7 +50,7 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
     H = Spacecraft.delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);
     
     % % Y, Y_star, H, Rから必要な要素だけ取り出す
-    [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,"2d",obj.useObs);
+    [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,"2d","ekf",obj.useObs);
     
     
     y = Yv - YStarv; 

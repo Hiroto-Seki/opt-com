@@ -90,16 +90,14 @@ classdef Spacecraft < handle
         rotationMatrix = rotation(roll,pitch,yaw,order) %order=1:x軸→y軸→z軸の順番に回転する, order=2:z軸→y軸→x軸の順番に回転する
         A  = delFdelX(xv,mu) %運動方程式の微分
         [roll, pitch, yaw,P] = attDetermination(stt,sttError,qd,qdError,directionEstI,scfl)
-        Y_star = calcG1w_ur(X_star,xve,xvg,constant) % 推定値の時の観測量を計算(1way, 宇宙機による推定)
-        Y_star = calcG2w_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,time)
+        Y_star = calcG_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,time,type) % 推定値の時の観測量を計算(1way, 宇宙機による推定)
         Y_star = calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant) % 推定値の時の観測量を計算(2way, 地上局による推定)
         xvsc = timeUpdate_sc(xvsc,mu, Dt, dt)
         [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
         [X_new, P_new, x_sp_new] = timeUpdateUkf(x_sp,constant,ukf,Dt,dt, error) % UKFに使う．シグマ点列と誤差共分散を時間更新
-        H = delGdelX1w_ur(X_star,xve,xvg,constant)   % 観測方程式の微分(1way, 宇宙機による推定)
-        H = delGdelX2w_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant)
+        H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type)   % 観測方程式の微分(1way, 宇宙機による推定)
         H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);  % 観測方程式の微分(2way, 地上局による推定)
-        [Yv,YStarv,Hm,Rm] = alignReqInfo4Est(Y,YStar,H,R,type,reqList); %y, Y, H, Rを過不足なく並べる. type="1u:1wayのuplink", "2u:2wayのuplink","2d:2wayのdownlink"
+        [Yv,YStarv,Hm,Rm] = alignReqInfo4Est(Y,YStar,H,R,obsType,estType,reqList); %y, Y, H, Rを過不足なく並べる. type="1u:1wayのuplink", "2u:2wayのuplink","2d:2wayのdownlink"
         [opn_t,opn_stateE,opn_stateGs] = calcTarget(t,gs,e,scAtT,time,constant) % ダウンリンクが届く時刻とその時刻の地球,地上局の位置を求める
         X_sp = calcSigmaPoint(X,P,ukf) % シグマ点列の計算
     end
