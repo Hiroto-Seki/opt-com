@@ -54,10 +54,6 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
     
     
     y = Yv - YStarv; 
-%     % 角度の不連続性を解消
-%     for y_i = 1 %1番目は受信側の方位角の測角
-%         y(y_i) = mod(y(y_i) + pi, 2*pi) - pi;
-%     end
     obj.y    = y;
 
 

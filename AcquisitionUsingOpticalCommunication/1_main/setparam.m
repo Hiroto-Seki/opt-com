@@ -16,7 +16,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % simulation timeStep[s]
     time.simDt = 10;
     % number of time step
-    time.stepNum = 2400; 
+    time.stepNum = 2160; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.t0Ephemeris = 0;
@@ -25,28 +25,29 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     
     %% parameter related to error
     % 初期時計誤差
-    error.clockSigma = 1e-1; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
+    error.clockSigma = 1e-2; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 5e2; %変更した 
+    error.scPosSigma = 1e4; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 1e-2; %変更した
-    % ダイナミクスの不確定性の標準偏差(探査機)
-    error.dynamics = 1e-10;
+    error.scVelSigma = 1e-1; %変更した
+    % ダイナミクスの不確定性の標準偏差(探査機) 太陽輻射厚が100kg,
+    % 10m^2で，4.6e-12km/s^2で，それより少し小さめの値に設定した
+    error.dynamics = 1e-12;
     % STTの精度
-    error.stt = 4.85 * 10^-6 * 0.358 ; %ISSL unit→10urad(cross bore sight), ASTRO APS(2kg,5W程度)→1arcsec以下(4.85urad)
+    error.stt = 4.85 * 10^-6 * 0.364 ; %ISSL unit→10urad(cross bore sight), ASTRO APS(2kg,5W程度)→1arcsec以下(4.85urad)
     % 参考: https://blog.satsearch.co/2019-11-26-star-trackers-the-cutting-edge-celestial-navigation-products-available-on-the-global-space-marketplace
     % 加速度センサの精度. 擾乱とかの方が大きいかも・・
     error.accel = 1e-12; %ちょっとサイズが大きいけど https://www.researchgate.net/publication/268554054_High-performance_Accelerometer_for_On-orbit_Spacecraft_Autonomy  
 %     % duration time(探査機が光を受けて返すまでの時間)の誤差
 %     error.duration = 1e-10;                    % 高精度にできると仮定
     % 地上局のポインティング精度. 
-    error.gsPoint = 0.2*1e-7; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
+    error.gsPoint = 1*1e-7; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
     
     %% ground station
     gs.lat  = 36.1325063*cspice_rpd();
-    gs.lon =138.3607113*cspice_rpd();
+    gs.lon = 138.3607113*cspice_rpd();
     gs.alt  = 1.456;
     %% laser form gs to sc
     % 探索範囲(rad)
@@ -61,9 +62,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % 地上局のレーザーに関するパラメータ
     gs.peakPower     = 370*10^3;
     gs.peakWidth     = 128 * 1e-9;
-    gs.Ppm_up        = 128;
+    gs.Ppm_up        = 256;
     gs.symbolRate_up = 0.66;
-    gs.tEff          = 0.7;
+    gs.tEff          = 0.7 * 0.7; %バンドパス損失も含めた
     gs.atmosphereEff = 0.73;
     gs.tAperture     = 1;
     gs.gamma         = 0.2; % telescope obscuration ratio
@@ -75,14 +76,14 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     sc.aperture = 0.22; % [m]
     sc.gamma    = 0.2;
     sc.rAntGain = (pi * sc.aperture/ gs.wavelength_up)^2  * (1- sc.gamma^2)^2;
-    sc.rEff = 0.7;
+    sc.rEff = 0.7 * 0.7; % バンドパス損失も含めた
     sc.fL   = 25 * 1e-3;   % 焦点距離
     % QD センサ(探査機)
     k = constant.boltzmann;     %ボルツマン定数
     sc.T = 263;             % 絶対温度
     sc.Rsh = 200 * 10^6 * 10^(-0.0375*(sc.T-298));     % 並列抵抗
-    sc.qdBw =  16.6*1e6;   % 帯域幅. 
-    sc.qdGain = 1.22;      %フォトダイオードのゲイン
+    sc.qdBw =  16.08*1e6;   % 帯域幅. 
+    sc.qdGain = 1.25;      %フォトダイオードのゲイン
     sc.qdF    = 2 + sc.qdGain * 0.028; %過剰ノイズ比
     sc.qdFov = 385*1e-6; % 視野角 STTの姿勢決定精度が5urad(1sigma) → PAAより大きい方がいい
     sc.qdIj  = (4 * k * sc.T * sc.qdBw/sc.Rsh)^0.5; %熱雑音電流
@@ -106,7 +107,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     %% laser from sc to gs
     % European Deep Space Optical Communication Programを参考にした
     % 探査機
-    sc.peakPower = 640 * 9.785;
+    sc.peakPower = 640 * 9.58;
     sc.peakWidth = 8 * 1e-9 * 9.58;
     sc.Ppm_down         = 4096;
     sc.symbolRate_down  = 0.66;
@@ -175,7 +176,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     
    % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
    scEstByScSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
-   scEstByScSeq.useObs.direction_ut =0;  %uplinkを地上局が送信する角度
+   scEstByScSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度 　0にする.1にすると，たぶんうまくいけば軌道決定精度がかなり上がるが，うまくデバッグできなかった
    scEstByScSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
    scEstByScSeq.useObs.length1w_ur =1;   %地上局→宇宙機の1way測距
    scEstByScSeq.useObs.length2w_ur =1;   %宇宙機→地上局→宇宙機の2way測距
@@ -185,7 +186,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    
   % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
    scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
-   scEstByGsSeq.useObs.direction_ut =0;  %uplinkを地上局が送信する角度
+   scEstByGsSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度 0にする.1にすると，たぶんうまくいけば軌道決定精度がかなり上がるが，うまくデバッグできなかった
    scEstByGsSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
    scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
    scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)

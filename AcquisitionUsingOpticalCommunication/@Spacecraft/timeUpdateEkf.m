@@ -5,7 +5,7 @@ function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
    timeStep = dt;
    Dt_rest = Dt;
    % system noise
-   Q = [zeros(4,7);zeros(3,4),eye(3)*(error.dynamics * Dt)^2];
+   Q_t = [zeros(4,7);zeros(3,4),eye(3)*(error.dynamics)]; % 安定させるために大きくした
    %% RK4で伝搬する
    while Dt * Dt_rest > 1e-10
        if abs(Dt_rest) < timeStep
@@ -39,8 +39,7 @@ function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
    STM = STM + timeStep/6*(k1stm+2*k2stm+2*k3stm+k4stm);
    % STMを用いてリファレンスの状態量と誤差共分散行列の更新
    X = STM * X;
-   P = STM * P * STM.' + Q;
+   P = STM * P * STM.' + STM *  Q_t * STM.';
    end
-   
    
 end

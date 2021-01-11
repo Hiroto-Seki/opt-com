@@ -31,7 +31,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
     
     
     %% YとY_star,H取得. 観測によって場合分け
-% %     if type == 1 %1wayの観測 (1,2,3,4,5,6,7,8)の観測を得られる
+    if type == 1 %1wayの観測 (1,2,3,4,5,6,7,8)の観測を得られる
         Y.direction_ur = scTrue.directionObserved_ur(:,ur_counter);
         Y.direction_ut = scTrue.transDirection_ur(:,ur_counter);
         Y.accel_ur     = scTrue.accelObseved_ur(:,ur_counter);
@@ -42,31 +42,31 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,"1u","ekf",obj.useObs);
         
         
-% %     else %2wayの観測 (1,2,3,4,5,6,7,8,9,10,11)の観測を得られる．(10,11はuplink内容に含まれる) 
-% %         Y.direction_ur = scTrue.directionObserved_ur(:,ur_counter); % 測角
-% %         Y.direction_ut = scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
-% %         Y.accel_ur     = scTrue.accelObseved_ur(:,ur_counter);...       % 加速度計
-% %         Y.length1w_ur  = scTrue.lengthObserved_ur(ur_counter);          % 測距1way
-% %         Y.length2w_ur  = scTrue.length2wObserved_ur(ur_counter);        % 測距2way
-% %         Y.direction_dr = scTrue.recDownAngle_ur(:,ur_counter);         % uplinkされる，地上局での観測
-% %         % 観測方程式に出てくるもの
-% %         xve_dr = earth.state_dr(:,ur2w_counter);
-% %         xvg_dr = gsTrue.state_dr(:,ur2w_counter);
-% %         dtAtGs = gsTrue.t_ut(ur_counter) - gsTrue.t_dr(ur2w_counter);
-% %         dt2w  = scTrue.t_ur(ur_counter) - scTrue.t_dt(ur2w_counter);
-% %         Y_star = Spacecraft.calcG_ur(X_star,xve_ut,xvg_ut,...
-% %                                         xve_dr,xvg_dr,...
-% %                                         dtAtGs, dt2w,...
-% %                                         constant,time,"2way");
-% %         H = Spacecraft.delGdelX_ur(X_star,xve_ut,xvg_ut,...
-% %                                         xve_dr,xvg_dr,...
-% %                                         dt2w,...
-% %                                         constant,"2way");
-% %         % Rの書き換え
-% %         obj.R.direction_dr = scTrue.recDownAngleAccuracy_ur(ur_counter)^2;
-% %         [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,"2u","ekf",obj.useObs);
-% %         
-% %     end
+    else %2wayの観測 (1,2,3,4,5,6,7,8,9,10,11)の観測を得られる．(10,11はuplink内容に含まれる) 
+        Y.direction_ur = scTrue.directionObserved_ur(:,ur_counter); % 測角
+        Y.direction_ut = scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
+        Y.accel_ur     = scTrue.accelObseved_ur(:,ur_counter);...       % 加速度計
+        Y.length1w_ur  = scTrue.lengthObserved_ur(ur_counter);          % 測距1way
+        Y.length2w_ur  = scTrue.length2wObserved_ur(ur_counter);        % 測距2way
+        Y.direction_dr = scTrue.recDownAngle_ur(:,ur_counter);         % uplinkされる，地上局での観測
+        % 観測方程式に出てくるもの
+        xve_dr = earth.state_dr(:,ur2w_counter);
+        xvg_dr = gsTrue.state_dr(:,ur2w_counter);
+        dtAtGs = gsTrue.t_ut(ur_counter) - gsTrue.t_dr(ur2w_counter);
+        dt2w  = scTrue.t_ur(ur_counter) - scTrue.t_dt(ur2w_counter);
+        Y_star = Spacecraft.calcG_ur(X_star,xve_ut,xvg_ut,...
+                                        xve_dr,xvg_dr,...
+                                        dtAtGs, dt2w,...
+                                        constant,time,"2way");
+        H = Spacecraft.delGdelX_ur(X_star,xve_ut,xvg_ut,...
+                                        xve_dr,xvg_dr,...
+                                        dt2w,...
+                                        constant,"2way");
+        % Rの書き換え
+        obj.R.direction_dr = scTrue.recDownAngleAccuracy_ur(ur_counter)^2;
+        [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,"2u","ekf",obj.useObs);
+        
+    end
     y = Yv - YStarv;
     obj.y = y;
     % ここで，方位角の測角の部分で2piの不連続を回避するためにの計算をする．
@@ -74,7 +74,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
 %         y(y_i) = mod(y(y_i) + pi, 2*pi) - pi;
 %     end
       
-    % 観測残差及び残差検定
+%     観測残差及び残差検定
     for k = length(y):-1:1
         S = (Hm*P_bar*Hm.' + Rm);
         if ekf.sigmaN < abs(y(k))/sqrt(S(k,k))

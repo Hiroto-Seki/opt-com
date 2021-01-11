@@ -15,8 +15,8 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant,error)
  % 推定値の方向の初期値(中心となる)
  relXvEst = obj.opnEstTempState_ut - earth.state(:,i) - obj.state(:,i); 
  relXvTrue = obj.opnTrueTempState_ut - earth.state(:,i) - obj.state(:,i);
- estAzm0 = atan2(relXvEst(2),relXvEst(1) ) + randn * error.gsPoint; %中心点をブレさせている
- estElv0 = atan(relXvEst(3) /(relXvEst(1)^2 + relXvEst(2)^2)^0.5 ) + randn * error.gsPoint; %中心点をブレさせている
+ estAzm0 = atan2(relXvEst(2),relXvEst(1) )  + randn * obj.directionAccuracy_ut(obj.ut_counter + 1); 
+ estElv0 = atan(relXvEst(3) /(relXvEst(1)^2 + relXvEst(2)^2)^0.5 ) + randn * obj.directionAccuracy_ut(obj.ut_counter + 1); %中心点をブレさせている
 
  % 真値の方向の初期値
  trueAzm0  = atan2(relXvTrue(2),relXvTrue(1) );
@@ -52,8 +52,8 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant,error)
      % 各時刻のAzmとElvを計算．(推定値真値ともに)
      estAzm = estAzm0 + dt * estAzmVel;
      estElv = estElv0 + dt * estElvVel;
-     pointAzm = estAzm + i_azm * gs.searchStep;
-     pointElv = estElv + i_elv * gs.searchStep;
+     pointAzm = estAzm + i_azm * gs.searchStep + randn * error.gsPoint;
+     pointElv = estElv + i_elv * gs.searchStep + randn * error.gsPoint;
      trueAzm = trueAzm0 + dt * trueAzmVel;
      trueElv = trueElv0 + dt * trueElvVel;
      % plot用に格納
@@ -72,7 +72,7 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant,error)
      if pointingError < tempPointingError
          tempPointingError = pointingError;
          gsTrue_t_ut   = obj.t(i) + dt;
-         gsTrue_direction_ut = [pointAzm;pointElv];
+         gsTrue_direction_ut = [estAzm + i_azm * gs.searchStep;estElv + i_elv * gs.searchStep];
      end
      % 次時刻ごとに推定値から何step離れた点に照射するか計算
      if     mod(i_dir,4) == 1

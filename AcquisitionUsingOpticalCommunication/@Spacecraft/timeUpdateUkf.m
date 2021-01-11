@@ -38,6 +38,8 @@ for k = 1:size(x_sp,2)
         P_new = P_new + ukf.wi_c * (x_sp_new(:,k) - X_new) * (x_sp_new(:,k) - X_new).';
     end  
 end
+
+
 P_new = P_new + Q;
 
 end
