@@ -2,17 +2,15 @@ function showResult(scTrue,scEstByScEkf,scEstByGsEkf,error)
 
 % 各要素ごとに出力
 figure(1)
-hold on
 title("clock error")
-semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60, scEstByScEkf.clockError)
-semilogy((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, scEstByGsEkf.clockError)
-semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60, 1 * reshape(scEstByScEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5 )
-semilogy((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, 1 * reshape(scEstByGsEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5 )
-semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60, - 1 * reshape(scEstByScEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5 )
-semilogy((scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, - 1 * reshape(scEstByGsEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5 )
-ylim(1e-2*[-1,1])
+semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60, abs(scEstByScEkf.clockError),...
+         (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, abs(scEstByGsEkf.clockError),...
+         (scEstByScEkf.t-scEstByScEkf.t(1))/60/60, 1 * reshape(scEstByScEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5, ...
+         (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, 1 * reshape(scEstByGsEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5)
+%          (scEstByScEkf.t-scEstByScEkf.t(1))/60/60, 3 * reshape(scEstByScEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5,...
+%          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60, 3 * reshape(scEstByGsEkf.P_list(1,1,:), 1, length(scEstByScEkf.t)).^0.5)
 xlabel('time[h]')
-legend('estimated by sc', 'estimated by gs', '1\sigma', '1\sigma')
+legend('estimated by sc', 'estimated by gs', '1\sigma estimated by sc', '1\sigma estimated by gs')
 
 figure(2)
 tiledlayout(1,4)

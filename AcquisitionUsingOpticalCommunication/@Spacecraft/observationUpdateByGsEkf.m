@@ -58,7 +58,7 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
 
 
     
-%     観測残差及び残差検定
+% %     観測残差及び残差検定
     for k = length(y):-1:1
         S = (Hm*P_bar*Hm.' + Rm);
         if ekf.sigmaN < abs(y(k))/sqrt(S(k,k)) %3シグマに設定している

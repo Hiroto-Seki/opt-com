@@ -26,6 +26,6 @@ classdef CelestialBody < handle
     end
     methods(Static)
         xv = twobody(xv, mu, a_pertubation) % 運動方程式. 宇宙機も，同じダイナミクスに従う
-%         xvAtT = calcStateE(sc,t,time)    % ある時刻の状態量を計算する
+        time = calcAngleHistory(time,earth,gsTrue,scTrue) %地球・宇宙機・太陽の間の角度と，地上局から宇宙機が見えるかを計算する
     end
 end

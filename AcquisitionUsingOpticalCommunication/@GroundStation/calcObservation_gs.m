@@ -51,6 +51,11 @@
     qdIl = obj.receivedPower_dr(dr_counter) * gs.qdS; %入射光による電流
     Snr = (gs.qdGain * qdIl)^2 /...
           (gs.qdGain^2 * 2 * constant.elementaryCharge * (qdIl + gs.qdId) * gs.qdBw * gs.qdF + gs.qdIj^2);
+    
+    if gs.reqSnr_down > Snr
+        disp("Downlink of signal to noise ratio is too low")
+    end
+    
     % 観測誤差(地上局はQDの精度=慣性空間での測角精度とする)
     obj.directionAccuracy_dr(dr_counter) = gs.qdFov /Snr;
     obj.directionObserved_dr(:,dr_counter) = obj.directionTrue_dr(:,dr_counter) + randn(2,1) * obj.directionAccuracy_dr(dr_counter);

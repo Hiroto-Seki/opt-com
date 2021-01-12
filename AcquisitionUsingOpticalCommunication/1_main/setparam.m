@@ -14,9 +14,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     
     %% parameter related to time
     % simulation timeStep[s]
-    time.simDt = 10;
+    time.simDt = 60;
     % number of time step
-    time.stepNum = 2160; 
+    time.stepNum = 3000; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.t0Ephemeris = 0;
@@ -25,13 +25,13 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     
     %% parameter related to error
     % 初期時計誤差
-    error.clockSigma = 1e-2; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
+    error.clockSigma = 1e-3; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
-    error.scPosSigma = 1e4; %変更した 
+    error.scPosSigma = 1e5; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 1e-1; %変更した
+    error.scVelSigma = 1e-0; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機) 太陽輻射厚が100kg,
     % 10m^2で，4.6e-12km/s^2で，それより少し小さめの値に設定した
     error.dynamics = 1e-12;
@@ -197,11 +197,11 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByScSeq.R.direction_ur = error.stt^2;
    scEstByScSeq.R.direction_ut = (gs.searchStep^2);
    scEstByScSeq.R.accel_ur     = error.accel^2;
-   scEstByScSeq.R.length1w_ur  = (error.randomClock * constant.lightSpeed)^2;
-   scEstByScSeq.R.length2w_ur  = (2 * error.randomClock * constant.lightSpeed)^2;
+   scEstByScSeq.R.length1w_ur  = (1e0 * error.randomClock * constant.lightSpeed)^2;
+   scEstByScSeq.R.length2w_ur  = (1e0 * error.randomClock * constant.lightSpeed)^2;
    scEstByScSeq.R.direction_dr = error.stt^2;  %downlinkを地上局が受信する角度
-   scEstByScSeq.R.length1w_dr  = (error.randomClock * constant.lightSpeed)^2;   %宇宙機→地上局の1way測距
-   scEstByScSeq.R.length2w_dr  = (error.randomClock * constant.lightSpeed)^2;   %地上局→宇宙機→地上局の1way測距  
+   scEstByScSeq.R.length1w_dr  = (1e0 * error.randomClock * constant.lightSpeed)^2;   %宇宙機→地上局の1way測距
+   scEstByScSeq.R.length2w_dr  = (1e0 * error.randomClock * constant.lightSpeed)^2;   %地上局→宇宙機→地上局の1way測距  
                              
    scEstByGsSeq.X             = scEstByScSeq.X;
    scEstByGsSeq.P             = scEstByScSeq.P;
@@ -212,7 +212,6 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
                           
     % EKFに使用するパラメーター
     ekf.sigmaN = 3;
-    
     
     % UKFに使用するパラメーター
     ukf.n = 7; % 推定する状態量の数(クロックオフセット，位置3・速度3)

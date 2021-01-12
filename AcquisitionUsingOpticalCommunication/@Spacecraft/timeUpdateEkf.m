@@ -5,7 +5,8 @@ function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
    timeStep = dt;
    Dt_rest = Dt;
    % system noise
-   Q_t = [zeros(4,7);zeros(3,4),eye(3)*(error.dynamics)]; % 安定させるために大きくした
+   Q_t = [error.randomClock^2, zeros(1,6); zeros(3,7) ; zeros(3,4),eye(3)*(error.dynamics^2)]; 
+%    Q_t = [zeros(4,7);zeros(3,4),eye(3)*(error.dynamics^2)]; 
    %% RK4で伝搬する
    while Dt * Dt_rest > 1e-10
        if abs(Dt_rest) < timeStep
@@ -38,8 +39,15 @@ function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
    k4stm = Spacecraft.delFdelX(xvsc+timeStep*k3sc,constant.sunMu)*(STM+timeStep*k3stm);
    STM = STM + timeStep/6*(k1stm+2*k2stm+2*k3stm+k4stm);
    % STMを用いてリファレンスの状態量と誤差共分散行列の更新
-   X = STM * X;
+%    X = STM * X;
+   X = [X(1) ;xvsc + timeStep/6*(k1sc+2*k2sc+2*k3sc+k4sc)];
    P = STM * P * STM.' + STM *  Q_t * STM.';
    end
+   
+%    % 本当はやりたくないのだが，クロックオフセットの推定値誤差共分散が小さいとおかしなところに収束してしまうので，
+%    if P(1,1) < 1e-10
+%        P(1,1) = 1e-10;
+%    end
+   
    
 end
