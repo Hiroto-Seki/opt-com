@@ -43,6 +43,8 @@ for i = 1:length(time.list)
     % 通信できるかを記録
     if time.upAvail(i) * time.downAvail(i) * time.elvAvail(i) == 1
         time.comAvail(i) = 1;
+    else
+        time.comAvail(i) = 0;
     end
     
 end

@@ -59,7 +59,7 @@ classdef GroundStation < handle
         end
         xvAtT = calcStateAtT_gs(obj,t,time,constant) % 時刻tでの状態量を得る
         [obj,earth] = search(obj,i,earth,gs,time,constant,error) 
-        obj = calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error,scEstbyGs,time) % 観測量の計算
+        obj = calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error,scEstbyGs,time,scEstbySc) % 観測量の計算
         
     end
     methods(Static)

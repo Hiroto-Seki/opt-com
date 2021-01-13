@@ -82,7 +82,7 @@ classdef Spacecraft < handle
         observationUpdateByScEkf(obj,scTrue,earth,gsTrue,constant,type,time,ekf) % (宇宙機による)EKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,time) % (宇宙機による)UKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         [obj,gsTrue,eTrue] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,eTrue,scAtT,time,constant) % obj = scTrue
-        observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新
+        observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue,time) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新
         observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf) %% (地上局による)UKFでの観測を用いて推定値と誤差共分散を更新
         
         

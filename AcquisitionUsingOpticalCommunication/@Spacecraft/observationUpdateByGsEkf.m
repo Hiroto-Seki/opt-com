@@ -11,7 +11,7 @@
 % X      : 更新した推定値
 % P      : 更新した誤差共分散行列
 
-function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue)
+function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue,time)
     % 何度目の観測か
     dr_counter = gsTrue.dr_counter;
     %% 必要な変数を取得
@@ -26,9 +26,9 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue)
     X_star = obj.X_dt;
     P_bar  = obj.P_dt;
     % Rを取得．QDセンサーの精度を反映
-    obj.R.direction_ur = gsTrue.scRecAngleAccuracy_dr(dr_counter)^2;
+    obj.R.direction_ur = gsTrue.scRecAngleAccuracy_dr(dr_counter)^2 + ( (P_bar(5,5)+P_bar(6,6)+P_bar(7,7))* time.simDt/1.5e9); %厳密には受信時刻と送信時刻の観測量は異なるので
     obj.R.direction_dr = gsTrue.directionAccuracy_dr(dr_counter)^2;
-    obj.R.direction_ut = gsTrue.transUpAngleAccuracy_dr(dr_counter)^2;
+    obj.R.direction_ut = gsTrue.transUpAngleAccuracy_dr(dr_counter)^2 + ((P_bar(5,5)+P_bar(6,6)+P_bar(7,7)) * time.simDt/1.5e9); %厳密には受信時刻と送信時刻の観測量は異なるので
     
     %% Yを取得. 
     Y.direction_ur = gsTrue.scRecAngle_dr(:,dr_counter); % 測角
@@ -38,12 +38,6 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue)
     Y.length1w_dr  = gsTrue.lengthObserved_dr(dr_counter);
     Y.length2w_dr  = gsTrue.length2wObserved_dr(dr_counter);
     
-%     Y = [gsTrue.scRecAngle_dr(:,dr_counter);... 
-%          gsTrue.transUpAngle_dr(:,dr_counter);...
-%          gsTrue.scAccel_dr(:,dr_counter);...       % 加速度計
-%          gsTrue.directionObserved_dr(:,dr_counter);... % 測角
-%          gsTrue.lengthObserved_dr(dr_counter);...
-%          gsTrue.length2wObserved_dr(dr_counter)];    % 測距(1way)
     %% Y_starを計算
     Y_star = Spacecraft.calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);
     % Hを計算
@@ -95,19 +89,23 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue)
     
     y = Yv - YStarv; 
     obj.y    = y;
-
-
     
-%%     観測残差及び残差検定
-%     for k = length(y):-1:1
-%         S = (Hm*P_bar*Hm.' + Rm);
-%         if ekf.sigmaN < abs(y(k))/sqrt(S(k,k)) %3シグマに設定している
-%             y(k) = [];
-%             Hm(k,:) = [];
-%             Rm(k,:) = [];
-%             Rm(:,k) = [];
-%         end  
+%     % uplinkがきちんと観測されていなさそうな場合はP_barを大きくする
+%     if scTrue.ur_observability(dr_counter) == 1
+%         P_bar = P_bar * 4;
 %     end
+    
+    
+%     観測残差及び残差検定
+    for k = length(y):-1:1
+        S = (Hm*P_bar*Hm.' + Rm);
+        if ekf.sigmaN < abs(y(k))/sqrt(S(k,k)) %3シグマに設定している
+            y(k) = [];
+            Hm(k,:) = [];
+            Rm(k,:) = [];
+            Rm(:,k) = [];
+        end  
+    end
     
    %% 有効な観測がない時は例外処理をする
    if isempty(y)
@@ -115,7 +113,7 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue)
        P = P_bar;
    else
        % Kを計算
-%        K = P_bar * H.'/(H*P_bar*H.' + R);
+%        K = P_bar * Hm.'/(Hm*P_bar*Hm.' + Rm);
        K = P_bar * Hm.'* pinv(Hm*P_bar*Hm.' + Rm);
        % XとPを計算
        X = X_star + K * y;
@@ -123,6 +121,9 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue)
    end
     obj.X_dt = X;
     obj.P_dt = P;
+    
+   
+   
 
 
 end

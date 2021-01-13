@@ -140,9 +140,9 @@ for i = 1:length(time.list)-1
             [scEstByGsEkf.X_dt, scEstByGsEkf.P_dt] = Spacecraft.timeUpdateEkf(scEstByGsEkf.X_dt, scEstByGsEkf.P_dt, constant, time.gsDt1, time.simDt,error);             
         end
         % 観測量の計算
-        gsTrue.calcObservation_gs(scTrue,earth,constant,gs,sc,error,scEstByGsEkf,time);
+        gsTrue.calcObservation_gs(scTrue,earth,constant,gs,sc,error,scEstByGsEkf,time,scEstByScEkf);
         % EKFで観測量から推定量を計算する
-        scEstByGsEkf.observationUpdateByGsEkf(gsTrue,earth,constant,ekf,scTrue);
+        scEstByGsEkf.observationUpdateByGsEkf(gsTrue,earth,constant,ekf,scTrue,time);
         % 時刻time.list(i+1)での推定値と誤差共分散を求める(結果に使う)
         time.gsDt2 = time.list(i+1) - time.scDtEstByGs;
         [scEstByGsEkf.X, scEstByGsEkf.P] = Spacecraft.timeUpdateEkf(scEstByGsEkf.X_dt, scEstByGsEkf.P_dt, constant, time.gsDt2, time.simDt,error);

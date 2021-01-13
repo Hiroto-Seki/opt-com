@@ -16,7 +16,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % simulation timeStep[s]
     time.simDt = 60;
     % number of time step
-    time.stepNum = 5000; 
+    time.stepNum = 8000; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.t0Ephemeris = 0;
@@ -25,13 +25,13 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     
     %% parameter related to error
     % 初期時計誤差
-    error.clockSigma = 1e-3; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
+    error.clockSigma = 1e-2; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
     error.scPosSigma = 1e5; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 1e-0; %変更した
+    error.scVelSigma = 1e-1; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機) 太陽輻射厚が100kg,
     % 10m^2で，4.6e-12km/s^2で，それより少し小さめの値に設定した
     error.dynamics = 1e-12;
@@ -185,8 +185,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByScSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の1way測距 (0になる)
    
   % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
-   scEstByGsSeq.useObs.direction_ur =0;  %uplinkを宇宙機が受信する角度
-   scEstByGsSeq.useObs.direction_ut =0;  %uplinkを地上局が送信する角度 0にする.1にすると，たぶんうまくいけば軌道決定精度がかなり上がるが，うまくデバッグできなかった
+   scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
+   scEstByGsSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度 0にする.1にすると，たぶんうまくいけば軌道決定精度がかなり上がるが，うまくデバッグできなかった
    scEstByGsSeq.useObs.accel_ur =0;      %uplinkを宇宙機が受信する時の加速度
    scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
    scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
