@@ -36,7 +36,7 @@ for i = 1:length(time.list)
     if abs(sep) > 12
         time.downAvail(i) = 1;
     end
-    if elvHorizon > 20
+    if elvHorizon > 20 %だいたい1パスが6時間くらい?
         time.elvAvail(i) = 1;
     end
     

@@ -24,6 +24,7 @@ classdef GroundStation < handle
           opnTrueTempState_ut
           % 受信に関するパラメーター
           dr_counter           %downlinkを受信した回数
+          dr_observability     %downlinkを観測できたかどうか. 1=観測できない. 2=SN比が低い 3=観測できた
           t_dr                 %downlinkを受信した時刻
           state_dr             %downlinkを受信した時刻の状態量
           lengthTrue_dr        %観測誤差を含まない測距情報
@@ -58,7 +59,7 @@ classdef GroundStation < handle
         end
         xvAtT = calcStateAtT_gs(obj,t,time,constant) % 時刻tでの状態量を得る
         [obj,earth] = search(obj,i,earth,gs,time,constant,error) 
-        obj = calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error) % 観測量の計算
+        obj = calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error,scEstbyGs,time) % 観測量の計算
         
     end
     methods(Static)

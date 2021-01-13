@@ -16,7 +16,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % simulation timeStep[s]
     time.simDt = 60;
     % number of time step
-    time.stepNum = 3000; 
+    time.stepNum = 5000; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.t0Ephemeris = 0;
@@ -177,7 +177,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
    scEstByScSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
    scEstByScSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度 　0にする.1にすると，たぶんうまくいけば軌道決定精度がかなり上がるが，うまくデバッグできなかった
-   scEstByScSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
+   scEstByScSeq.useObs.accel_ur =0;      %uplinkを宇宙機が受信する時の加速度
    scEstByScSeq.useObs.length1w_ur =1;   %地上局→宇宙機の1way測距
    scEstByScSeq.useObs.length2w_ur =1;   %宇宙機→地上局→宇宙機の2way測距
    scEstByScSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度 
@@ -185,9 +185,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByScSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の1way測距 (0になる)
    
   % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
-   scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
-   scEstByGsSeq.useObs.direction_ut =1;  %uplinkを地上局が送信する角度 0にする.1にすると，たぶんうまくいけば軌道決定精度がかなり上がるが，うまくデバッグできなかった
-   scEstByGsSeq.useObs.accel_ur =1;      %uplinkを宇宙機が受信する時の加速度
+   scEstByGsSeq.useObs.direction_ur =0;  %uplinkを宇宙機が受信する角度
+   scEstByGsSeq.useObs.direction_ut =0;  %uplinkを地上局が送信する角度 0にする.1にすると，たぶんうまくいけば軌道決定精度がかなり上がるが，うまくデバッグできなかった
+   scEstByGsSeq.useObs.accel_ur =0;      %uplinkを宇宙機が受信する時の加速度
    scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
    scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
    scEstByGsSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度

@@ -11,7 +11,7 @@
 % X      : 更新した推定値
 % P      : 更新した誤差共分散行列
 
-function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
+function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue)
     % 何度目の観測か
     dr_counter = gsTrue.dr_counter;
     %% 必要な変数を取得
@@ -48,9 +48,49 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
     Y_star = Spacecraft.calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);
     % Hを計算
     H = Spacecraft.delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);
-    
+
+    %% 観測できているかで場合わけ (9通り)
+    % uplinkが観測されているか:scTrue.ur_observability(dr_counter).宇宙機は受信したらすぐ送信する
+    % downlinkが観測されているか: gsTrue.dr_observability(dr_counter)
+    switch scTrue.ur_observability(dr_counter)
+        case 1 %uplinkが観測されていない
+            switch gsTrue.dr_observability(dr_counter)
+                case 1
+                    obsType = "2d_noObsU_noObsD";
+                case 2
+                    obsType = "2d_noObsU_lowD";
+                case 3
+                    obsType = "2d_noObsU_obsD";
+                otherwise
+                    disp("obsType is not set correctly")
+            end  
+        case 2 %uplinkのSNRが低い
+            switch gsTrue.dr_observability(dr_counter)
+                case 1
+                    obsType = "2d_lowU_noObsD";
+                case 2
+                    obsType = "2d_lowU_lowD";
+                case 3
+                    obsType = "2d_lowU_obsD";
+                otherwise
+                    disp("obsType is not set correctly")
+            end  
+        case 3 %uplinkが観測されている
+            switch gsTrue.dr_observability(dr_counter)
+                case 1
+                    obsType = "2d_obsU_noObsD";
+                case 2
+                    obsType = "2d_obsU_lowD";
+                case 3
+                    obsType = "2d_obsU_obsD";
+                otherwise
+                    disp("obsType is not set correctly")
+            end
+        otherwise
+            disp("obsType is not set correctly")
+    end
     % % Y, Y_star, H, Rから必要な要素だけ取り出す
-    [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,"2d","ekf",obj.useObs);
+    [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
     
     
     y = Yv - YStarv; 
@@ -58,16 +98,16 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf)
 
 
     
-% %     観測残差及び残差検定
-    for k = length(y):-1:1
-        S = (Hm*P_bar*Hm.' + Rm);
-        if ekf.sigmaN < abs(y(k))/sqrt(S(k,k)) %3シグマに設定している
-            y(k) = [];
-            Hm(k,:) = [];
-            Rm(k,:) = [];
-            Rm(:,k) = [];
-        end  
-    end
+%%     観測残差及び残差検定
+%     for k = length(y):-1:1
+%         S = (Hm*P_bar*Hm.' + Rm);
+%         if ekf.sigmaN < abs(y(k))/sqrt(S(k,k)) %3シグマに設定している
+%             y(k) = [];
+%             Hm(k,:) = [];
+%             Rm(k,:) = [];
+%             Rm(:,k) = [];
+%         end  
+%     end
     
    %% 有効な観測がない時は例外処理をする
    if isempty(y)

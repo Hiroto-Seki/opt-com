@@ -15,13 +15,14 @@ classdef Spacecraft < handle
           % 時刻ごとに，ランダムに姿勢を与える．→QDセンサー上での送信方向の誤差を計算する．姿勢は推定しない．(ダイナミクスが早いので，観測が追い付かなそうなので)
           % ------------scTrueにのみあるもの (観測に関するもの)--------
           ur_counter             %uplinkを受信した回数を数える
+          ur_observability         %uplinkを観測できたかどうか. 1=観測できない. 2=SN比が低い 3=観測できた
           t_ur                   %uplinkを受信する時刻
           state_ur               %観測時の宇宙機の位置・速度
           attStateTrue_ur        %t_urに対応する姿勢(ロール・ピッチ・ヨー) 
           attStateObserved_ur    %t_urに対応する姿勢 
           lengthTrue_ur          %距離の真値
           lengthObserved_ur      %観測される距離
-          ur2w_counter         %2wayが観測された回数
+          ur2w_counter           %2wayが観測された回数
           length2wObserved_ur%観測される距離(2way)
           durationAtGs           %地上局が受信してから送信するまでの時間
           directionTrue_ur       %誤差がない時の慣性空間上での見かけの方向(azimuth,elevation)
@@ -75,13 +76,13 @@ classdef Spacecraft < handle
             obj.clockError = zeros(1,length(obj.t));
         end 
         obj = calcOrbitTwoBody(obj,sunMu,error)
-        xvAtT = calcStateAtT_sc(obj,t,time)  
+        xvAtT = calcStateAtT_sc(obj,t,time,constant)  
         [obj,gsTrue] = receiveUplink(obj,gsTrue,earth,constant,time) %uplinkを受信する．その時の観測量を求める
         obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type) %観測量の計算 obj = scTrue, type=1:1way, type=2:2way
         observationUpdateByScEkf(obj,scTrue,earth,gsTrue,constant,type,time,ekf) % (宇宙機による)EKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,time) % (宇宙機による)UKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         [obj,gsTrue,eTrue] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,eTrue,scAtT,time,constant) % obj = scTrue
-        observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新
+        observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新
         observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf) %% (地上局による)UKFでの観測を用いて推定値と誤差共分散を更新
         
         

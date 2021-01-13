@@ -40,13 +40,16 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
           (sc.qdGain^2 * 2 * constant.elementaryCharge * (qdIl + sc.qdId) * sc.qdBw * sc.qdF + sc.qdIj^2);
       % QDセンサーの値(x,y)を姿勢の真値から求める. 誤差を含む
       qdXY_noError = - sc.fL /(directionTrueFLT(3)*1e3) * (directionTrueFLT(1:2)*1e3); %単位がmであることに注意
-      % もし，QDセンサー内に入らなかったら警告
-      if norm(qdXY_noError) > sc.qdPhi
+      % もし，QDセンサー内に入らなかったはいらなかったり,SN比が低すぎたら
+      if norm(qdXY_noError) > sc.qdPhi || 1 > Snr
           disp("Uplink doesn't enter the FOV of QD")
-      end 
-      % SN比が要求に満たなかった場合も警告
-      if sc.reqSnr_up > Snr
+          obj.ur_observability(obj.ur_counter) = 1;
+      elseif sc.reqSnr_up > Snr
           disp("Uplink of signal to noise ratio is too low")
+          obj.ur_observability(obj.ur_counter) = 2;
+      else
+          disp("Uplink of signal is observed")
+          obj.ur_observability(obj.ur_counter) = 3;
       end 
       % ノイズ電流に起因するスポット位置を受光スポット内にランダムに生成する
       qdRandom_R     = sqrt(rand * sc.qdPhi^2);

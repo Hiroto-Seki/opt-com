@@ -27,6 +27,12 @@ function [obj,gsTrue,earth] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,
     dt_counter = obj.dt_counter + 1;
     obj.dt_counter = dt_counter;
     
+    % 宇宙機の受信回数と送信回数が一致しているのか確認(念のため)
+    if obj.dt_counter == obj.ur_counter
+    else
+        disp("dt_counter and ur_counter is not same")
+    end
+    
     % 送信した時刻での宇宙機の状態量(真値)を求める．(地上局での観測量の計算に用いる)
     obj.t_dt(dt_counter) = t;
     obj.state_dt(:,dt_counter) = scTrueAtT;

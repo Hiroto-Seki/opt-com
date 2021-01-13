@@ -13,7 +13,7 @@
 
 
 
-    function calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error)
+    function calcObservation_gs(obj,scTrue,earth,constant,gs,sc,error,scEstByGs,time)
     % 何度目の受信か
     dr_counter = obj.dr_counter;
 
@@ -34,12 +34,23 @@
     t_dr    = obj.t_dr(dr_counter);
     xvgs_dr = obj.state_dr(:,dr_counter);
     xve_dr  = earth.state_dr(:,dr_counter);
+    
+    % 地上局が推定する．宇宙機の送信時の状態量
+    xvsc_dt_estByGs = scEstByGs.calcStateAtT_sc(t_dt,time,constant);
+    % 地上局が推定する宇宙機の方向
+    gs2scD_estByGs  = xvsc_dt_estByGs - xve_dr - xvgs_dr; 
+
+    
+    
 
     %% 測角
     gs2scD = xvsc_dt - xve_dr - xvgs_dr;  % vector(position and velocity) of GroundStation To SpaceCraft when Downlink
     directionTrue = gs2scD(1:3) + (xve_dr(4:6) + xvgs_dr(4:6)) * ( norm(gs2scD(1:3))/constant.lightSpeed ) ;
     obj.directionTrue_dr(:,dr_counter) = [atan2(directionTrue(2),directionTrue(1));
                                         atan(directionTrue(3)/(directionTrue(1)^2 +directionTrue(2)^2 )^0.5)];
+    
+
+                                    
     % 観測誤差の計算
     pointingError_dt = scTrue.pointingError_dt(dr_counter);
     % 指向誤差損失
@@ -52,8 +63,18 @@
     Snr = (gs.qdGain * qdIl)^2 /...
           (gs.qdGain^2 * 2 * constant.elementaryCharge * (qdIl + gs.qdId) * gs.qdBw * gs.qdF + gs.qdIj^2);
     
-    if gs.reqSnr_down > Snr
+    % 地上局の推定する方向の誤差
+    gsRecDirectionError = acos(gs2scD_estByGs.' * gs2scD/ norm(gs2scD_estByGs)/norm(gs2scD));
+      
+    if gsRecDirectionError > gs.qdFov
+        disp("Downlink is out of the FOV of ground station")
+        obj.dr_observability(dr_counter) = 1;
+    elseif gs.reqSnr_down > Snr
         disp("Downlink of signal to noise ratio is too low")
+        obj.dr_observability(dr_counter) = 2;
+    else
+        disp("Downlink of signal is observed")
+        obj.dr_observability(dr_counter) = 3;
     end
     
     % 観測誤差(地上局はQDの精度=慣性空間での測角精度とする)

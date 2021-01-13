@@ -38,10 +38,19 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         Y.length1w_ur  = scTrue.lengthObserved_ur(ur_counter);
         Y_star = Spacecraft.calcG_ur(X_star,xve_ut,xvg_ut,[],[],[],[],constant,[],"1way");
         H = Spacecraft.delGdelX_ur(X_star,xve_ut,xvg_ut,[],[],[],constant,"1way");
+        
+        % 観測できているかの判定を使う
+        if scTrue.ur_observability(ur_counter) == 1
+            obsType = "1u_noObs";
+        elseif scTrue.ur_observability(ur_counter) == 2
+            obsType = "1u_lowSnr";
+        elseif scTrue.ur_observability(ur_counter) == 3
+            obsType = "1u_Obs";
+        else
+            disp("observation type is not defined correctly ")
+        end
         % Y, Y_star, H, Rから必要な要素だけ取り出す
-        [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,"1u","ekf",obj.useObs);
-        
-        
+        [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
     else %2wayの観測 (1,2,3,4,5,6,7,8,9,10,11)の観測を得られる．(10,11はuplink内容に含まれる) 
         Y.direction_ur = scTrue.directionObserved_ur(:,ur_counter); % 測角
         Y.direction_ut = scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
@@ -64,7 +73,49 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
                                         constant,"2way");
         % Rの書き換え
         obj.R.direction_dr = scTrue.recDownAngleAccuracy_ur(ur_counter)^2;
-        [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,"2u","ekf",obj.useObs);
+        %% 観測できているのかの判定
+        % downlinkで観測できていたか: gsTrue.dr_observability(ur2w_counter)
+        % uplinkが観測できていたか:scTrue.ur_observability(ur_counter)
+        switch gsTrue.dr_observability(ur2w_counter)
+            case 1 %downlinkが観測されていない
+                switch scTrue.ur_observability(ur_counter)
+                    case 1
+                        obsType = "2u_noObsD_noObsU";
+                    case 2
+                        obsType = "2u_noObsD_lowU";
+                    case 3
+                        obsType = "2u_noObsD_obsU";
+                    otherwise
+                        disp("obsType is not set correctly")
+                end  
+            case 2 %downlinkのSNRが低い
+                switch scTrue.ur_observability(ur_counter)
+                    case 1
+                        obsType = "2u_lowD_noObsU";
+                    case 2
+                        obsType = "2u_lowD_lowU";
+                    case 3
+                        obsType = "2u_lowD_obsU";
+                    otherwise
+                        disp("obsType is not set correctly")
+                end  
+            case 3 %downlinkが観測されている
+                switch scTrue.ur_observability(ur_counter)
+                    case 1
+                        obsType = "2u_obsD_noObsU";
+                    case 2
+                        obsType = "2u_obsD_lowU";
+                    case 3
+                        obsType = "2u_obsD_obsU";
+                    otherwise
+                        disp("obsType is not set correctly")
+                end
+            otherwise
+                disp("obsType is not set correctly")
+        end
+        
+        
+        [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
         
     end
     y = Yv - YStarv;

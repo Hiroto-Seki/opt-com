@@ -39,15 +39,10 @@ function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
    k4stm = Spacecraft.delFdelX(xvsc+timeStep*k3sc,constant.sunMu)*(STM+timeStep*k3stm);
    STM = STM + timeStep/6*(k1stm+2*k2stm+2*k3stm+k4stm);
    % STMを用いてリファレンスの状態量と誤差共分散行列の更新
-%    X = STM * X;
    X = [X(1) ;xvsc + timeStep/6*(k1sc+2*k2sc+2*k3sc+k4sc)];
    P = STM * P * STM.' + STM *  Q_t * STM.';
    end
    
-%    % 本当はやりたくないのだが，クロックオフセットの推定値誤差共分散が小さいとおかしなところに収束してしまうので，
-%    if P(1,1) < 1e-10
-%        P(1,1) = 1e-10;
-%    end
-   
+  
    
 end
