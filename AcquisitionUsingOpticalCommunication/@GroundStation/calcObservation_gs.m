@@ -27,7 +27,7 @@
     xvsc_ur = scTrue.state_ur(:,dr_counter);
     
     % 宇宙機の受信時の推定状態量
-    xvscEst_ur = scEstBySc.calcStateAtT_sc(t_ur,time,constant);
+%     xvscEst_ur = scEstBySc.calcStateAtT_sc(t_ur,time,constant);
 
     % 宇宙機の送信時の状態量
     t_dt    = scTrue.t_dt(dr_counter);
@@ -87,21 +87,23 @@
     obj.directionObserved_dr(:,dr_counter) = obj.directionTrue_dr(:,dr_counter) + randn(2,1) * obj.directionAccuracy_dr(dr_counter);
     
     % downlinkに載っている情報
-    % uplinkを受けてから受信するまでの時間の分の移動を補正した値にする
-    dtAtSc = t_dt - t_ur;
-    % direction_utの補正
-    posGs2Sc_Est = xvscEst_ur(1:3) - (xvgs_dr(1:3)+xve_dr(1:3));
-    velGs2Sc_Est = xvscEst_ur(4:6) - (xvgs_dr(4:6)+xve_dr(4:6));
-    dAzm_ut = dtAtSc * ( - velGs2Sc_Est(1) * sin(scTrue.transUpAngle_dt(1,dr_counter)) ...
-        +  velGs2Sc_Est(2) * cos(scTrue.transUpAngle_dt(1,dr_counter)))...
-        /((t_ur - t_ut)* constant.lightSpeed * cos(scTrue.transUpAngle_dt(2,dr_counter)));
-    dElv_ut = dtAtSc * ( -   (velGs2Sc_Est(1) * posGs2Sc_Est(1) + velGs2Sc_Est(2) * posGs2Sc_Est(2))/(posGs2Sc_Est(1)^2+posGs2Sc_Est(2)^2)^0.5...
-        * sin(scTrue.transUpAngle_dt(2,dr_counter)) ...
-        +  velGs2Sc_Est(3) * cos(scTrue.transUpAngle_dt(2,dr_counter)))...
-        /((t_ur - t_ut)* constant.lightSpeed);     
+%     % uplinkを受けてから受信するまでの時間の分の移動を補正した値にする
+%     dtAtSc = t_dt - t_ur;
+%     % direction_utの補正
+%     posGs2Sc_Est = xvscEst_ur(1:3) - (xvgs_dr(1:3)+xve_dr(1:3));
+%     velGs2Sc_Est = xvscEst_ur(4:6) - (xvgs_dr(4:6)+xve_dr(4:6));
+%     dAzm_ut = dtAtSc * ( - velGs2Sc_Est(1) * sin(scTrue.transUpAngle_dt(1,dr_counter)) ...
+%         +  velGs2Sc_Est(2) * cos(scTrue.transUpAngle_dt(1,dr_counter)))...
+%         /((t_ur - t_ut)* constant.lightSpeed * cos(scTrue.transUpAngle_dt(2,dr_counter)));
+%     dElv_ut = dtAtSc * ( -   (velGs2Sc_Est(1) * posGs2Sc_Est(1) + velGs2Sc_Est(2) * posGs2Sc_Est(2))/(posGs2Sc_Est(1)^2+posGs2Sc_Est(2)^2)^0.5...
+%         * sin(scTrue.transUpAngle_dt(2,dr_counter)) ...
+%         +  velGs2Sc_Est(3) * cos(scTrue.transUpAngle_dt(2,dr_counter)))...
+%         /((t_ur - t_ut)* constant.lightSpeed); 
+%     obj.scRecAngle_dr(:,dr_counter) = scTrue.recUpAngle_dt(:,dr_counter) - [dAzm_ut;dElv_ut]; %uplinkの受信角度
+%     obj.transUpAngle_dr(:,dr_counter) = scTrue.transUpAngle_dt(:,dr_counter) + [dAzm_ut;dElv_ut];
     obj.scAccel_dr(:,dr_counter) = scTrue.accel_dt(:,dr_counter);
-    obj.scRecAngle_dr(:,dr_counter) = scTrue.recUpAngle_dt(:,dr_counter) - [dAzm_ut;dElv_ut]; %uplinkの受信角度
-    obj.transUpAngle_dr(:,dr_counter) = scTrue.transUpAngle_dt(:,dr_counter) + [dAzm_ut;dElv_ut];
+    obj.scRecAngle_dr(:,dr_counter) = scTrue.recUpAngle_dt(:,dr_counter); %uplinkの受信角度
+    obj.transUpAngle_dr(:,dr_counter) = scTrue.transUpAngle_dt(:,dr_counter);
     obj.transUpAngleAccuracy_dr(:,dr_counter) = scTrue.transUpAngleAccuracy_dt(:,dr_counter);
     obj.scRecAngleAccuracy_dr(dr_counter) = scTrue.recUpAngleAccuracy_dt(dr_counter);    
     

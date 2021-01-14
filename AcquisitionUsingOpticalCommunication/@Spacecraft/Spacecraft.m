@@ -83,7 +83,7 @@ classdef Spacecraft < handle
         observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,time) % (宇宙機による)UKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         [obj,gsTrue,eTrue] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,eTrue,scAtT,time,constant) % obj = scTrue
         observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue,time) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新
-        observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf) %% (地上局による)UKFでの観測を用いて推定値と誤差共分散を更新
+        observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf,scTrue) %% (地上局による)UKFでの観測を用いて推定値と誤差共分散を更新
         
         
     end
@@ -98,7 +98,7 @@ classdef Spacecraft < handle
         [X_new, P_new, x_sp_new] = timeUpdateUkf(x_sp,constant,ukf,Dt,dt, error) % UKFに使う．シグマ点列と誤差共分散を時間更新
         H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type)   % 観測方程式の微分(1way, 宇宙機による推定)
         H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);  % 観測方程式の微分(2way, 地上局による推定)
-        [Yv,YStarv,Hm,Rm] = alignReqInfo4Est(Y,YStar,H,R,obsType,estType,reqList); %y, Y, H, Rを過不足なく並べる. type="1u:1wayのuplink", "2u:2wayのuplink","2d:2wayのdownlink"
+        [Yv,YStarv,Hm,Rm,obsNum] = alignReqInfo4Est(Y,YStar,H,R,obsType,estType,reqList); %y, Y, H, Rを過不足なく並べる. type="1u:1wayのuplink", "2u:2wayのuplink","2d:2wayのdownlink"
         [opn_t,opn_stateE,opn_stateGs] = calcTarget(t,gs,e,scAtT,time,constant) % ダウンリンクが届く時刻とその時刻の地球,地上局の位置を求める
         X_sp = calcSigmaPoint(X,P,ukf) % シグマ点列の計算
     end

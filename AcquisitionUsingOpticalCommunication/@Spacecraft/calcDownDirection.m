@@ -82,4 +82,9 @@ function [obj,gsTrue,earth] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,
     % 送信方向の誤差を求める
     pointingError = abs( acos(directionTrueI.' * directionTransI/( norm(directionTrueI)* norm(directionTransI)) ));
     obj.pointingError_dt(dt_counter) = pointingError;
+    
+    
+    
+    
+    
     end

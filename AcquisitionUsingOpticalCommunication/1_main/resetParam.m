@@ -1,4 +1,4 @@
-function [time, gsTrue, scTrue] = resetParam(time, gsTrue, scTrue)
+function [time, gsTrue, scTrue,scEstBySc,scEstByGs] = resetParam(time, gsTrue, scTrue,scEstBySc,scEstByGs)
     time.lastSearch = 0;
     gsTrue.ut_counter = 0;
     gsTrue.t_ut = [];
@@ -48,7 +48,6 @@ function [time, gsTrue, scTrue] = resetParam(time, gsTrue, scTrue)
     scTrue.transDirection_ur = [];       %uplinkに載っている，送信方向(誤差を持つ)
     scTrue.recDownAngle_ur = [];         %uplinkに載っている，地上局の観測量(downlinkの測角)
     scTrue.recDownAngleAccuracy_ur = []; %上の精度
-    % ----------scTrueにあるもの(送信に関するもの)--------
     scTrue.dt_counter  = 0;           % downlinkを送信した回数を数える 
     scTrue.t_dt    = [];                % downlinkを送信した時刻  
     scTrue.state_dt  = [];              % downlinkを送信した時刻の状態量(観測量の計算に用いる)
@@ -58,5 +57,11 @@ function [time, gsTrue, scTrue] = resetParam(time, gsTrue, scTrue)
     scTrue.transUpAngle_dt  = [];       % downlinkに載っている，宇宙機の観測量(uplinkの送信角度)
     scTrue.transUpAngleAccuracy_dt = []; % 上の精度
     scTrue.pointingError_dt = [];       % downlinkの送信方向誤差
-    scTrue.tRec_dt  = [];               % downlinkが受信されるはずの時刻   
+    scTrue.tRec_dt  = [];               % downlinkが受信されるはずの時刻 
+    % X_dt, P_dt　(scEstBySc)
+    scEstBySc.X_dt = [];
+    scEstBySc.P_dt = [];
+    scEstByGs.X_dt = [];
+    scEstByGs.P_dt = [];
+    
 end

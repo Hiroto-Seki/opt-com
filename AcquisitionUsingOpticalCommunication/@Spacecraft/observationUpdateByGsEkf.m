@@ -26,9 +26,9 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue,time)
     X_star = obj.X_dt;
     P_bar  = obj.P_dt;
     % Rを取得．QDセンサーの精度を反映
-    obj.R.direction_ur = gsTrue.scRecAngleAccuracy_dr(dr_counter)^2 + ( (P_bar(5,5)+P_bar(6,6)+P_bar(7,7))* time.simDt/1.5e9); %厳密には受信時刻と送信時刻の観測量は異なるので
+    obj.R.direction_ur = gsTrue.scRecAngleAccuracy_dr(dr_counter)^2; %厳密には受信時刻と送信時刻の観測量は異なるので
     obj.R.direction_dr = gsTrue.directionAccuracy_dr(dr_counter)^2;
-    obj.R.direction_ut = gsTrue.transUpAngleAccuracy_dr(dr_counter)^2 + ((P_bar(5,5)+P_bar(6,6)+P_bar(7,7)) * time.simDt/1.5e9); %厳密には受信時刻と送信時刻の観測量は異なるので
+    obj.R.direction_ut = gsTrue.transUpAngleAccuracy_dr(dr_counter)^2; %厳密には受信時刻と送信時刻の観測量は異なるので
     
     %% Yを取得. 
     Y.direction_ur = gsTrue.scRecAngle_dr(:,dr_counter); % 測角
@@ -84,7 +84,7 @@ function observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue,time)
             disp("obsType is not set correctly")
     end
     % % Y, Y_star, H, Rから必要な要素だけ取り出す
-    [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
+    [Yv,YStarv,Hm,Rm,~] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
     
     
     y = Yv - YStarv; 

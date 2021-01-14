@@ -16,7 +16,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % simulation timeStep[s]
     time.simDt = 60;
     % number of time step
-    time.stepNum = 8000; 
+    time.stepNum = 10000; 
     % simulateion start time (ephemeris time)
     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
     time.t0Ephemeris = 0;
@@ -180,7 +180,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByScSeq.useObs.accel_ur =0;      %uplinkを宇宙機が受信する時の加速度
    scEstByScSeq.useObs.length1w_ur =1;   %地上局→宇宙機の1way測距
    scEstByScSeq.useObs.length2w_ur =1;   %宇宙機→地上局→宇宙機の2way測距
-   scEstByScSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度 
+   scEstByScSeq.useObs.direction_dr =0;  %downlinkを地上局が受信する角度 
    scEstByScSeq.useObs.length1w_dr =0;   %宇宙機→地上局の1way測距       (0になる)
    scEstByScSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の1way測距 (0になる)
    

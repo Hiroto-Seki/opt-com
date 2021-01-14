@@ -50,7 +50,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
             disp("observation type is not defined correctly ")
         end
         % Y, Y_star, H, Rから必要な要素だけ取り出す
-        [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
+        [Yv,YStarv,Hm,Rm,~] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
     else %2wayの観測 (1,2,3,4,5,6,7,8,9,10,11)の観測を得られる．(10,11はuplink内容に含まれる) 
         Y.direction_ur = scTrue.directionObserved_ur(:,ur_counter); % 測角
         Y.direction_ut = scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
@@ -115,7 +115,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         end
         
         
-        [Yv,YStarv,Hm,Rm] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
+        [Yv,YStarv,Hm,Rm,~] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
         
     end
     y = Yv - YStarv;

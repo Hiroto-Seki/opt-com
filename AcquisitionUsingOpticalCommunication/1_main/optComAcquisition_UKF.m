@@ -137,9 +137,9 @@ for i = 1:length(time.list)-1
             [scEstByGsUkf.X_dt, scEstByGsUkf.P_dt, scEstByGsUkf.x_sp_dt] = Spacecraft.timeUpdateUkf(scEstByGsUkf.x_sp_dt,constant, ukf, time.gsDt1, time.simDt, error);                 
         end
         % 観測量の計算
-        gsTrue.calcObservation_gs(scTrue,earth,constant,gs,sc,error);
+        gsTrue.calcObservation_gs(scTrue,earth,constant,gs,sc,error,scEstByGsUkf,time,scEstByScUkf);
         % EKFで観測量から推定量を計算する
-        scEstByGsUkf.observationUpdateByGsUkf(gsTrue,earth,constant,ukf)
+        scEstByGsUkf.observationUpdateByGsUkf(gsTrue,earth,constant,ukf,scTrue)
         % シグマポイントの再計算 % To Do
         scEstByGsUkf.x_sp_dt = Spacecraft.calcSigmaPoint(scEstByGsUkf.X_dt, scEstByGsUkf.P_dt,ukf);
         % 時刻time.list(i+1)での推定値と誤差共分散を求める(結果に使う)

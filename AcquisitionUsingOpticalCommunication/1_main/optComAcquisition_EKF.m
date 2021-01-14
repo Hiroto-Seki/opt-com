@@ -63,7 +63,7 @@ for i = 1:length(time.list)-1
     else 
         if time.lastSearch == 0
         else 
-            [time, gsTrue, scTrue] = resetParam(time, gsTrue, scTrue);
+            [time, gsTrue, scTrue,scEstByScEkf,scEstByGsEkf] = resetParam(time, gsTrue, scTrue,scEstByScEkf,scEstByGsEkf);
         end
     end
     
@@ -100,9 +100,11 @@ for i = 1:length(time.list)-1
         % EKFで観測値を用いて推定値のupdate 
         scEstByScEkf.observationUpdateByScEkf(scTrue,earth, gsTrue,constant,time.obsScType,time,ekf);
         % 観測から次ステップまでの推定値と共分散を時間伝搬. 
-        [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdateEkf(scEstByScEkf.X, scEstByScEkf.P, constant, time.scDt2,time.simDt,error);
+        [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdateEkf(scEstByScEkf.X, scEstByScEkf.P, constant, time.scDt2,time.simDt,error);        
         % downlink方向の決定. ダウンリンクを受ける時刻も計算
-        [scTrue,gsTrue,earth] = scTrue.calcDownDirection(time.list(i+1),scTrue.state(:,i+1),scEstByScEkf.X(2:7),gsTrue,earth,time,constant);  
+        [scTrue,gsTrue,earth] = scTrue.calcDownDirection(time.list(i+1),scTrue.state(:,i+1),scEstByScEkf.X(2:7),gsTrue,earth,time,constant); 
+        scEstByScEkf.X_dt(:,scTrue.dt_counter) = scEstByScEkf.X;
+        scEstByScEkf.P_dt(:,:,scTrue.dt_counter) = scEstByScEkf.P;
     end
     % 推定値を記録していく
     scEstByScEkf.clockError(i+1)= error.clock0- scEstByScEkf.X(1); %残りの誤差
@@ -141,8 +143,12 @@ for i = 1:length(time.list)-1
         end
         % 観測量の計算
         gsTrue.calcObservation_gs(scTrue,earth,constant,gs,sc,error,scEstByGsEkf,time,scEstByScEkf);
-        % EKFで観測量から推定量を計算する
-        scEstByGsEkf.observationUpdateByGsEkf(gsTrue,earth,constant,ekf,scTrue,time);
+        % EKFで観測量から推定量を計算する もしくは，宇宙機の推定値をそのまま使う
+        if gsTrue.dr_observability(gsTrue.dr_counter) == 3
+            scEstByGsEkf.X_dt = scEstByScEkf.X_dt(:,gsTrue.dr_counter);
+            scEstByGsEkf.P_dt = scEstByScEkf.P_dt(:,:,gsTrue.dr_counter);
+        end
+%         scEstByGsEkf.observationUpdateByGsEkf(gsTrue,earth,constant,ekf,scTrue,time);
         % 時刻time.list(i+1)での推定値と誤差共分散を求める(結果に使う)
         time.gsDt2 = time.list(i+1) - time.scDtEstByGs;
         [scEstByGsEkf.X, scEstByGsEkf.P] = Spacecraft.timeUpdateEkf(scEstByGsEkf.X_dt, scEstByGsEkf.P_dt, constant, time.gsDt2, time.simDt,error);
