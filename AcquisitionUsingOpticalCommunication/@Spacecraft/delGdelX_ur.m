@@ -1,7 +1,7 @@
 % 探査機が推定するEKFのための観測式の微分を求める
 
 
-function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type)
+function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time)
     deltaT = X_star(1);
     xvs    = X_star(2:7);
     c = constant.lightSpeed;
@@ -110,8 +110,12 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type)
     
     %% 2wayの場合
     if strcmp(type,"2way")
-        xst     = X_star(2:4) - dt2w* X_star(5:7);
-        delXst = [zeros(3,1),eye(3),- dt2w*eye(3)];
+        xvst   = Spacecraft.timeUpdate_sc(X_star(2:7),constant.sunMu, -dt2w, time.simDt);
+        xst = xvst(1:3);
+%         xst     = X_star(2:4) - dt2w* X_star(5:7);
+%         delXst = [zeros(3,1),eye(3),- dt2w*eye(3)];
+        delXvst = Spacecraft.getSTM(X_star(2:7),constant.sunMu,0,-dt2w);
+        delXst  = [zeros(3,1),delXvst(1:3,:)];
         drd = (xst(1:3) - xver(1:3) - xvgr(1:3));
         Ld  = norm(drd);
         % Ldの微分

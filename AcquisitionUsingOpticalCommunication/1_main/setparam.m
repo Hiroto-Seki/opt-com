@@ -18,23 +18,35 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % number of time step
     time.stepNum = 10000; 
     % simulateion start time (ephemeris time)
-    time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
+%     time.t0 = cspice_str2et('2030/01/01 00:00:00 UTC');
+    time.t0 = cspice_str2et('2034 DEC 30 20:55:10.305362');
     time.t0Ephemeris = 0;
+    % LOSの何日前から軌道決定するか(とりあえず1週間前から計算)
+    time2LOS = 24 * 60 * 60 * 7;
+    time.t0  = time.t0 - time2LOS;
+    
     % 基準となる時刻のリスト
     time.list = linspace(time.t0,time.t0+time.simDt * time.stepNum,time.stepNum+1);
     
+    % 宇宙機の初期値
+    % sc.state0 = cspice_spkezr('699', time.t0Ephemeris + time.t0,'ECLIPJ2000', 'NONE', '10'); %推定値の初期値. とりあえず土星にしている
+    sc.state0 = [-738505094.095115; 1108698819.51426; 15674510.6716146; -5.19045777910223;-0.349637820348331; -0.212238899522963];
+    % 宇宙機の初期値をtime2LOSだけ逆伝搬して求める
+    sc.state0 = Spacecraft.timeUpdate_sc(sc.state0,constant.sunMu,-time2LOS, time.simDt);
+    
+    
     %% parameter related to error
     % 初期時計誤差
-    error.clockSigma = 1e-2; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
+    error.clockSigma = 1e-1; %初期時計誤差(秒), 100ppbで，約2ヶ月分蓄積した場合
     error.clock0     = error.clockSigma * randn;
     error.randomClock        = 1e-7;    %ランダム時計誤差. 帯域幅に相当
     % 初期宇宙機軌道誤差[km]. (1軸あたりの誤差は1/√3 になる)
     error.scPosSigma = 1e5; %変更した 
     % 適当に0.1km/s程度の誤差とする
-    error.scVelSigma = 1e-1; %変更した
+    error.scVelSigma = 5e-1; %変更した
     % ダイナミクスの不確定性の標準偏差(探査機) 太陽輻射厚が100kg,
     % 10m^2で，4.6e-12km/s^2で，それより少し小さめの値に設定した
-    error.dynamics = 1e-12;
+    error.dynamics = 1e-11;
     % STTの精度
     error.stt = 4.85 * 10^-6 * 0.364 ; %ISSL unit→10urad(cross bore sight), ASTRO APS(2kg,5W程度)→1arcsec以下(4.85urad)
     % 参考: https://blog.satsearch.co/2019-11-26-star-trackers-the-cutting-edge-celestial-navigation-products-available-on-the-global-space-marketplace
@@ -44,6 +56,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
 %     error.duration = 1e-10;                    % 高精度にできると仮定
     % 地上局のポインティング精度. 
     error.gsPoint = 1*1e-7; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
+    % 宇宙機のポインティング精度
+    error.scPoint = 1*1e-7;
     
     %% ground station
     gs.lat  = 36.1325063*cspice_rpd();
@@ -151,8 +165,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % 地球
     earth  = CelestialBody(time,"Earth");
     earth.getEphem(time);
-    % 宇宙機
-    sc.state0 = cspice_spkezr('699', time.t0Ephemeris + time.t0,'ECLIPJ2000', 'NONE', '10'); %推定値の初期値. とりあえず土星にしている
+
+    
     % 真値(誤差を入れる)
     scTrue                  = Spacecraft(time);
     scTrue.state            = sc.state0 + [ 1/3^0.5 * randn(3,1) * error.scPosSigma ; 1/3^0.5 * randn(3,1) * error.scVelSigma ];
@@ -190,7 +204,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByGsSeq.useObs.accel_ur =0;      %uplinkを宇宙機が受信する時の加速度
    scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
    scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
-   scEstByGsSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
+   scEstByGsSeq.useObs.direction_dr =0;  %downlinkを地上局が受信する角度
    scEstByGsSeq.useObs.length1w_dr =1;   %宇宙機→地上局の1way測距
    scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の2way測距
     

@@ -21,7 +21,7 @@ function [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,scAtT,spacecraft,time,
      % 伝搬遅延の計算 
      dtlt_length = 0; %初期化.
      while (corr > tol) && (iter < iterMax)
-         if strcmp(valueType,"true value") %真値の場合は，配列を補間して求める
+         if strcmp(valueType,"true value") %真値の場合は，配列を補間して求める→時間かかるので，伝搬して求める
             xvsc = interp1(spacecraft.t, spacecraft.state.', t + dtlt_length/constant.lightSpeed, 'spline','extrap').';
          else %推定値の場合は現在時刻から伝搬する
             xvsc = Spacecraft.timeUpdate_sc(scAtT,constant.sunMu, dtlt_length/constant.lightSpeed, min(time.simDt*10,200)); %そこまで精度はいらないのでタイムステップを大きく取っている
@@ -32,7 +32,7 @@ function [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,scAtT,spacecraft,time,
          iter = iter + 1;
      end
      opn_t    = t + dtlt_length/constant.lightSpeed;
-     if strcmp(valueType,"true value") %真値の場合は，配列を補間して求める
+     if strcmp(valueType,"true value") %真値の場合は，配列を補間して求める→時間かかるので伝搬して求める
             opn_state = interp1(spacecraft.t, spacecraft.state.', opn_t, 'spline','extrap').';
      else %推定値の場合は現在時刻から伝搬する
             opn_state = Spacecraft.timeUpdate_sc(scAtT,constant.sunMu, dtlt_length/constant.lightSpeed, min(time.simDt*10,200)); %そこまで精度はいらないのでタイムステップを大きく取っている

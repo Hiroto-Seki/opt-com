@@ -37,7 +37,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         Y.accel_ur     = scTrue.accelObseved_ur(:,ur_counter);
         Y.length1w_ur  = scTrue.lengthObserved_ur(ur_counter);
         Y_star = Spacecraft.calcG_ur(X_star,xve_ut,xvg_ut,[],[],[],[],constant,[],"1way");
-        H = Spacecraft.delGdelX_ur(X_star,xve_ut,xvg_ut,[],[],[],constant,"1way");
+        H = Spacecraft.delGdelX_ur(X_star,xve_ut,xvg_ut,[],[],[],constant,"1way",time);
         
         % 観測できているかの判定を使う
         if scTrue.ur_observability(ur_counter) == 1
@@ -50,7 +50,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
             disp("observation type is not defined correctly ")
         end
         % Y, Y_star, H, Rから必要な要素だけ取り出す
-        [Yv,YStarv,Hm,Rm,~] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
+        [Yv,YStarv,Hm,Rm,~,sigmaN] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
     else %2wayの観測 (1,2,3,4,5,6,7,8,9,10,11)の観測を得られる．(10,11はuplink内容に含まれる) 
         Y.direction_ur = scTrue.directionObserved_ur(:,ur_counter); % 測角
         Y.direction_ut = scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
@@ -70,7 +70,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         H = Spacecraft.delGdelX_ur(X_star,xve_ut,xvg_ut,...
                                         xve_dr,xvg_dr,...
                                         dt2w,...
-                                        constant,"2way");
+                                        constant,"2way",time);
         % Rの書き換え
         obj.R.direction_dr = scTrue.recDownAngleAccuracy_ur(ur_counter)^2;
         %% 観測できているのかの判定
@@ -115,7 +115,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         end
         
         
-        [Yv,YStarv,Hm,Rm,~] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
+        [Yv,YStarv,Hm,Rm,~,sigmaN] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
         
     end
     y = Yv - YStarv;
@@ -126,9 +126,17 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
 %     end
       
 %     観測残差及び残差検定
+%     % P_barが小さい時は，うまくいかないので，観測を入れるかどうかの判断のためのP_barを大きくする(P_tempに置き換える)    
+%     errorTemp = [1e-4; 1e2;1e2; 1e1; 1e-5; 1e-5;1e-5];
+%     P_temp = errorTemp * errorTemp.';
+%     
+%     P_temp = P_temp .* (P_temp > P_bar) + P_bar .*(P_temp < P_bar); 
+    
+    
+    
     for k = length(y):-1:1
         S = (Hm*P_bar*Hm.' + Rm);
-        if ekf.sigmaN < abs(y(k))/sqrt(S(k,k))
+        if sigmaN(k) < abs(y(k))/sqrt(S(k,k))
             y(k) = [];
             Hm(k,:) = [];
             Rm(k,:) = [];

@@ -3,20 +3,23 @@
 /Users/hiroto/Documents/lab/master/research/simulator/opt-com/optComAcquisition/optComAcquisitionManual.txt
 %}
 
-%% 前処理
-clear all; close all; clc
-% add path to SPICE
-addpath(genpath('~/Documents/Matlab/SPICE'));
-% SPICEのKernel(天体情報)を読み込む
-spice_loadkernels();
-% 取得した天体情報 + alphaを利用しやすいように構造体へまとめる
-SSD = spice_setparams();
-% 乱数
-rng('default');
-rng(1)
+% %% 前処理
+% clear all; close all; clc
+% % add path to SPICE
+% addpath(genpath('~/Documents/Matlab/SPICE'));
+% % SPICEのKernel(天体情報)を読み込む
+% spice_loadkernels();
+% % 取得した天体情報 + alphaを利用しやすいように構造体へまとめる
+% SSD = spice_setparams();
+% % 乱数
+% rng('default');
+% rng(1)
+% 
+% %% 1.setting parameter and initial state
+% [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,~] = setparam(SSD);
 
-%% 1.setting parameter and initial state
-[constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,~] = setparam(SSD);
+
+function [gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,time] = optComAcquisition_EKF(constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,SSD)
 
 %% 2. calculate true orbit of spacecraft
 % 真値の計算
@@ -26,7 +29,6 @@ scTrue.calcOrbitTwoBody(constant.sunMu,error.dynamics)
 time = CelestialBody.calcAngleHistory(time,earth,gsTrue,scTrue);
 
 
-
 %% 3. calculate initial guess of spacecraft orbit (without observation)
 scEstByScEkf.calcOrbitTwoBody(constant.sunMu,0)
 scEstByGsEkf.calcOrbitTwoBody(constant.sunMu,0)
@@ -34,7 +36,6 @@ scEstByGsEkf.calcOrbitTwoBody(constant.sunMu,0)
 %% ここからは，time stepごとの計算をしていく
 for i = 1:length(time.list)-1
     %% 4 地上局からの送信
-    
     if time.comAvail(i) == 1
     % 探索を開始するtime.stepの計算
         if  time.lastSearch == 0  || i == time.lastSearch + time.obsStep
@@ -102,7 +103,7 @@ for i = 1:length(time.list)-1
         % 観測から次ステップまでの推定値と共分散を時間伝搬. 
         [scEstByScEkf.X, scEstByScEkf.P] = Spacecraft.timeUpdateEkf(scEstByScEkf.X, scEstByScEkf.P, constant, time.scDt2,time.simDt,error);        
         % downlink方向の決定. ダウンリンクを受ける時刻も計算
-        [scTrue,gsTrue,earth] = scTrue.calcDownDirection(time.list(i+1),scTrue.state(:,i+1),scEstByScEkf.X(2:7),gsTrue,earth,time,constant); 
+        [scTrue,gsTrue,earth] = scTrue.calcDownDirection(time.list(i+1),scTrue.state(:,i+1),scEstByScEkf.X(2:7),gsTrue,earth,time,constant,error); 
         scEstByScEkf.X_dt(:,scTrue.dt_counter) = scEstByScEkf.X;
         scEstByScEkf.P_dt(:,:,scTrue.dt_counter) = scEstByScEkf.P;
     end
@@ -138,7 +139,6 @@ for i = 1:length(time.list)-1
             time.scDtEstByGsNew = scTrue.t_dt(gsTrue.dr_counter) + scEstByGsEkf.clockError(i);
             time.gsDt1 = time.scDtEstByGsNew - time.scDtEstByGs;
             time.scDtEstByGs = time.scDtEstByGsNew;
-% %             time.gsDt1 = scTrue.t_dt(gsTrue.dr_counter) - scTrue.t_dt(gsTrue.dr_counter-1);
             [scEstByGsEkf.X_dt, scEstByGsEkf.P_dt] = Spacecraft.timeUpdateEkf(scEstByGsEkf.X_dt, scEstByGsEkf.P_dt, constant, time.gsDt1, time.simDt,error);             
         end
         % 観測量の計算
@@ -147,6 +147,9 @@ for i = 1:length(time.list)-1
         if gsTrue.dr_observability(gsTrue.dr_counter) == 3
             scEstByGsEkf.X_dt = scEstByScEkf.X_dt(:,gsTrue.dr_counter);
             scEstByGsEkf.P_dt = scEstByScEkf.P_dt(:,:,gsTrue.dr_counter);
+            gs.searchArea = (scEstByGsEkf.P_dt(2,2) + scEstByGsEkf.P_dt(3,3) +scEstByGsEkf.P_dt(4,4))^0.5/(SSD.AU*10);
+        else
+            gs.searchArea = 200 * 1e-6;  % 観測できなかったら，広い範囲を探索する
         end
 %         scEstByGsEkf.observationUpdateByGsEkf(gsTrue,earth,constant,ekf,scTrue,time);
         % 時刻time.list(i+1)での推定値と誤差共分散を求める(結果に使う)
@@ -160,4 +163,4 @@ for i = 1:length(time.list)-1
 %     disp(i) 
 end
 
-showResult(scTrue,scEstByScEkf,scEstByGsEkf,error);
+end

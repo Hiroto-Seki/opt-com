@@ -3,6 +3,8 @@
 function [obj,gsTrue] = receiveUplink(obj,gsTrue,earth,constant,time) 
     %% gsTrue.ut_counter番目のuplinkを宇宙機が受信する時刻と状態量を求める
     ut_counter = gsTrue.ut_counter;
+    %% 
+    
     [obj.t_ur(ut_counter),obj.state_ur(:,ut_counter),dtlt] ...
         = GroundStation.calcTarget(gsTrue.t_ut(ut_counter),gsTrue.state_ut(:,ut_counter),earth.state_ut(:,ut_counter),[],obj,time,constant,"true value"); 
 %     % 確認する

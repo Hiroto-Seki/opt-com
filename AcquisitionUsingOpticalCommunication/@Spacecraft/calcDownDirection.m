@@ -22,7 +22,7 @@
 % gsTrue.state_dr(:,obj.dt_counter)
 % eTrue.state_dr(:,obj.dt_counter)
 
-function [obj,gsTrue,earth] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,earth,time,constant)
+function [obj,gsTrue,earth] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,earth,time,constant,error)
     % 何度目の送信か
     dt_counter = obj.dt_counter + 1;
     obj.dt_counter = dt_counter;
@@ -73,11 +73,11 @@ function [obj,gsTrue,earth] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,
     yawEst   = obj.attStateObserved_ur(3,dt_counter);
     directionEstFLT =  (Spacecraft.rotation(rollEst,pitchEst,yawEst,1))\directionEstI;      
     
-    % 実際の姿勢で慣性系での方向を求める(姿勢の真値はuplinkを受信した時刻のものと同じにしている)
-    rollTrue  = obj.attStateTrue_ur(1,dt_counter);
-    pitchTrue = obj.attStateTrue_ur(2,dt_counter);
-    yawTrue   = obj.attStateTrue_ur(3,dt_counter);    
-    directionTransI = (Spacecraft.rotation(rollTrue,pitchTrue,yawTrue,1))* directionEstFLT;
+    % 実際の姿勢で慣性系での方向を求める(姿勢の真値はuplinkを受信した時刻のものと同じにしている) 制御誤差も載せる
+    rollTrue  = obj.attStateTrue_ur(1,dt_counter) + error.scPoint * randn ;
+    pitchTrue = obj.attStateTrue_ur(2,dt_counter) + error.scPoint * randn;
+    yawTrue   = obj.attStateTrue_ur(3,dt_counter) + error.scPoint * randn;    
+    directionTransI = (Spacecraft.rotation(rollTrue,pitchTrue,yawTrue,1))* directionEstFLT ;
 
     % 送信方向の誤差を求める
     pointingError = abs( acos(directionTrueI.' * directionTransI/( norm(directionTrueI)* norm(directionTransI)) ));

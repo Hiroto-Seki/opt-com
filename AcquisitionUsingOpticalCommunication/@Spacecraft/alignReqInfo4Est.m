@@ -1,4 +1,4 @@
-function [Yv,YStarv,Hm,Rm,obsNum] = alignReqInfo4Est(Y,Y_star,H,R,obsType,estType,reqList)
+function [Yv,YStarv,Hm,Rm,obsNum,sigmaN] = alignReqInfo4Est(Y,Y_star,H,R,obsType,estType,reqList)
 
 % ここで，そもそも選択によらず観測できないものは除く
 switch obsType
@@ -27,6 +27,7 @@ switch obsType
     case  "2u_obsD_obsU"   %downlinkも観測できてuplinkも観測できた場合
         reqList.length1w_dr  = 0;
         reqList.length2w_dr  = 0;
+%         reqList.length1w_ur  = 0; %1wayを使わないという選択
     case  "2u_obsD_lowU"   %downlinkは観測できてuplinkはSN比が低い場合
         reqList.direction_ut = 0; %SN比が低くて観測できない
         reqList.length1w_ur  = 0; %SN比が低くて観測できない
@@ -158,6 +159,7 @@ YStarv = [];
 Hm     = [];
 Rv     = [];
 Rm     = []; 
+sigmaN = [];
 
 % 観測の数
 obsNum = reqList.direction_ur + ...
@@ -179,7 +181,8 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.azm_ur;H.elv_ur];
         end
-        Rv     = [Rv;ones(2,1) * R.direction_ur];
+        Rv     = [Rv;ones(2,1) * R.direction_ur * 1];
+        sigmaN = [sigmaN;[10;1] * 3]; % [100,1]
     end
 
     if reqList.direction_ut == 1 % 要素は2つ分
@@ -188,7 +191,8 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.azm_ut;H.elv_ut];
         end
-        Rv     = [Rv; ones(2,1) *R.direction_ut];
+        Rv     = [Rv; [10000;1] *R.direction_ut]; % [10000;1]
+        sigmaN = [sigmaN;ones(2,1) * 3];
     end
 
     if reqList.accel_ur == 1 % 要素は3つ分
@@ -197,7 +201,8 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.accel_ur];
         end
-        Rv     = [Rv; ones(3,1) * R.accel_ur];
+        Rv     = [Rv; ones(3,1) * R.accel_ur * 2];
+        sigmaN = [sigmaN;ones(3,1) * 3];
     end
 
     if reqList.length1w_ur == 1 % 要素は1つ分
@@ -206,7 +211,8 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.length1w_ur];
         end
-        Rv     = [Rv; ones(1,1) * R.length1w_ur];
+        Rv     = [Rv; ones(1,1) * R.length1w_ur * 10000];  % 1000
+        sigmaN = [sigmaN;ones(1,1) * 3];
     end
 
     if reqList.length2w_ur == 1 % 要素は1つ分
@@ -215,7 +221,8 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.length2w_ur];
         end
-        Rv     = [Rv; ones(1,1) * R.length2w_ur];
+        Rv     = [Rv; ones(1,1) * R.length2w_ur * 1000]; % 100
+        sigmaN = [sigmaN;ones(1,1) * 3];
     end
 
     if reqList.direction_dr == 1 % 要素は2つ分
@@ -224,7 +231,8 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.azm_dr;H.elv_dr];
         end
-        Rv     = [Rv; ones(2,1) * R.direction_dr];
+        Rv     = [Rv; ones(2,1) * R.direction_dr * 2];
+        sigmaN = [sigmaN;ones(2,1) * 3];
     end
 
     if reqList.length1w_dr == 1 % 要素は1つ分
@@ -233,7 +241,8 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.length1w_dr];
         end
-        Rv     = [Rv; ones(1,1) * R.length1w_dr];
+        Rv     = [Rv; ones(1,1) * R.length1w_dr * 2];
+        sigmaN = [sigmaN;ones(1,1) * 3];
     end
 
     if reqList.length2w_dr == 1 % 要素は1つ分
@@ -242,7 +251,8 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.length2w_dr];
         end
-        Rv     = [Rv; ones(1,1) * R.length2w_dr];
+        Rv     = [Rv; ones(1,1) * R.length2w_dr * 2];
+        sigmaN = [sigmaN;ones(1,1) * 3];
     end
 
 
