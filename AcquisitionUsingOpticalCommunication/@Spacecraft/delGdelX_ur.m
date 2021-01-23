@@ -88,9 +88,9 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time)
 
     %% 観測式の微分を求める
     %  測角(受信)
-    delAzm_ur = (delDurY * DurX - delDurX * DurY)/(DurX^2 + DurY^2);
-    delElv_ur = ( (DurX^2 + DurY^2)*delDurZ - (DurX * delDurX + DurY * delDurY)*DurZ )...
-                /( (DurX^2 + DurY^2 + DurZ^2) * (DurX^2 + DurY^2)^0.5 ) ;
+%     delAzm_ur = (delDurY * DurX - delDurX * DurY)/(DurX^2 + DurY^2);
+%     delElv_ur = ( (DurX^2 + DurY^2)*delDurZ - (DurX * delDurX + DurY * delDurY)*DurZ )...
+%                 /( (DurX^2 + DurY^2 + DurZ^2) * (DurX^2 + DurY^2)^0.5 ) ;
     % 加速度
     delAccel  = -constant.sunMu * ( delRsc * R^-3 - 3 * Rsc * R^-4 * delR);
     % 送信方向
@@ -100,11 +100,31 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time)
     % 測距(クロックのオフセットがのっている)
     delL1w    = [c,0,0,0,0,0,0] + delLu;
     
+    % 3軸にした場合
+    dur_norm = (DurX^2 + DurY^2 + DurZ^2)^0.5;
+    delDirectionX_ur = 1/dur_norm^3 * ...
+        (delDurX * dur_norm^2 - DurX*(DurX *delDurX + DurY *delDurY + DurZ *delDurZ )  );
+    delDirectionY_ur = 1/dur_norm^3 * ...
+        (delDurY * dur_norm^2 - DurY*(DurX *delDurX + DurY *delDurY + DurZ *delDurZ )  );
+    delDirectionZ_ur = 1/dur_norm^3 * ...
+        (delDurZ * dur_norm^2 - DurZ*(DurX *delDurX + DurY *delDurY + DurZ *delDurZ )  );
+ 
+    dut_norm = (DutX^2 + DutY^2 + DutZ^2)^0.5;
+    delDirectionX_ut = 1/dut_norm^3 * ...
+        (delDutX * dut_norm^2 - DutX*(DutX *delDutX + DutY *delDutY + DutZ *delDutZ )  );
+    delDirectionY_ut = 1/dut_norm^3 * ...
+        (delDutY * dut_norm^2 - DutY*(DutX *delDutX + DutY *delDutY + DutZ *delDutZ )  );
+     delDirectionZ_ut = 1/dut_norm^3 * ...
+        (delDutZ * dut_norm^2 - DutZ*(DutX *delDutX + DutY *delDutY + DutZ *delDutZ )  );   
+    
+    
     %% まとめる
-    H.azm_ur      = delAzm_ur;
-    H.elv_ur      = delElv_ur;
-    H.azm_ut      = delAzm_ut;
-    H.elv_ut      = delElv_ut;
+%     H.azm_ur      = delAzm_ur;
+%     H.elv_ur      = delElv_ur;
+    H.direction_ur  = [delDirectionX_ur;delDirectionY_ur;delDirectionZ_ur];
+%     H.azm_ut      = delAzm_ut;
+%     H.elv_ut      = delElv_ut;
+    H.direction_ut  = [delDirectionX_ut;delDirectionY_ut;delDirectionZ_ut];
     H.accel_ur    = delAccel;
     H.length1w_ur = delL1w;
     

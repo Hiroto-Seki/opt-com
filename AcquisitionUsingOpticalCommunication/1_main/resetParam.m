@@ -1,4 +1,10 @@
 function [time, gsTrue, scTrue,scEstBySc,scEstByGs] = resetParam(time, gsTrue, scTrue,scEstBySc,scEstByGs)
+    % 結果の出力用に記録
+    gsTrue.t_drList = [gsTrue.t_drList, gsTrue.t_dr(1:gsTrue.dr_counter)];
+    gsTrue.snr_drList = [gsTrue.snr_drList,gsTrue.snr_dr(1:gsTrue.dr_counter)];
+    scTrue.targetError_dtList = [scTrue.targetError_dtList,scTrue.targetError_dt(1:gsTrue.dr_counter) ];
+    scTrue.pointError_dtList = [scTrue.pointError_dtList, scTrue.pointingError_dt(1:gsTrue.dr_counter)];
+
     time.lastSearch = 0;
     gsTrue.ut_counter = 0;
     gsTrue.t_ut = [];
@@ -63,5 +69,5 @@ function [time, gsTrue, scTrue,scEstBySc,scEstByGs] = resetParam(time, gsTrue, s
     scEstBySc.P_dt = [];
     scEstByGs.X_dt = [];
     scEstByGs.P_dt = [];
-    
+
 end

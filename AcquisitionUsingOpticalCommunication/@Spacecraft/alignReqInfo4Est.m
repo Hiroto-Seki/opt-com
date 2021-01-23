@@ -175,24 +175,28 @@ if strcmp(estType,"obsCheck")
     %観測の数を数えただけ 
 else
     % 使用する観測のみを付け足していく
-    if reqList.direction_ur == 1 % 要素は2つ分
+    if reqList.direction_ur == 1 % 要素は3つ分
         Yv     = [Yv;Y.direction_ur];
-        YStarv = [YStarv;Y_star.azm_ur;Y_star.elv_ur];
+%         YStarv = [YStarv;Y_star.azm_ur;Y_star.elv_ur];
+        YStarv = [YStarv;Y_star.direction_ur;];
         if strcmp(estType,"ekf")
-            Hm     = [Hm;H.azm_ur;H.elv_ur];
+%             Hm     = [Hm;H.azm_ur;H.elv_ur];
+            Hm     = [Hm;H.direction_ur];
         end
-        Rv     = [Rv;ones(2,1) * R.direction_ur * 1];
-        sigmaN = [sigmaN;[10;1] * 3]; % [100,1]
+        Rv     = [Rv;[1;1;1] * R.direction_ur * 1];
+        sigmaN = [sigmaN;ones(3,1) * 3]; % [10,1]
     end
 
-    if reqList.direction_ut == 1 % 要素は2つ分
+    if reqList.direction_ut == 1 % 要素は3つ分
         Yv     = [Yv;Y.direction_ut];
-        YStarv = [YStarv;Y_star.azm_ut;Y_star.elv_ut];
+%         YStarv = [YStarv;Y_star.azm_ut;Y_star.elv_ut];
+        YStarv = [YStarv;Y_star.direction_ut];
         if strcmp(estType,"ekf")
-            Hm     = [Hm;H.azm_ut;H.elv_ut];
+%             Hm     = [Hm;H.azm_ut;H.elv_ut];
+            Hm     = [Hm;H.direction_ut];
         end
-        Rv     = [Rv; [10000;1] *R.direction_ut]; % [10000;1]
-        sigmaN = [sigmaN;ones(2,1) * 3];
+        Rv     = [Rv; [1;1;1] *R.direction_ut]; % [10000;1]
+        sigmaN = [sigmaN;ones(3,1) * 3];
     end
 
     if reqList.accel_ur == 1 % 要素は3つ分
@@ -211,7 +215,7 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.length1w_ur];
         end
-        Rv     = [Rv; ones(1,1) * R.length1w_ur * 10000];  % 1000
+        Rv     = [Rv; ones(1,1) * R.length1w_ur * 1];  % 1000
         sigmaN = [sigmaN;ones(1,1) * 3];
     end
 
@@ -221,7 +225,7 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.length2w_ur];
         end
-        Rv     = [Rv; ones(1,1) * R.length2w_ur * 1000]; % 100
+        Rv     = [Rv; ones(1,1) * R.length2w_ur * 1]; % 100
         sigmaN = [sigmaN;ones(1,1) * 3];
     end
 

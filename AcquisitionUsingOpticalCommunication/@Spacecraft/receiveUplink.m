@@ -25,9 +25,10 @@ function [obj,gsTrue] = receiveUplink(obj,gsTrue,earth,constant,time)
     
     %% 送信機のpointing誤差の計算
     trueDirection_ut = obj.state_ur(:,ut_counter) - obj.eState_ur(:,ut_counter) - obj.gsState_ur(:,ut_counter);
+    normalizedTrueDirection_ut = trueDirection_ut(1:3)/norm(trueDirection_ut(1:3));
     
-    gsTrue.pointingError_ut(ut_counter) = ((atan2(trueDirection_ut(2),trueDirection_ut(1)) - obj.transDirection_ur(1,ut_counter))^2 ...
-                                                + (atan(trueDirection_ut(3) /(trueDirection_ut(1)^2 + trueDirection_ut(2)^2)^0.5) - obj.transDirection_ur(2,ut_counter))^2)^0.5;
-    
+%     gsTrue.pointingError_ut(ut_counter) = ((atan2(trueDirection_ut(2),trueDirection_ut(1)) - obj.transDirection_ur(1,ut_counter))^2 ...
+%                                                 + (atan(trueDirection_ut(3) /(trueDirection_ut(1)^2 + trueDirection_ut(2)^2)^0.5) - obj.transDirection_ur(2,ut_counter))^2)^0.5;
+    gsTrue.pointingError_ut(ut_counter) = norm(normalizedTrueDirection_ut - obj.transDirection_ur(:,ut_counter));
     
 end

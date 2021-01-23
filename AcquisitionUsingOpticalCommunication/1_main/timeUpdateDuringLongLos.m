@@ -31,6 +31,6 @@ for i_los = 1:time_los.stepNum+1
     [scEstByGs_los.X, scEstByGs_los.P] = Spacecraft.timeUpdateEkf(scEstByGs_los.X, scEstByGs_los.P, constant, time_los.simDt,time_los.simDt,error);
 end
 
-showResult(scTrue_los,scEstBySc_los,scEstByGs_los,error,1);
+showResult(scTrue_los,scEstBySc_los,scEstByGs_los,error,n*3-2,[],gs,resultPath);
 
 % 

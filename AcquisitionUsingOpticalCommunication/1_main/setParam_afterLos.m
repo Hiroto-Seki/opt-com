@@ -18,7 +18,7 @@ scTrue_afterLos = Spacecraft(time_afterLos);
 scTrue_afterLos.state = scTrue_los.state(:,end);
 
 
-%% ここから
+
 scEstByScSeq_afterLos            = Spacecraft(time_afterLos);
 scEstByScSeq_afterLos.state      = scEstBySc_los.state(:,end);
 scEstByScSeq_afterLos.clockError = scEstBySc_los.clockError(end); 
@@ -57,8 +57,6 @@ scEstByScSeq_afterLos.R = scEstByScEkf.R;
 scEstByGsSeq_afterLos.R = scEstByGsEkf.R;
 
 
-
-
 % 送受信した回数の初期化
 gsTrue_afterLos.ut_counter=0;
 gsTrue_afterLos.dr_counter=0;
@@ -68,5 +66,12 @@ scTrue_afterLos.dt_counter=0;
 scTrue_afterLos.ur2w_counter = 0;
 % 初期化
 time_afterLos.lastSearch = 0;
+
+
+% 結果を格納する
+gsTrue_afterLos.t_drList = [];
+gsTrue_afterLos.snr_drList = [];
+scTrue_afterLos.targetError_dtList = [];
+scTrue_afterLos.pointError_dtList = [];
 
 end

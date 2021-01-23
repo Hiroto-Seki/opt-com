@@ -33,6 +33,7 @@ classdef GroundStation < handle
           durationAtSc         %宇宙機での受信から送信までの時間(2wayの測距に使う)
           directionTrue_dr     %downlink時の観測誤差を含まない見かけの宇宙機の方向
           receivedPower_dr     %downlinkで受信した電力強度
+          snr_dr
           directionAccuracy_dr %測角の精度
           directionObserved_dr %downlinkで観測される測角情報
           scAccel_dr           %downlinkされる宇宙機の加速度情報
@@ -40,6 +41,10 @@ classdef GroundStation < handle
           scRecAngleAccuracy_dr%上の精度
           transUpAngle_dr      %downlinkされる地上局のuplinkでの送信方向
           transUpAngleAccuracy_dr %上の精度
+          % 記録用
+          t_drList
+          snr_drList
+          
     end
     methods 
         function obj = GroundStation(gs,constant,time) 

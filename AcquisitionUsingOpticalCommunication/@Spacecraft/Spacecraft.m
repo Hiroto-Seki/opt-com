@@ -47,9 +47,9 @@ classdef Spacecraft < handle
           transUpAngle_dt        % downlinkに載っている，宇宙機の観測量(uplinkの送信角度)
           transUpAngleAccuracy_dt% 上の精度
           pointingError_dt       % downlinkの送信方向誤差
+          targetError_dt         % downlinkの目標方向の誤差
           tRec_dt                % downlinkが受信されるはずの時刻
-          % --------- scEstByScEkf, scEstByGsEkf, scEstByScBatch,
-          % scEstByGsBatch にあるもの (推定に使う) ------
+          % --------- scEstByScEkf, scEstByGsEkf(推定に使う) ------
           X                      % 状態量の推定値をまとめたベクトル 
           Y                      % 観測値
           y                      % Y - Y*
@@ -64,7 +64,14 @@ classdef Spacecraft < handle
           x_sp                   % Xのsigma point
           y_sp                   % シグマポイントに対応するY
           x_sp_dt
-          
+%           % ----------Information filterに使うもの
+%           S
+%           W
+%           S_dt
+%           W_dt
+          % 記録用
+          targetError_dtList
+          pointError_dtList
           
     end
  
@@ -84,7 +91,7 @@ classdef Spacecraft < handle
         [obj,gsTrue,eTrue] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,eTrue,scAtT,time,constant,error) % obj = scTrue
         observationUpdateByGsEkf(obj,gsTrue,earth,constant,ekf,scTrue,time) % (地上局による)EKFでの観測を用いて推定値と誤差共分散を更新
         observationUpdateByGsUkf(obj,gsTrue,earth,constant,ukf,scTrue) %% (地上局による)UKFでの観測を用いて推定値と誤差共分散を更新
-        
+        observationUpdateByScESIRF(obj,scTrue,earth, gsTrue,constant,type,time)
         
     end
     methods(Static)
@@ -103,5 +110,7 @@ classdef Spacecraft < handle
         X_sp = calcSigmaPoint(X,P,ukf) % シグマ点列の計算
         dxdt = twobody_stateAndSTM(t,x,mu)
         STM = getSTM(x0,mu,t0, tf)
+        [X, S] = timeUpdateESIRF(X, S, constant, Dt, dt,error)
+        dGamma = calcDGamma(delFdelX,dt,tau)
     end
 end

@@ -250,6 +250,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scTrue.ur2w_counter = 0;
    % 初期化
    time.lastSearch = 0;
-   
-
+   % 結果を格納する
+   gsTrue.t_drList = [];
+   gsTrue.snr_drList = [];
+   scTrue.targetError_dtList = [];
+   scTrue.pointError_dtList = [];
 end

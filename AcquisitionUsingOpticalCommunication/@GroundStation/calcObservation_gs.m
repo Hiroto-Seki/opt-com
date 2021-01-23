@@ -67,7 +67,7 @@
     qdIl = obj.receivedPower_dr(dr_counter) * gs.qdS; %入射光による電流
     Snr = (gs.qdGain * qdIl)^2 /...
           (gs.qdGain^2 * 2 * constant.elementaryCharge * (qdIl + gs.qdId) * gs.qdBw * gs.qdF + gs.qdIj^2);
-    
+    obj.snr_dr(dr_counter) = Snr;
     % 地上局の推定する方向の誤差
     gsRecDirectionError = acos(gs2scD_estByGs.' * gs2scD/ norm(gs2scD_estByGs)/norm(gs2scD));
       
@@ -75,10 +75,10 @@
         disp("Downlink is out of the FOV of ground station")
         obj.dr_observability(dr_counter) = 1;
     elseif gs.reqSnr_down > Snr
-        disp("Downlink of signal to noise ratio is too low")
+        disp("Downlink signal to noise ratio is too low")
         obj.dr_observability(dr_counter) = 2;
     else
-        disp("Downlink of signal is observed")
+        disp("Downlink signal is observed")
         obj.dr_observability(dr_counter) = 3;
     end
     

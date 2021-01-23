@@ -45,46 +45,33 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
           disp("Uplink doesn't enter the FOV of QD")
           obj.ur_observability(obj.ur_counter) = 1;
       elseif sc.reqSnr_up > Snr
-          disp("Uplink of signal to noise ratio is too low")
+          disp("Uplink signal to noise ratio is too low")
           obj.ur_observability(obj.ur_counter) = 2;
       else
-          disp("Uplink of signal is observed")
+          disp("Uplink signal is observed")
           obj.ur_observability(obj.ur_counter) = 3;
       end 
-      % ノイズ電流に起因するスポット位置を受光スポット内にランダムに生成する
-      qdRandom_R     = sqrt(rand * sc.qdPhi^2);
-      qdRandom_theta = -pi + (2* pi) * rand;
-      qdXY_Random    = qdRandom_R * [cos(qdRandom_theta);sin(qdRandom_theta)];
-      qdXY_observed  = (qdIl^2 * qdXY_noError + qdIl^2/Snr * qdXY_Random)/( qdIl^2 + qdIl^2/Snr ); %QDセンサーの誤差を含むQDセンサー上の観測値
-      
-      % 姿勢決定に使うので，qdセンサーの観測精度を見積もる(おそらくqdIL,qdInの大きさは，uplinkの信号がON-OFFしてるので切り分けられる)
-%       qdError = sc.qdPhi/Snr;
       
       %% 宇宙機の姿勢を推定する
       % 　※宇宙機の軌道の推定値が悪いと，qdセンサーの値を姿勢に変換する精度も落ちてしまうので，宇宙機の軌道の精度が悪い場合は，sttのみの観測を使い，宇宙機の軌道の精度がいい場合は，qdも姿勢決定にしようする
       sttObserved = [rollTrue;pitchTrue;yawTrue] + randn(3,1)*error.stt;
       %   軌道の推定値のズレがどの程度観測に影響しそうか
-%       directionEstError = (scEst.P(2,2) + scEst.P(3,3) + scEst.P(4,4))^0.5 / obj.lengthObserved_ur(obj.ur_counter);
-%       if directionEstError < error.stt % sttの値とQDの値を両方姿勢決定に使う
-%           % STT, QDセンサー, uplinkに入っている状態量から，宇宙機の姿勢を求める
-%           [rollEst, pitchEst, yawEst,P_att] = Spacecraft.attDetermination(sttObserved,error.stt,qdXY_observed,qdError,directionEstI,sc.fL);
-%           % directionの測角精度(観測誤差共分散行列に使用する)
-%           obj.directionAccuracy_ur(obj.ur_counter) = sqrt((P_att(1)^2 + P_att(2)^2 + P_att(3)^2)/2  + ((1/Snr)*sc.qdFov)^2);
-%       else
-          rollEst  = sttObserved(1);
-          pitchEst = sttObserved(2);
-          yawEst   = sttObserved(3);
-          obj.directionAccuracy_ur(obj.ur_counter) = sqrt(error.stt^2 * 3/2  + ((1/Snr)*sc.qdFov)^2);
-%       end
-      %% QD座標系での観測値を慣性座標系での値に変換する．(TrueDirectionIに近くなっていると嬉しい. 視線方向の成分には, 姿勢推定誤差+軌道推定誤差がのる)
-      % qd座標系での観測をFLT座標系に変換して正規化する
-      directionEstFLT = [-qdXY_observed;sc.fL]; 
-      directionEstFLT_normalized = directionEstFLT/norm(directionEstFLT);
-      % FLT座標系から，慣性座標系に直す(姿勢決定誤差がのる)
-      directionEstI_normalizedNew = (Spacecraft.rotation(rollEst,pitchEst,yawEst,1))* directionEstFLT_normalized;
+      rollEst  = sttObserved(1);
+      pitchEst = sttObserved(2);
+      yawEst   = sttObserved(3);
+      obj.directionAccuracy_ur(obj.ur_counter) = sqrt(error.stt^2 * 3/2  + ((1/Snr)*sc.qdFov)^2);
+
+      
+      
       % 見かけのuplink方向を記録する
-      obj.directionTrue_ur(:,obj.ur_counter) = [ atan2( directionTrueI_normalized(2),directionTrueI_normalized(1) ); asin(directionTrueI_normalized(3))];
-      obj.directionObserved_ur(:,obj.ur_counter) = [ atan2( directionEstI_normalizedNew(2),directionEstI_normalizedNew(1) ); asin(directionEstI_normalizedNew(3))];  
+%       obj.directionTrue_ur(:,obj.ur_counter) = [ atan2( directionTrueI_normalized(2),directionTrueI_normalized(1) ); asin(directionTrueI_normalized(3))];
+      obj.directionTrue_ur(:,obj.ur_counter) = directionTrueI_normalized;
+      
+      % 計算の簡略化
+%       obj.directionObserved_ur(:,obj.ur_counter) = obj.directionTrue_ur(:,obj.ur_counter) + randn(2,1)* obj.directionAccuracy_ur(obj.ur_counter);
+      obj.directionObserved_ur(:,obj.ur_counter) = obj.directionTrue_ur(:,obj.ur_counter) + randn(3,1)* obj.directionAccuracy_ur(obj.ur_counter);
+      
+%       obj.directionObserved_ur(:,obj.ur_counter) = [ atan2( directionEstI_normalizedNew(2),directionEstI_normalizedNew(1) ); asin(directionEstI_normalizedNew(3))];  
       % 姿勢を記録する
       obj.attStateTrue_ur(:,obj.ur_counter) = [rollTrue;pitchTrue;yawTrue];       
       obj.attStateObserved_ur(:,obj.ur_counter) = [rollEst;pitchEst;yawEst]; 

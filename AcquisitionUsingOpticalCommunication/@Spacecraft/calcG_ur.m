@@ -11,22 +11,27 @@ xvsr    = X_star(2:7);
 %% 測角(受信)
 direction_ur = xvet(1:3) + xvgt(1:3) - xvsr(1:3)...
                 + norm(xvet(1:3) + xvgt(1:3) - xvsr(1:3)) * xvsr(4:6)/ constant.lightSpeed;
-azm_ur = atan2(direction_ur(2), direction_ur(1));
-elv_ur = atan(direction_ur(3)/(direction_ur(1)^2 +direction_ur(2)^2)^0.5);
+% azm_ur = atan2(direction_ur(2), direction_ur(1));
+% elv_ur = atan(direction_ur(3)/(direction_ur(1)^2 +direction_ur(2)^2)^0.5);
+direction_ur = direction_ur/norm(direction_ur);
 %% 加速度
 velAccel = CelestialBody.twobody(xvsr,constant.sunMu,0);
 accel    = velAccel(4:6);
 %% 測角(送信)
 direction_ut = xvsr(1:3) - xvet(1:3) - xvgt(1:3);
-azm_ut = atan2(direction_ut(2), direction_ut(1));
-elv_ut = atan(direction_ut(3)/(direction_ut(1)^2 +direction_ut(2)^2)^0.5);
+% azm_ut = atan2(direction_ut(2), direction_ut(1));
+% elv_ut = atan(direction_ut(3)/(direction_ut(1)^2 +direction_ut(2)^2)^0.5);
+direction_ut = direction_ut/norm(direction_ut);
+
 % 測距(1way)
 length1w = norm(xvet(1:3) + xvgt(1:3) - xvsr(1:3)) + deltaT * constant.lightSpeed;
 
-Y_star.azm_ur      = azm_ur;
-Y_star.elv_ur      = elv_ur;
-Y_star.azm_ut      = azm_ut;
-Y_star.elv_ut      = elv_ut;
+% Y_star.azm_ur      = azm_ur;
+% Y_star.elv_ur      = elv_ur;
+% Y_star.azm_ut      = azm_ut;
+% Y_star.elv_ut      = elv_ut;
+Y_star.direction_ur = direction_ur;
+Y_star.direction_ut = direction_ut;
 Y_star.accel_ur    = accel;
 Y_star.length1w_ur =length1w;
 

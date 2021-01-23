@@ -15,8 +15,8 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant,error)
  % 推定値の方向の初期値(中心となる)
  relXvEst = obj.opnEstTempState_ut - earth.state(:,i) - obj.state(:,i); 
  relXvTrue = obj.opnTrueTempState_ut - earth.state(:,i) - obj.state(:,i);
- estAzm0 = atan2(relXvEst(2),relXvEst(1) )  +  randn * obj.directionAccuracy_ut(obj.ut_counter + 1); 
- estElv0 = atan(relXvEst(3) /(relXvEst(1)^2 + relXvEst(2)^2)^0.5 ) + randn * obj.directionAccuracy_ut(obj.ut_counter + 1); %中心点をブレさせている
+ estAzm0 = atan2(relXvEst(2),relXvEst(1) )  + ( 2 * rand -1) * obj.directionAccuracy_ut(obj.ut_counter + 1); 
+ estElv0 = atan(relXvEst(3) /(relXvEst(1)^2 + relXvEst(2)^2)^0.5 ) + ( 2 * rand -1) * obj.directionAccuracy_ut(obj.ut_counter + 1); %中心点をブレさせている
 
  % 真値の方向の初期値
  trueAzm0  = atan2(relXvTrue(2),relXvTrue(1) );
@@ -104,7 +104,8 @@ function [obj,earth] = search(obj,i,earth,gs,time,constant,error)
  %% 何番目の送信に対応した状態量なのかを記録する
  obj.ut_counter = obj.ut_counter + 1;
  obj.t_ut(obj.ut_counter) = gsTrue_t_ut;
- obj.direction_ut(:,obj.ut_counter) = gsTrue_direction_ut; 
+ [obj.direction_ut(1,obj.ut_counter), obj.direction_ut(2,obj.ut_counter), obj.direction_ut(3,obj.ut_counter)]...
+ = sph2cart(gsTrue_direction_ut(1),gsTrue_direction_ut(2),1); 
   % 送信時刻の地上局の位置速度，地球の位置,速度を求める.
  earth.state_ut(:,obj.ut_counter)  = earth.calcStateAtT_cb(obj.t_ut(obj.ut_counter),time,constant);
  obj.state_ut(:,obj.ut_counter) = obj.calcStateAtT_gs(obj.t_ut(obj.ut_counter),time,constant);
