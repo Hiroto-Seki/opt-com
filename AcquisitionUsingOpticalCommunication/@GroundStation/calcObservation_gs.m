@@ -51,9 +51,9 @@
     %% 測角
     gs2scD = xvsc_dt - xve_dr - xvgs_dr;  % vector(position and velocity) of GroundStation To SpaceCraft when Downlink
     directionTrue = gs2scD(1:3) + (xve_dr(4:6) + xvgs_dr(4:6)) * ( norm(gs2scD(1:3))/constant.lightSpeed ) ;
-    obj.directionTrue_dr(:,dr_counter) = [atan2(directionTrue(2),directionTrue(1));
-                                        atan(directionTrue(3)/(directionTrue(1)^2 +directionTrue(2)^2 )^0.5)];
-    
+%     obj.directionTrue_dr(:,dr_counter) = [atan2(directionTrue(2),directionTrue(1));
+%                                         atan(directionTrue(3)/(directionTrue(1)^2 +directionTrue(2)^2 )^0.5)];
+    obj.directionTrue_dr(:,dr_counter) = directionTrue/norm(directionTrue);
 
                                     
     % 観測誤差の計算
@@ -84,7 +84,7 @@
     
     % 観測誤差(地上局はQDの精度=慣性空間での測角精度とする)
     obj.directionAccuracy_dr(dr_counter) = gs.qdFov /Snr;
-    obj.directionObserved_dr(:,dr_counter) = obj.directionTrue_dr(:,dr_counter) + randn(2,1) * obj.directionAccuracy_dr(dr_counter);
+    obj.directionObserved_dr(:,dr_counter) = obj.directionTrue_dr(:,dr_counter) + randn(3,1) * obj.directionAccuracy_dr(dr_counter);
     
     % downlinkに載っている情報
 %     % uplinkを受けてから受信するまでの時間の分の移動を補正した値にする

@@ -179,12 +179,20 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time)
         delDdrZ(6) = delXst(3,6) + (xver(6) + xvgr(6)) * delLd(6)/c;
         delDdrZ(7) = delXst(3,7) + (xver(6) + xvgr(6)) * delLd(7)/c;
 
-        delAzm_dr = (delDdrY * DdrX - delDdrX * DdrY)/(DdrX^2 + DdrY^2);
-        delElv_dr = ( (DdrX^2 + DdrY^2)*delDdrZ - (DdrX * delDdrX + DdrY * delDdrY)*DdrZ )...
-                    /( (DdrX^2 + DdrY^2 + DdrZ^2) * (DdrX^2 + DdrY^2)^0.5 ) ;
+%         delAzm_dr = (delDdrY * DdrX - delDdrX * DdrY)/(DdrX^2 + DdrY^2);
+%         delElv_dr = ( (DdrX^2 + DdrY^2)*delDdrZ - (DdrX * delDdrX + DdrY * delDdrY)*DdrZ )...
+%                     /( (DdrX^2 + DdrY^2 + DdrZ^2) * (DdrX^2 + DdrY^2)^0.5 ) ;
+        delDirectionX_dr = 1/(DdrX^2 + DdrY^2 + DdrZ^2)^1.5 * ...
+                        (delDdrX * (DdrX^2 + DdrY^2 + DdrZ^2)  + DdrX * (delDdrX * DdrX + delDdrY * DdrY + delDdrZ * DdrZ) );
+        delDirectionY_dr = 1/(DdrX^2 + DdrY^2 + DdrZ^2)^1.5 * ...
+                        (delDdrY * (DdrX^2 + DdrY^2 + DdrZ^2)  + DdrY * (delDdrX * DdrX + delDdrY * DdrY + delDdrZ * DdrZ) );
+        delDirectionZ_dr = 1/(DdrX^2 + DdrY^2 + DdrZ^2)^1.5 * ...
+                        (delDdrZ * (DdrX^2 + DdrY^2 + DdrZ^2)  + DdrZ * (delDdrX * DdrX + delDdrY * DdrY + delDdrZ * DdrZ) );
+
         H.length2w_ur = delL2w;
-        H.azm_dr      = delAzm_dr;
-        H.elv_dr      = delElv_dr;
+%         H.azm_dr      = delAzm_dr;
+%         H.elv_dr      = delElv_dr;
+        H.direction_dr = [delDirectionX_dr;delDirectionY_dr;delDirectionZ_dr];
     end
     
 

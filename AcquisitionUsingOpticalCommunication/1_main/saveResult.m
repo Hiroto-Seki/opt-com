@@ -120,3 +120,5 @@ result(3).clockErrorGs(1,n) = abs(scEstByGsEkf_afterLos.clockError(end));
 result(3).clockErrorGs(2,n) = scEstByGsEkf_afterLos.P_list(1,1,end)^0.5;
 
 result(3).downAvail(1,n) = sum(gsTrue_afterLos.snr_drList > gs.reqSnr_down)/length(gsTrue_afterLos.snr_drList) * 100;
+
+

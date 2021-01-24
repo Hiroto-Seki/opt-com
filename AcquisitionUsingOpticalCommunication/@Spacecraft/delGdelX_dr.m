@@ -72,9 +72,17 @@ function H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant)
 
     %% 観測式の微分を求める
     %  測角(受信)
-    delAzm_dr = (delD_drY * d_drX - delD_drX * d_drY)/(d_drX^2 + d_drY^2);
-    delElv_dr = (delD_drZ * (d_drX^2 + d_drY^2) - d_drZ * ( d_drX * delD_drX + d_drY * delD_drY  ))...
-        / ((d_drX^2 + d_drY^2 + d_drZ^2) * (d_drX^2 + d_drY^2)^0.5 );
+%     delAzm_dr = (delD_drY * d_drX - delD_drX * d_drY)/(d_drX^2 + d_drY^2);
+%     delElv_dr = (delD_drZ * (d_drX^2 + d_drY^2) - d_drZ * ( d_drX * delD_drX + d_drY * delD_drY  ))...
+%         / ((d_drX^2 + d_drY^2 + d_drZ^2) * (d_drX^2 + d_drY^2)^0.5 );
+
+    delDirectionX_dr = 1/(d_drX^2 + d_drY^2 + d_drZ^2)^1.5 * ...
+                        (delD_drX * (d_drX^2 + d_drY^2 + d_drZ^2)  + d_drX * (delD_drX * d_drX + delD_drY * d_drY + delD_drZ * d_drZ) );
+    delDirectionY_dr = 1/(d_drX^2 + d_drY^2 + d_drZ^2)^1.5 * ...
+                        (delD_drY * (d_drX^2 + d_drY^2 + d_drZ^2)  + d_drY * (delD_drX * d_drX + delD_drY * d_drY + delD_drZ * d_drZ) );
+    delDirectionZ_dr = 1/(d_drX^2 + d_drY^2 + d_drZ^2)^1.5 * ...
+                        (delD_drZ * (d_drX^2 + d_drY^2 + d_drZ^2)  + d_drZ * (delD_drX * d_drX + delD_drY * d_drY + delD_drZ * d_drZ) );                
+    
     % 加速度
     delAccel  = - constant.sunMu * ( delRsc * R^-3 - 3 *  R^-4 * Rsc  * delR);
     % 1wayの測距(クロックのオフセットがのっている)
@@ -111,12 +119,18 @@ function H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant)
     delD_utZ(5) = 0;
     delD_utZ(6) = 0;
     delD_utZ(7) = -dtAtSc; 
-    % 方位角
-    delAzm_ut = (delD_utY * d_utX - delD_utX * d_utY)/(d_utX^2 + d_utY^2);
-    % 仰角
-    delElv_ut = (delD_utZ * (d_utX^2 + d_utY^2) - d_utZ * ( d_utX * delD_utX + d_utY * delD_utY  ))...
-        / ((d_utX^2 + d_utY^2 + d_utZ^2) * (d_utX^2 + d_utY^2)^0.5 );
+%     % 方位角
+%     delAzm_ut = (delD_utY * d_utX - delD_utX * d_utY)/(d_utX^2 + d_utY^2);
+%     % 仰角
+%     delElv_ut = (delD_utZ * (d_utX^2 + d_utY^2) - d_utZ * ( d_utX * delD_utX + d_utY * delD_utY  ))...
+%         / ((d_utX^2 + d_utY^2 + d_utZ^2) * (d_utX^2 + d_utY^2)^0.5 );
     
+    delDirectionX_ut = 1/(d_utX^2 + d_utY^2 + d_utZ^2)^1.5 * ...
+                        (delD_utX * (d_utX^2 + d_utY^2 + d_utZ^2)  + d_utX * (delD_utX * d_utX + delD_utY * d_utY + delD_utZ * d_utZ) );
+    delDirectionY_ut = 1/(d_utX^2 + d_utY^2 + d_utZ^2)^1.5 * ...
+                        (delD_utY * (d_utX^2 + d_utY^2 + d_utZ^2)  + d_utY * (delD_utX * d_utX + delD_utY * d_utY + delD_utZ * d_utZ) );
+    delDirectionZ_ut = 1/(d_utX^2 + d_utY^2 + d_utZ^2)^1.5 * ...
+                        (delD_utZ * (d_utX^2 + d_utY^2 + d_utZ^2)  + d_utZ * (delD_utX * d_utX + delD_utY * d_utY + delD_utZ * d_utZ) );               
     % uplinkの受信方向
     d_urX  =  xv_ut(1) - (xvs(1) - xvs(4) * dtAtSc) + xvs(4)/c * lu;
     d_urY  =  xv_ut(2) - (xvs(2) - xvs(5) * dtAtSc) + xvs(5)/c * lu;
@@ -146,22 +160,27 @@ function H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant)
     delD_urZ(6) =                     xvs(6) * delLu(6)/c;
     delD_urZ(7) = dtAtSc + 1/c * lu + xvs(6) * delLu(7)/c;
     % 方位角
-    delAzm_ur = (delD_urY * d_urX - delD_urX * d_urY)/(d_urX^2 + d_urY^2);
-    % 仰角
-    delElv_ur = (delD_urZ * (d_urX^2 + d_urY^2) - d_urZ * ( d_urX * delD_urX + d_urY * delD_urY  ))...
-        / ((d_urX^2 + d_urY^2 + d_urZ^2) * (d_urX^2 + d_urY^2)^0.5 );
-    
-%     H = [delAzm_ur; delElv_ur;delAzm_ut;delElv_ut; delAccel;delAzm_dr;delElv_dr;delL1w;delL2w];
-    
-    H.azm_ur      = delAzm_ur;
-    H.elv_ur      = delElv_ur;
-    H.azm_ut      = delAzm_ut;
-    H.elv_ut      = delElv_ut;
+%     delAzm_ur = (delD_urY * d_urX - delD_urX * d_urY)/(d_urX^2 + d_urY^2);
+%     % 仰角
+%     delElv_ur = (delD_urZ * (d_urX^2 + d_urY^2) - d_urZ * ( d_urX * delD_urX + d_urY * delD_urY  ))...
+%         / ((d_urX^2 + d_urY^2 + d_urZ^2) * (d_urX^2 + d_urY^2)^0.5 );
+    delDirectionX_ur = 1/(d_urX^2 + d_urY^2 + d_urZ^2)^1.5 * ...
+                        (delD_urX * (d_urX^2 + d_urY^2 + d_urZ^2)  + d_urX * (delD_urX * d_urX + delD_urY * d_urY + delD_urZ * d_urZ) );
+    delDirectionY_ur = 1/(d_urX^2 + d_urY^2 + d_urZ^2)^1.5 * ...
+                        (delD_urY * (d_urX^2 + d_urY^2 + d_urZ^2)  + d_urY * (delD_urX * d_urX + delD_urY * d_urY + delD_urZ * d_urZ) );
+    delDirectionZ_ur = 1/(d_urX^2 + d_urY^2 + d_urZ^2)^1.5 * ...
+                        (delD_urZ * (d_urX^2 + d_urY^2 + d_urZ^2)  + d_urZ * (delD_urX * d_urX + delD_urY * d_urY + delD_urZ * d_urZ) );   
+%     H.azm_ur      = delAzm_ur;
+%     H.elv_ur      = delElv_ur;
+%     H.azm_ut      = delAzm_ut;
+%     H.elv_ut      = delElv_ut;
     H.accel_ur    = delAccel;
-    H.azm_dr      = delAzm_dr;
-    H.elv_dr      = delElv_dr;
+%     H.azm_dr      = delAzm_dr;
+%     H.elv_dr      = delElv_dr;
     H.length1w_dr = delL1w;
     H.length2w_dr = delL2w;
     
-    
+    H.direction_ur = [delDirectionX_ur;delDirectionY_ur;delDirectionZ_ur];
+    H.direction_ut = [delDirectionX_ut;delDirectionY_ut;delDirectionZ_ut];
+    H.direction_dr = [delDirectionX_dr;delDirectionY_dr;delDirectionZ_dr];
 end

@@ -44,11 +44,12 @@ if strcmp(type,"2way")
     % 地上局の観測(ダウンリンクの受信)
     direction_dr = xvst(1:3) - xver(1:3) - xvgr(1:3)...
                 + norm(xvst(1:3) - xver(1:3) - xvgr(1:3)) * (xver(4:6) + xvgr(4:6))/ constant.lightSpeed;
-    azm_dr   =  atan2(direction_dr(2), direction_dr(1));
-    elv_dr   =  atan(direction_dr(3)/(direction_dr(1)^2 +direction_dr(2)^2)^0.5);
+%     azm_dr   =  atan2(direction_dr(2), direction_dr(1));
+%     elv_dr   =  atan(direction_dr(3)/(direction_dr(1)^2 +direction_dr(2)^2)^0.5);
+    Y_star.direction_dr = direction_dr/norm(direction_dr);
     Y_star.length2w_ur = length2w;
-    Y_star.azm_dr      = azm_dr;
-    Y_star.elv_dr      = elv_dr;
+%     Y_star.azm_dr      = azm_dr;
+%     Y_star.elv_dr      = elv_dr;
 end
 
 

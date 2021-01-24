@@ -31,7 +31,7 @@ SSD = spice_setparams();
 rng('default');
 
 % 結果の格納
-N = 2; %モンテカルロシミュレーションの数
+N = 1; %モンテカルロシミュレーションの数
 
 % result(1):通信断絶前 result(2):通信断絶中 K=3:通信断絶後
 result = struct("posErrorSc"  , zeros(8,N),... %x,y,z,rの誤差とそれに対応する標準偏差 
@@ -43,7 +43,7 @@ result = struct("posErrorSc"  , zeros(8,N),... %x,y,z,rの誤差とそれに対�
                 "downAvail" ,zeros(1,N));    %Downlinkの成功率
 
 
-for n = 1:N
+for n = 3
     rng(n)
 
     [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,~] = setparam(SSD);
@@ -63,6 +63,8 @@ for n = 1:N
     saveResult;
 end
 
+save([resultPath,'/result.mat'],'result')
+% comparison;
 
 
 

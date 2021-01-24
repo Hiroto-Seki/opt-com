@@ -149,7 +149,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
        X = X_star;
        P = P_bar;
    else
-%         K = P_bar * H.'/(H*P_bar*H.' + R);
+%         K = P_bar * Hm.'/(Hm*P_bar*Hm.' + Rm);
         K = P_bar * Hm.'* pinv(Hm*P_bar*Hm.' + Rm);
         x = K * y;
         % XとPを計算

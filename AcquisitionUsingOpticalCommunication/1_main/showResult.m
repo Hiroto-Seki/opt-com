@@ -1,7 +1,7 @@
 function showResult(scTrue,scEstByScEkf,scEstByGsEkf,error,a,gsTrue,gs,resultPath)
 
 % 各要素ごとに出力
-f1 = figure(a*4+1);
+f1 = figure('visible', 'off');
 f1.OuterPosition = [100 100 500 500];
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByScEkf.clockError),...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByGsEkf.clockError),...
@@ -14,10 +14,10 @@ title("clock error befor long communication disconnection ")
 file1 = [resultPath,'/clockError',num2str(a+1),'.png'];
 saveas(f1, file1)
 
-f2 = figure(a*4+2);
+f2 = figure('visible', 'off');
 f2.OuterPosition = [100 100 1200 600];
-tiledlayout(1,4)
-nexttile
+subplot(1,4,1)
+% nexttile
 
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByScEkf.state(1,:) - scTrue.state(1,:)),'-r',...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByGsEkf.state(1,:) - scTrue.state(1,:)),'-g',...
@@ -31,9 +31,9 @@ ylim([1e-1 1e6])
 xlabel('day')
 ylabel('position error [km]')
 title("position X error")
-nexttile
+% nexttile
 % hold on
-
+subplot(1,4,2)
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByScEkf.state(2,:) - scTrue.state(2,:)),'-r',...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByGsEkf.state(2,:) - scTrue.state(2,:)),'-g',...
          (scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24,  1 * reshape(scEstByScEkf.P_list(3,3,:),  [], size(scEstByScEkf.P_list,3)).^0.5, '--r',...
@@ -45,7 +45,8 @@ ylim([1e-1 1e6])
 xlabel('day')
 ylabel('position error [km]')
 title("position Y error")
-nexttile
+% nexttile
+subplot(1,4,3)
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByScEkf.state(3,:) - scTrue.state(3,:)),'-r',...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByGsEkf.state(3,:) - scTrue.state(3,:)),'-g',...
          (scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24,  1 * reshape(scEstByScEkf.P_list(4,4,:),  [], size(scEstByScEkf.P_list,3)).^0.5, '--r',...
@@ -56,7 +57,8 @@ xlabel('day')
 ylabel('position error [km]')
 ylim([1e-1 1e6])
 title("position Z error")
-nexttile
+% nexttile
+subplot(1,4,4)
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, ((scEstByScEkf.state(1,:) - scTrue.state(1,:)).^2 + (scEstByScEkf.state(2,:) - scTrue.state(2,:)).^2 + (scEstByScEkf.state(3,:) - scTrue.state(3,:)).^2).^0.5, '-r',...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, ((scEstByGsEkf.state(1,:) - scTrue.state(1,:)).^2 + (scEstByGsEkf.state(2,:) - scTrue.state(2,:)).^2 + (scEstByGsEkf.state(3,:) - scTrue.state(3,:)).^2).^0.5, '-g',...
          (scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24,  1 * (reshape(scEstByScEkf.P_list(2,2,:),  [], size(scEstByScEkf.P_list,3)) + reshape(scEstByScEkf.P_list(3,3,:), [], size(scEstByScEkf.P_list,3))+ reshape(scEstByScEkf.P_list(4,4,:),  [], size(scEstByScEkf.P_list,3))).^0.5, '--r',...
@@ -73,10 +75,10 @@ saveas(f2, file2)
 
 
 
-f3 = figure(a*4 + 3);
+f3 = figure('visible', 'off');
 f3.OuterPosition = [100 100 1200 600];
-tiledlayout(1,4)
-nexttile
+subplot(1,4,1)
+% nexttile
 
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByScEkf.state(4,:) - scTrue.state(4,:)),'-r',...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByGsEkf.state(4,:) - scTrue.state(4,:)),'-g',...
@@ -89,7 +91,8 @@ xlabel('day')
 ylabel('velocity error [km/s]')
 ylim([1e-6 1e0])
 title("velocity X error")
-nexttile
+% nexttile
+subplot(1,4,2)
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByScEkf.state(5,:) - scTrue.state(5,:)),'-r',...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByGsEkf.state(5,:) - scTrue.state(5,:)),'-g',...
          (scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24,  1 * reshape(scEstByScEkf.P_list(6,6,:), [], size(scEstByScEkf.P_list,3)).^0.5, '--r',...
@@ -100,8 +103,8 @@ xlabel('day')
 ylabel('velocity error [km/s]')
 ylim([1e-6 1e0])
 title("velocity Y error")
-nexttile
-
+% nexttile
+subplot(1,4,3)
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByScEkf.state(6,:) - scTrue.state(6,:)),'-r',...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, abs(scEstByGsEkf.state(6,:) - scTrue.state(6,:)),'-g',...
          (scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24,  1 * reshape(scEstByScEkf.P_list(7,7,:),  [], size(scEstByScEkf.P_list,3)).^0.5, '--r',...
@@ -112,7 +115,8 @@ xlabel('day')
 ylabel('velocity error [km/s]')
 ylim([1e-6 1e0])
 title("velocity Z error")
-nexttile
+% nexttile
+subplot(1,4,4)
 semilogy((scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24, ((scEstByScEkf.state(4,:) - scTrue.state(4,:)).^2 + (scEstByScEkf.state(5,:) - scTrue.state(5,:)).^2 + (scEstByScEkf.state(6,:) - scTrue.state(6,:)).^2).^0.5, '-r',...
          (scEstByGsEkf.t-scEstByScEkf.t(1))/60/60/24, ((scEstByGsEkf.state(4,:) - scTrue.state(4,:)).^2 + (scEstByGsEkf.state(5,:) - scTrue.state(5,:)).^2 + (scEstByGsEkf.state(6,:) - scTrue.state(6,:)).^2).^0.5, '-g',...
          (scEstByScEkf.t-scEstByScEkf.t(1))/60/60/24,  1 * (reshape(scEstByScEkf.P_list(5,5,:),  [], size(scEstByScEkf.P_list,3)) + reshape(scEstByScEkf.P_list(6,6,:),  [], size(scEstByScEkf.P_list,3))+ reshape(scEstByScEkf.P_list(7,7,:),  [], size(scEstByScEkf.P_list,3))).^0.5, '--r',...
@@ -129,7 +133,7 @@ saveas(f3, file3)
 % 通信成立性のplot
 
 if mod(a,3) == 0 || mod(a,3) == 2
-    f4 = figure(a*4 + 4);
+    f4 = figure('visible', 'off');
     f4.OuterPosition = [100 100 500 500];
     semilogy((gsTrue.t_drList-scTrue.t(1))/24/60/60, scTrue.targetError_dtList,'p',...
           (gsTrue.t_drList-scTrue.t(1))/24/60/60,scTrue.pointError_dtList, 'o',...

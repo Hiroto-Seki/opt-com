@@ -229,14 +229,16 @@ else
         sigmaN = [sigmaN;ones(1,1) * 3];
     end
 
-    if reqList.direction_dr == 1 % 要素は2つ分
+    if reqList.direction_dr == 1 % 要素は3つ分
         Yv     = [Yv;Y.direction_dr];
-        YStarv = [YStarv;Y_star.azm_dr;Y_star.elv_dr];
+%         YStarv = [YStarv;Y_star.azm_dr;Y_star.elv_dr];
+        YStarv = [YStarv;Y_star.direction_dr];
         if strcmp(estType,"ekf")
-            Hm     = [Hm;H.azm_dr;H.elv_dr];
+%             Hm     = [Hm;H.azm_dr;H.elv_dr];
+            Hm     = [Hm;H.direction_dr];
         end
-        Rv     = [Rv; ones(2,1) * R.direction_dr * 2];
-        sigmaN = [sigmaN;ones(2,1) * 3];
+        Rv     = [Rv; ones(3,1) * R.direction_dr * 2];
+        sigmaN = [sigmaN;ones(3,1) * 3];
     end
 
     if reqList.length1w_dr == 1 % 要素は1つ分

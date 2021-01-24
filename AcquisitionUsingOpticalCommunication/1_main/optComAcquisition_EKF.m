@@ -144,6 +144,7 @@ for i = 1:length(time.list)-1
         % 観測量の計算
         gsTrue.calcObservation_gs(scTrue,earth,constant,gs,sc,error,scEstByGsEkf,time,scEstByScEkf);
         % EKFで観測量から推定量を計算する もしくは，宇宙機の推定値をそのまま使う
+%         scEstByGsEkf.observationUpdateByGsEkf(gsTrue,earth,constant,ekf,scTrue,time);
         if gsTrue.dr_observability(gsTrue.dr_counter) == 3
             scEstByGsEkf.X_dt = scEstByScEkf.X_dt(:,gsTrue.dr_counter);
             scEstByGsEkf.P_dt = scEstByScEkf.P_dt(:,:,gsTrue.dr_counter);
@@ -151,7 +152,8 @@ for i = 1:length(time.list)-1
         else
             gs.searchArea = 200 * 1e-6;  % 観測できなかったら，広い範囲を探索する
         end
-%         scEstByGsEkf.observationUpdateByGsEkf(gsTrue,earth,constant,ekf,scTrue,time);
+        
+        
         % 時刻time.list(i+1)での推定値と誤差共分散を求める(結果に使う)
         time.gsDt2 = time.list(i+1) - time.scDtEstByGs;
         [scEstByGsEkf.X, scEstByGsEkf.P] = Spacecraft.timeUpdateEkf(scEstByGsEkf.X_dt, scEstByGsEkf.P_dt, constant, time.gsDt2, time.simDt,error);
