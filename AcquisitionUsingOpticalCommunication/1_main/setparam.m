@@ -1,4 +1,4 @@
-function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSeq,ekf,ukf] = setparam(SSD)
+function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSeq,ekf,ukf,saturn] = setparam(SSD)
     %% constant value
     constant.sunMu         = SSD.GM(10);      % km^3/s^2 gravity constant of the sun
     constant.earthMu       = SSD.GM(399);     % km^3/s^2 gravity constant of the 
@@ -96,8 +96,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     k = constant.boltzmann;     %ボルツマン定数
     sc.T = 263;             % 絶対温度
     sc.Rsh = 200 * 10^6 * 10^(-0.0375*(sc.T-298));     % 並列抵抗
-    sc.qdBw =  16.08*1e6;   % 帯域幅. 
-    sc.qdGain = 1.25;      %フォトダイオードのゲイン
+    sc.qdBw =  15.64*1e6;   % 帯域幅. 
+    sc.qdGain = 1.4;      %フォトダイオードのゲイン
     sc.qdF    = 2 + sc.qdGain * 0.028; %過剰ノイズ比
     sc.qdFov = 385*1e-6; % 視野角 STTの姿勢決定精度が5urad(1sigma) → PAAより大きい方がいい
     sc.qdIj  = (4 * k * sc.T * sc.qdBw/sc.Rsh)^0.5; %熱雑音電流
@@ -165,7 +165,9 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     % 地球
     earth  = CelestialBody(time,"Earth");
     earth.getEphem(time);
-
+    % 土星
+    saturn =  CelestialBody(time,"Saturn");
+    saturn.getEphem(time);
     
     % 真値(誤差を入れる)
     scTrue                  = Spacecraft(time);
@@ -204,18 +206,18 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByGsSeq.useObs.accel_ur =0;      %uplinkを宇宙機が受信する時の加速度
    scEstByGsSeq.useObs.length1w_ur =0;   %地上局→宇宙機の1way測距        (0になる)
    scEstByGsSeq.useObs.length2w_ur =0;   %宇宙機→地上局→宇宙機の2way測距  (0になる)
-   scEstByGsSeq.useObs.direction_dr =0;  %downlinkを地上局が受信する角度
+   scEstByGsSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
    scEstByGsSeq.useObs.length1w_dr =1;   %宇宙機→地上局の1way測距
    scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の2way測距
     
    scEstByScSeq.R.direction_ur = error.stt^2;
    scEstByScSeq.R.direction_ut = (gs.searchStep^2);
    scEstByScSeq.R.accel_ur     = error.accel^2;
-   scEstByScSeq.R.length1w_ur  = (1e0 * error.randomClock * constant.lightSpeed)^2;
-   scEstByScSeq.R.length2w_ur  = (1e0 * error.randomClock * constant.lightSpeed)^2;
+   scEstByScSeq.R.length1w_ur  = ( error.randomClock * constant.lightSpeed)^2;
+   scEstByScSeq.R.length2w_ur  = ( error.randomClock * constant.lightSpeed)^2;
    scEstByScSeq.R.direction_dr = error.stt^2;  %downlinkを地上局が受信する角度
-   scEstByScSeq.R.length1w_dr  = (1e0 * error.randomClock * constant.lightSpeed)^2;   %宇宙機→地上局の1way測距
-   scEstByScSeq.R.length2w_dr  = (1e0 * error.randomClock * constant.lightSpeed)^2;   %地上局→宇宙機→地上局の1way測距  
+   scEstByScSeq.R.length1w_dr  = ( error.randomClock * constant.lightSpeed)^2;   %宇宙機→地上局の1way測距
+   scEstByScSeq.R.length2w_dr  = ( error.randomClock * constant.lightSpeed)^2;   %地上局→宇宙機→地上局の1way測距  
                              
    scEstByGsSeq.X             = scEstByScSeq.X;
    scEstByGsSeq.P             = scEstByScSeq.P;

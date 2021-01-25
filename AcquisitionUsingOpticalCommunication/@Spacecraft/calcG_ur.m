@@ -5,7 +5,7 @@
 % xvg: uplinkを送信した時刻の地上局
 
 
-function Y_star = calcG_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,time,type)
+function Y_star = calcG_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,time,type,xve_ut3w,xvg_ut3w,dtAtSc3w)
 deltaT = X_star(1);
 xvsr    = X_star(2:7);
 %% 測角(受信)
@@ -50,6 +50,12 @@ if strcmp(type,"2way")
     Y_star.length2w_ur = length2w;
 %     Y_star.azm_dr      = azm_dr;
 %     Y_star.elv_dr      = elv_dr;
+    % sc->gsの1wayの測距
+    Y_star.length1w_dr = norm(xver(1:3) + xvgr(1:3) - xst(1:3)) - deltaT * constant.lightSpeed; 
+    % gs->sc->gsの2wayの測距
+    xvsr3w = Spacecraft.timeUpdate_sc(xvsr,constant.sunMu, -dt2w-dtAtSc3w, time.simDt); 
+    length2w_dr = norm(xve_ut3w(1:3) + xvg_ut3w(1:3) - xvsr3w(1:3)) +  norm(xver(1:3) + xvgr(1:3) - xst(1:3)) + dtAtSc3w * constant.lightSpeed;
+    Y_star.length2w_dr = length2w_dr;
 end
 
 

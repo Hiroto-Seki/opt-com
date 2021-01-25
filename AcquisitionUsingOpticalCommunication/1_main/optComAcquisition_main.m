@@ -31,7 +31,7 @@ SSD = spice_setparams();
 rng('default');
 
 % 結果の格納
-N = 1; %モンテカルロシミュレーションの数
+N = 100; %モンテカルロシミュレーションの数
 
 % result(1):通信断絶前 result(2):通信断絶中 K=3:通信断絶後
 result = struct("posErrorSc"  , zeros(8,N),... %x,y,z,rの誤差とそれに対応する標準偏差 
@@ -43,20 +43,20 @@ result = struct("posErrorSc"  , zeros(8,N),... %x,y,z,rの誤差とそれに対�
                 "downAvail" ,zeros(1,N));    %Downlinkの成功率
 
 
-for n = 3
+for n = 1:N
     rng(n)
 
-    [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,~] = setparam(SSD);
+    [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,~,saturn] = setparam(SSD);
     % 長時間の通信隔絶前の捕捉
-    [gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,time] = optComAcquisition_EKF(constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,SSD);
+    [gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,time] = optComAcquisition_EKF(constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,SSD,saturn);
     showResult(scTrue,scEstByScEkf,scEstByGsEkf,error,n*3-3,gsTrue,gs,resultPath);
 
     % 長時間の通信隔絶
     timeUpdateDuringLongLos;
     % 長時間の通信隔絶後の再捕捉
-    [time_afterLos,gsTrue_afterLos,earth_afterLos,scTrue_afterLos,scEstByScEkf_afterLos,scEstByGsEkf_afterLos]...
+    [time_afterLos,gsTrue_afterLos,earth_afterLos,scTrue_afterLos,scEstByScEkf_afterLos,scEstByGsEkf_afterLos,saturn_afterLos]...
         = setParam_afterLos(time,time_los,gs,scTrue_los,scEstBySc_los,scEstByGs_los,scEstByScEkf,scEstByGsEkf,constant,error);
-    [gsTrue_afterLos,earth_afterLos,scTrue_afterLos,scEstByScEkf_afterLos,scEstByGsEkf_afterLos,time_afterLOS] = optComAcquisition_EKF(constant,time_afterLos,error,gs,sc,gsTrue_afterLos,earth_afterLos,scTrue_afterLos,scEstByScEkf_afterLos,scEstByGsEkf_afterLos,ekf,SSD);
+    [gsTrue_afterLos,earth_afterLos,scTrue_afterLos,scEstByScEkf_afterLos,scEstByGsEkf_afterLos,time_afterLOS] = optComAcquisition_EKF(constant,time_afterLos,error,gs,sc,gsTrue_afterLos,earth_afterLos,scTrue_afterLos,scEstByScEkf_afterLos,scEstByGsEkf_afterLos,ekf,SSD,saturn_afterLos);
     showResult(scTrue_afterLos,scEstByScEkf_afterLos,scEstByGsEkf_afterLos,error,n*3-1,gsTrue_afterLos,gs,resultPath);
     
     % 結果の格納
@@ -65,9 +65,6 @@ end
 
 save([resultPath,'/result.mat'],'result')
 % comparison;
-
-
-
 
 
 

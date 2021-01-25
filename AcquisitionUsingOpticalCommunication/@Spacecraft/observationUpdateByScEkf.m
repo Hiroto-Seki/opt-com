@@ -58,19 +58,26 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         Y.length1w_ur  = scTrue.lengthObserved_ur(ur_counter);          % 測距1way
         Y.length2w_ur  = scTrue.length2wObserved_ur(ur_counter);        % 測距2way
         Y.direction_dr = scTrue.recDownAngle_ur(:,ur_counter);         % uplinkされる，地上局での観測
+        Y.length1w_dr  = gsTrue.lengthObserved_dr(:,ur2w_counter);     %地上局側の観測量
+        Y.length2w_dr  = gsTrue.length2wObserved_dr(:,ur2w_counter);     %地上局側の観測量
         % 観測方程式に出てくるもの
         xve_dr = earth.state_dr(:,ur2w_counter);
         xvg_dr = gsTrue.state_dr(:,ur2w_counter);
         dtAtGs = gsTrue.t_ut(ur_counter) - gsTrue.t_dr(ur2w_counter);
         dt2w  = scTrue.t_ur(ur_counter) - scTrue.t_dt(ur2w_counter);
+        % 地上局の2wayの観測を交換する場合に出てくる
+        xve_ut3w = earth.state_ut(:,ur2w_counter); 
+        xvg_ut3w = gsTrue.state_ut(:,ur2w_counter);
+        dtAtSc3w = scTrue.t_dt(ur2w_counter) - scTrue.t_ur(ur2w_counter);
+        
         Y_star = Spacecraft.calcG_ur(X_star,xve_ut,xvg_ut,...
                                         xve_dr,xvg_dr,...
                                         dtAtGs, dt2w,...
-                                        constant,time,"2way");
+                                        constant,time,"2way",xve_ut3w,xvg_ut3w,dtAtSc3w);
         H = Spacecraft.delGdelX_ur(X_star,xve_ut,xvg_ut,...
                                         xve_dr,xvg_dr,...
                                         dt2w,...
-                                        constant,"2way",time);
+                                        constant,"2way",time,xve_ut3w,xvg_ut3w,dtAtSc3w);
         % Rの書き換え
         obj.R.direction_dr = scTrue.recDownAngleAccuracy_ur(ur_counter)^2;
         %% 観測できているのかの判定
@@ -120,17 +127,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
     end
     y = Yv - YStarv;
     obj.y = y;
-    % ここで，方位角の測角の部分で2piの不連続を回避するためにの計算をする．
-%     for y_i = [1,6] %1番目は受信側の方位角の測角，6番目は送信側の方位角の測角
-%         y(y_i) = mod(y(y_i) + pi, 2*pi) - pi;
-%     end
-      
-%     観測残差及び残差検定
-%     % P_barが小さい時は，うまくいかないので，観測を入れるかどうかの判断のためのP_barを大きくする(P_tempに置き換える)    
-%     errorTemp = [1e-4; 1e2;1e2; 1e1; 1e-5; 1e-5;1e-5];
-%     P_temp = errorTemp * errorTemp.';
-%     
-%     P_temp = P_temp .* (P_temp > P_bar) + P_bar .*(P_temp < P_bar); 
+
     
     
     

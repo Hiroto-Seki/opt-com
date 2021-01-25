@@ -23,7 +23,7 @@ classdef Spacecraft < handle
           lengthTrue_ur          %距離の真値
           lengthObserved_ur      %観測される距離
           ur2w_counter           %2wayが観測された回数
-          length2wObserved_ur%観測される距離(2way)
+          length2wObserved_ur    %観測される距離(2way)
           durationAtGs           %地上局が受信してから送信するまでの時間
           directionTrue_ur       %誤差がない時の慣性空間上での見かけの方向(azimuth,elevation)
           directionObserved_ur   %観測結果から計算される慣性空間上での見かけの方向(sttとqdの誤差が含まれる)
@@ -85,7 +85,7 @@ classdef Spacecraft < handle
         obj = calcOrbitTwoBody(obj,sunMu,error)
         xvAtT = calcStateAtT_sc(obj,t,time,constant)  
         [obj,gsTrue] = receiveUplink(obj,gsTrue,earth,constant,time) %uplinkを受信する．その時の観測量を求める
-        obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type) %観測量の計算 obj = scTrue, type=1:1way, type=2:2way
+        obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type,earth) %観測量の計算 obj = scTrue, type=1:1way, type=2:2way
         observationUpdateByScEkf(obj,scTrue,earth,gsTrue,constant,type,time,ekf) % (宇宙機による)EKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         observationUpdateByScUkf(obj,scTrue,earth, gsTrue,constant,type,ukf,time) % (宇宙機による)UKFで観測量を用いて推定値と誤差共分散を更新. 1wayと2wayでtype分け
         [obj,gsTrue,eTrue] = calcDownDirection(obj,t,scTrueAtT,scEstAtT,gsTrue,eTrue,scAtT,time,constant,error) % obj = scTrue
@@ -98,12 +98,12 @@ classdef Spacecraft < handle
         rotationMatrix = rotation(roll,pitch,yaw,order) %order=1:x軸→y軸→z軸の順番に回転する, order=2:z軸→y軸→x軸の順番に回転する
         A  = delFdelX(xv,mu) %運動方程式の微分
         [roll, pitch, yaw,P] = attDetermination(stt,sttError,qd,qdError,directionEstI,scfl)
-        Y_star = calcG_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,time,type) % 推定値の時の観測量を計算(1way, 宇宙機による推定)
+        Y_star = calcG_ur(X_star,xvet,xvgt,xver,xvgr,dtAtGs, dt2w, constant,time,type,xve_ut3w,xvg_ut3w,dtAtSc3w) % 推定値の時の観測量を計算(1way, 宇宙機による推定)
         Y_star = calcG_dr(X_star,xv_ut,xv_dr,dtAtSc,constant) % 推定値の時の観測量を計算(2way, 地上局による推定)
         xvsc = timeUpdate_sc(xvsc,mu, Dt, dt)
-        [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
+        [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error,type)
         [X_new, P_new, x_sp_new] = timeUpdateUkf(x_sp,constant,ukf,Dt,dt, error) % UKFに使う．シグマ点列と誤差共分散を時間更新
-        H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time)   % 観測方程式の微分(1way, 宇宙機による推定)
+        H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time,xve_ut3w,xvg_ut3w,dtAtSc3w)   % 観測方程式の微分(1way, 宇宙機による推定)
         H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);  % 観測方程式の微分(2way, 地上局による推定)
         [Yv,YStarv,Hm,Rm,obsNum,sigmaN] = alignReqInfo4Est(Y,YStar,H,R,obsType,estType,reqList); %y, Y, H, Rを過不足なく並べる. type="1u:1wayのuplink", "2u:2wayのuplink","2d:2wayのdownlink"
         [opn_t,opn_stateE,opn_stateGs] = calcTarget(t,gs,e,scAtT,time,constant) % ダウンリンクが届く時刻とその時刻の地球,地上局の位置を求める

@@ -1,6 +1,6 @@
 % 長時間の通信途絶後の軌道決定
 
-function [time_afterLos,gsTrue_afterLos,earth_afterLos,scTrue_afterLos,scEstByScSeq_afterLos,scEstByGsSeq_afterLos]...
+function [time_afterLos,gsTrue_afterLos,earth_afterLos,scTrue_afterLos,scEstByScSeq_afterLos,scEstByGsSeq_afterLos,saturn_afterLos]...
     = setParam_afterLos(time,time_los,gs,scTrue_los,scEstBySc_los,scEstByGs_los,scEstByScEkf,scEstByGsEkf,constant,error)
 
 time_afterLos    = time;
@@ -13,6 +13,10 @@ gsTrue_afterLos = GroundStation(gs,constant,time_afterLos);
 % 地球
 earth_afterLos  = CelestialBody(time_afterLos,"Earth");
 earth_afterLos.getEphem(time_afterLos);
+
+saturn_afterLos  = CelestialBody(time_afterLos,"Saturn");
+saturn_afterLos.getEphem(time_afterLos);
+
 % 宇宙機(真値)
 scTrue_afterLos = Spacecraft(time_afterLos);
 scTrue_afterLos.state = scTrue_los.state(:,end);

@@ -2,8 +2,8 @@
 function [gs,time,directionAccuracy_ut] = setSearchArea(time,gs,SSD,scEstByGsSeqP,error)
     % 推定値の分散から，探索が必要な範囲を決定
     posError = (scEstByGsSeqP(2,2) + scEstByGsSeqP(3,3) + scEstByGsSeqP(4,4))^0.5;
-    gs.searchArea     = max([(posError/(SSD.AU*10)) * 3, 10*1e-6, gs.searchArea]) ; %10AUくらいを想定．3sigmaをカバーする. 
-    gs.searchStep     = min(0.66e-6, ceil(gs.searchArea/50*1e8)*1e-8 ); %探索時の1stepあたりの間隔(rad). 0.1urad~0.8uradくらいで探索する
+    gs.searchArea     = min(300*1e-6, max([(posError/(SSD.AU*10)) * 3, 10*1e-6, gs.searchArea]) ); %10AUくらいを想定．3sigmaをカバーする. 
+    gs.searchStep     = min(0.946e-6 , ceil(gs.searchArea/50*1e8)*1e-8 ); %探索時の1stepあたりの間隔(rad). 0.1urad~0.8uradくらいで探索する
     %% 送る情報量から，1回のuplinkにかかる時間を求める
     % 今は仮で情報量を置いておく
     dataVolume = 13 * 64; % bit

@@ -27,8 +27,8 @@ for i_los = 1:time_los.stepNum+1
     scEstBySc_los.state(:,i_los)    = scEstBySc_los.X(2:7);
     scEstBySc_los.P_list(:,:,i_los) = scEstBySc_los.P;    
     % 時間伝搬
-    [scEstBySc_los.X, scEstBySc_los.P] = Spacecraft.timeUpdateEkf(scEstBySc_los.X, scEstBySc_los.P, constant, time_los.simDt,time_los.simDt,error);
-    [scEstByGs_los.X, scEstByGs_los.P] = Spacecraft.timeUpdateEkf(scEstByGs_los.X, scEstByGs_los.P, constant, time_los.simDt,time_los.simDt,error);
+    [scEstBySc_los.X, scEstBySc_los.P] = Spacecraft.timeUpdateEkf(scEstBySc_los.X, scEstBySc_los.P, constant, time_los.simDt,time_los.simDt,error,2);
+    [scEstByGs_los.X, scEstByGs_los.P] = Spacecraft.timeUpdateEkf(scEstByGs_los.X, scEstByGs_los.P, constant, time_los.simDt,time_los.simDt,error,2);
 end
 
 showResult(scTrue_los,scEstBySc_los,scEstByGs_los,error,n*3-2,[],gs,resultPath);

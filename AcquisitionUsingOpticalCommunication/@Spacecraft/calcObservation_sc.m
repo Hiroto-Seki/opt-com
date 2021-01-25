@@ -3,11 +3,16 @@
 % 出力
 % 中間パラメーター
 
-function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)      
+function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type,earth)      
       %% 1way, 2wayに共通
       %% 1wayの測距
       % 観測値
-      obj.lengthObserved_ur(obj.ur_counter)   =  obj.lengthTrue_ur(obj.ur_counter) + constant.lightSpeed * (error.clock0 + error.randomClock * randn);
+%       obj.lengthObserved_ur(obj.ur_counter)   =  obj.lengthTrue_ur(obj.ur_counter) + constant.lightSpeed * (error.clock0 + error.randomClock * randn);
+      %　時刻ベースではなく，位置ベースで計算させる．(Y_starと計算方法を合わせる)
+      obj.lengthObserved_ur(obj.ur_counter)  = norm( obj.eState_ur(1:3,obj.ur_counter) +  obj.gsState_ur(1:3,obj.ur_counter) - obj.state_ur(1:3,obj.ur_counter)) ...
+                                                + constant.lightSpeed * (error.clock0 + error.randomClock * randn);
+      
+      
       
       %% 慣性空間上での見かけのuplink受信方向
       % 慣性空間上での見かけのuplink受信方向の真値
@@ -86,11 +91,26 @@ function obj = calcObservation_sc(obj,scEst,gsTrue,constant,error,sc,gs,type)
     %% 2way のみ
     if type == 2
 %     % 2wayの測距(往復時間,滞在時間)
-        obj.length2wObserved_ur(obj.ur_counter) = (obj.t_ur(obj.ur_counter) - obj.t_dt(obj.ur2w_counter) + error.randomClock * randn )*constant.lightSpeed ;
+%         obj.length2wObserved_ur(obj.ur_counter) = (obj.t_ur(obj.ur_counter) - obj.t_dt(obj.ur2w_counter) + error.randomClock * randn )*constant.lightSpeed ;
+      % 時刻ベースではなく，位置から計算させる．(Y_starと計算方法を合わせる)  
+        obj.length2wObserved_ur(obj.ur_counter) = norm( obj.eState_ur(1:3,obj.ur_counter) +  obj.gsState_ur(1:3,obj.ur_counter) - obj.state_ur(1:3,obj.ur_counter))...
+                                                   + (gsTrue.t_ut(obj.ur_counter) - gsTrue.t_dr(obj.ur2w_counter)) * constant.lightSpeed ...
+                                                   + norm( earth.state_dr(1:3,obj.ur2w_counter) +  gsTrue.state_dr(1:3,obj.ur2w_counter) - obj.state_dt(1:3,obj.ur2w_counter))...
+                                               +error.randomClock * randn * constant.lightSpeed ;
         obj.durationAtGs(obj.ur_counter) = gsTrue.t_ut(obj.ur_counter) - gsTrue.t_dr(obj.ur2w_counter);
       % 地上局の観測量も送信されている
       obj.recDownAngle_ur(:,obj.ur_counter) = gsTrue.directionObserved_dr(:,obj.ur2w_counter);
       obj.recDownAngleAccuracy_ur(obj.ur_counter) = gsTrue.directionAccuracy_dr(obj.ur2w_counter);
+      
+      
+      
+      % 時刻ベースの計算と位置ベースの計算が一致しているか?
+      Lu_time = (obj.t_ur(obj.ur_counter) - gsTrue.t_ut(obj.ur_counter)) * constant.lightSpeed;
+      Lu_pos  = norm( obj.eState_ur(1:3,obj.ur_counter) +  obj.gsState_ur(1:3,obj.ur_counter) - obj.state_ur(1:3,obj.ur_counter));
+      Ld_time = (gsTrue.t_dr(obj.ur2w_counter) - obj.t_dt(obj.ur2w_counter) ) * constant.lightSpeed;
+      Ld_pos  = norm( earth.state_dr(1:3,obj.ur2w_counter) +  gsTrue.state_dr(1:3,obj.ur2w_counter) - obj.state_dt(1:3,obj.ur2w_counter));
+      
+      
     end
 
 end

@@ -1,7 +1,7 @@
 % 探査機が推定するEKFのための観測式の微分を求める
 
 
-function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time)
+function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time,xve_ut3w,xvg_ut3w,dtAtSc3w)
     deltaT = X_star(1);
     xvs    = X_star(2:7);
     c = constant.lightSpeed;
@@ -94,9 +94,9 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time)
     % 加速度
     delAccel  = -constant.sunMu * ( delRsc * R^-3 - 3 * Rsc * R^-4 * delR);
     % 送信方向
-    delAzm_ut = (delDutY * DutX - delDutX * DutY)/(DutX^2 + DutY^2);
-    delElv_ut = ( (DutX^2 + DutY^2)*delDutZ - (DutX * delDutX + DutY * delDutY)*DutZ )...
-                /( (DutX^2 + DutY^2 + DutZ^2) * (DutX^2 + DutY^2)^0.5 ) ;
+%     delAzm_ut = (delDutY * DutX - delDutX * DutY)/(DutX^2 + DutY^2);
+%     delElv_ut = ( (DutX^2 + DutY^2)*delDutZ - (DutX * delDutX + DutY * delDutY)*DutZ )...
+%                 /( (DutX^2 + DutY^2 + DutZ^2) * (DutX^2 + DutY^2)^0.5 ) ;
     % 測距(クロックのオフセットがのっている)
     delL1w    = [c,0,0,0,0,0,0] + delLu;
     
@@ -193,6 +193,26 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time)
 %         H.azm_dr      = delAzm_dr;
 %         H.elv_dr      = delElv_dr;
         H.direction_dr = [delDirectionX_dr;delDirectionY_dr;delDirectionZ_dr];
+        
+        H.length1w_dr = [-c,0,0,0,0,0,0] + delLd;
+        
+        % 地上局->宇宙機->地上局の2wayの観測の微分
+        xveg_ut3w = xve_ut3w + xvg_ut3w;
+        xvs_ur3w  = Spacecraft.timeUpdate_sc(X_star(2:7),constant.sunMu, -dt2w-dtAtSc3w, time.simDt);
+        delXvs_ur3w = Spacecraft.getSTM(X_star(2:7),constant.sunMu,0,-dt2w-dtAtSc3w);
+        delXs_ur3w  = [zeros(3,1),delXvs_ur3w(1:3,:)];
+        dru3w       = xvs_ur3w(1:3) - xveg_ut3w(1:3);
+        Lu3w        = norm(dru3w);
+        delLu3w(1) = 1/Lu3w * ((xvs_ur3w(1)-xveg_ut3w(1))*delXs_ur3w(1,1) + (xvs_ur3w(2)-xveg_ut3w(2))*delXs_ur3w(2,1) + (xvs_ur3w(3)-xveg_ut3w(3))*delXs_ur3w(3,1));
+        delLu3w(2) = 1/Lu3w * ((xvs_ur3w(1)-xveg_ut3w(1))*delXs_ur3w(1,2) + (xvs_ur3w(2)-xveg_ut3w(2))*delXs_ur3w(2,2) + (xvs_ur3w(3)-xveg_ut3w(3))*delXs_ur3w(3,2));
+        delLu3w(3) = 1/Lu3w * ((xvs_ur3w(1)-xveg_ut3w(1))*delXs_ur3w(1,3) + (xvs_ur3w(2)-xveg_ut3w(2))*delXs_ur3w(2,3) + (xvs_ur3w(3)-xveg_ut3w(3))*delXs_ur3w(3,3));
+        delLu3w(4) = 1/Lu3w * ((xvs_ur3w(1)-xveg_ut3w(1))*delXs_ur3w(1,4) + (xvs_ur3w(2)-xveg_ut3w(2))*delXs_ur3w(2,4) + (xvs_ur3w(3)-xveg_ut3w(3))*delXs_ur3w(3,4));
+        delLu3w(5) = 1/Lu3w * ((xvs_ur3w(1)-xveg_ut3w(1))*delXs_ur3w(1,5) + (xvs_ur3w(2)-xveg_ut3w(2))*delXs_ur3w(2,5) + (xvs_ur3w(3)-xveg_ut3w(3))*delXs_ur3w(3,5));
+        delLu3w(6) = 1/Lu3w * ((xvs_ur3w(1)-xveg_ut3w(1))*delXs_ur3w(1,6) + (xvs_ur3w(2)-xveg_ut3w(2))*delXs_ur3w(2,6) + (xvs_ur3w(3)-xveg_ut3w(3))*delXs_ur3w(3,6));
+        delLu3w(7) = 1/Lu3w * ((xvs_ur3w(1)-xveg_ut3w(1))*delXs_ur3w(1,7) + (xvs_ur3w(2)-xveg_ut3w(2))*delXs_ur3w(2,7) + (xvs_ur3w(3)-xveg_ut3w(3))*delXs_ur3w(3,7));
+        
+        H.length2w_dr = delLu3w + delLd;
+        
     end
     
 

@@ -1,17 +1,22 @@
 % 探査機のEKFの際，伝搬時間Dtを与えてリファレンスの状態量，誤差共分散行列の更新をする
 % RK4の時間間隔はdtとする
-function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
+function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error,type)
    % 初期化
    timeStep = dt;
    Dt_rest = Dt;
    % system noise
-   % system function Error 
-%    w = [  0;  [0;0;0] ;  error.dynamics * ones(3,1) ];
-%    Q_t = w * w.';
+   % system function Error
    Q = zeros(7,7);
-   Q(5:7,5:7) = error.dynamics^2 * eye(3);
-   Q(1,1)     = 1e-18; % 1e-16
-   Q(2:4,2:4) = 1e-18 * eye(3); % 1e-16
+   if type == 1
+%        Q(5:7,5:7) = 1e12 * error.dynamics^2 * eye(3); %1e12
+       Q(5:7,5:7) = 1e8 * error.dynamics^2 * eye(3); %1e12
+       Q(1,1)     = 1e-12; % 1e-12
+%        Q(2:4,2:4) = 1e-16 * eye(3); % 1e-16
+       Q(2:4,2:4) = 1e-8 * eye(3); % 1e-16
+   elseif type == 2
+       Q(1,1)     = 1e-12; % 1e-12
+       Q(5:7,5:7) = error.dynamics^2 * eye(3);
+   end
    %% RK4で伝搬する
    while Dt * Dt_rest > 1e-10
        if abs(Dt_rest) < timeStep
@@ -49,7 +54,7 @@ function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error)
    
    % STMを用いてリファレンスの状態量と誤差共分散行列の更新
    X = [X(1) ;xvsc + timeStep/6*(k1sc+2*k2sc+2*k3sc+k4sc)];
-   P = STM * P * STM.' +  STM *  Q *  STM.' * dt;
+   P = STM * P * STM.' +  STM *  Q *  STM.' * dt * dt;
    end
    
 

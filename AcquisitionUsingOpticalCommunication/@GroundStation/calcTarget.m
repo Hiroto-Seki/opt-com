@@ -17,7 +17,7 @@ function [opn_t,opn_state,dtlt] = calcTarget(t,gsAtT,eAtT,scAtT,spacecraft,time,
      corr = 1;
      % イタレーション回数
      iter = 0;
-     iterMax = 10;
+     iterMax = 30;
      % 伝搬遅延の計算 
      dtlt_length = 0; %初期化.
      while (corr > tol) && (iter < iterMax)

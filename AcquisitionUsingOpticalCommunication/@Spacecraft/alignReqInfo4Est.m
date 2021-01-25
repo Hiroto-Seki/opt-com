@@ -25,8 +25,8 @@ switch obsType
         reqList.length2w_dr  = 0;%1wayuplinkの観測にはない
     %% 2wayの宇宙機側の観測
     case  "2u_obsD_obsU"   %downlinkも観測できてuplinkも観測できた場合
-        reqList.length1w_dr  = 0;
-        reqList.length2w_dr  = 0;
+%         reqList.length1w_dr  = 0;
+%         reqList.length2w_dr  = 0;
 %         reqList.length1w_ur  = 0; %1wayを使わないという選択
     case  "2u_obsD_lowU"   %downlinkは観測できてuplinkはSN比が低い場合
         reqList.direction_ut = 0; %SN比が低くて観測できない
@@ -205,7 +205,7 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.accel_ur];
         end
-        Rv     = [Rv; ones(3,1) * R.accel_ur * 2];
+        Rv     = [Rv; ones(3,1) * R.accel_ur * 1];
         sigmaN = [sigmaN;ones(3,1) * 3];
     end
 
@@ -237,7 +237,7 @@ else
 %             Hm     = [Hm;H.azm_dr;H.elv_dr];
             Hm     = [Hm;H.direction_dr];
         end
-        Rv     = [Rv; ones(3,1) * R.direction_dr * 2];
+        Rv     = [Rv; ones(3,1) * R.direction_dr * 1];
         sigmaN = [sigmaN;ones(3,1) * 3];
     end
 
@@ -247,7 +247,7 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.length1w_dr];
         end
-        Rv     = [Rv; ones(1,1) * R.length1w_dr * 2];
+        Rv     = [Rv; ones(1,1) * R.length1w_dr * 1];
         sigmaN = [sigmaN;ones(1,1) * 3];
     end
 
@@ -257,7 +257,7 @@ else
         if strcmp(estType,"ekf")
             Hm     = [Hm;H.length2w_dr];
         end
-        Rv     = [Rv; ones(1,1) * R.length2w_dr * 2];
+        Rv     = [Rv; ones(1,1) * R.length2w_dr * 1];
         sigmaN = [sigmaN;ones(1,1) * 3];
     end
 
@@ -268,6 +268,7 @@ else
     for i = 1:lenR
         Rm(i,i) = Rv(i);
     end
+%     Rm = Rm ;  %観測誤差共分散行列を大きくする
 end
 
 end
