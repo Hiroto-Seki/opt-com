@@ -36,6 +36,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         Y.direction_ut = scTrue.transDirection_ur(:,ur_counter);
         Y.accel_ur     = scTrue.accelObseved_ur(:,ur_counter);
         Y.length1w_ur  = scTrue.lengthObserved_ur(ur_counter);
+        Y.rangeRate_ur = scTrue.rangeRateObserved_ur(ur_counter);
         Y_star = Spacecraft.calcG_ur(X_star,xve_ut,xvg_ut,[],[],[],[],constant,[],"1way");
         H = Spacecraft.delGdelX_ur(X_star,xve_ut,xvg_ut,[],[],[],constant,"1way",time);
         
@@ -60,6 +61,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         Y.direction_dr = scTrue.recDownAngle_ur(:,ur_counter);         % uplinkされる，地上局での観測
         Y.length1w_dr  = gsTrue.lengthObserved_dr(:,ur2w_counter);     %地上局側の観測量
         Y.length2w_dr  = gsTrue.length2wObserved_dr(:,ur2w_counter);     %地上局側の観測量
+        Y.rangeRate_ur = scTrue.rangeRateObserved_ur(ur_counter);
         % 観測方程式に出てくるもの
         xve_dr = earth.state_dr(:,ur2w_counter);
         xvg_dr = gsTrue.state_dr(:,ur2w_counter);
@@ -151,7 +153,8 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         x = K * y;
         % XとPを計算
         X = X_star +x;
-        P = (eye(7) - K * Hm)*P_bar;
+%         P = (eye(7) - K * Hm)*P_bar;
+        P = (eye(7) - K * Hm)*P_bar * (eye(7) - K * Hm).' + K * Rm * K.';
    end
     
     obj.X = X;

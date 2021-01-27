@@ -58,6 +58,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     error.gsPoint = 1*1e-7; %S-340 Piezo Tip/Tilt-Mirror Platform: High-Dynamics for Optics to 100 mm (4") Dia. mirrorが小さく，resolution=制御精度ではないが．．．20nrad
     % 宇宙機のポインティング精度
     error.scPoint = 1*1e-7;
+    % ドップラーの計測精度
+    error.rangeRate = 1e-6; %臼田
     
     %% ground station
     gs.lat  = 36.1325063*cspice_rpd();
@@ -199,6 +201,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByScSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度 
    scEstByScSeq.useObs.length1w_dr =0;   %宇宙機→地上局の1way測距       (0になる)
    scEstByScSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の1way測距 (0になる)
+   scEstByScSeq.useObs.rangeRate1w_ur =1;   %レンジレート
    
   % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
    scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
@@ -209,7 +212,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByGsSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度
    scEstByGsSeq.useObs.length1w_dr =1;   %宇宙機→地上局の1way測距
    scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の2way測距
-    
+   scEstByGsSeq.useObs.rangeRate1w_ur =1;   %レンジレート
+   
    scEstByScSeq.R.direction_ur = error.stt^2;
    scEstByScSeq.R.direction_ut = (gs.searchStep^2);
    scEstByScSeq.R.accel_ur     = error.accel^2;
@@ -218,7 +222,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByScSeq.R.direction_dr = error.stt^2;  %downlinkを地上局が受信する角度
    scEstByScSeq.R.length1w_dr  = ( error.randomClock * constant.lightSpeed)^2;   %宇宙機→地上局の1way測距
    scEstByScSeq.R.length2w_dr  = ( error.randomClock * constant.lightSpeed)^2;   %地上局→宇宙機→地上局の1way測距  
-                             
+   scEstByScSeq.R.rangeRate_ur  = error.rangeRate^2;   
+                        
    scEstByGsSeq.X             = scEstByScSeq.X;
    scEstByGsSeq.P             = scEstByScSeq.P;
    scEstByGsSeq.P_list        = zeros(7,7,length(time.list));

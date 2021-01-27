@@ -11,6 +11,7 @@ switch obsType
     case  "1u_lowSnr"
         reqList.direction_ut = 0; %SN比が低くて観測できない
         reqList.length1w_ur  = 0; %SN比が低くて観測できない
+        reqList.rangeRate1w_ur = 0;
         reqList.length2w_ur  = 0; %1wayuplinkの観測にはない
         reqList.direction_dr = 0; %1wayuplinkの観測にはない
         reqList.length1w_dr  = 0; %1wayuplinkの観測にはない
@@ -19,6 +20,7 @@ switch obsType
         reqList.direction_ur  = 0; %視野に入らないので観測できない
         reqList.direction_ut  = 0; %視野に入らないので観測できない
         reqList.length1w_ur  = 0;  %視野に入らないので観測できない
+        reqList.rangeRate1w_ur = 0;
         reqList.length2w_ur  = 0; %1wayuplinkの観測にはない
         reqList.direction_dr = 0;%1wayuplinkの観測にはない
         reqList.length1w_dr  = 0;%1wayuplinkの観測にはない
@@ -32,6 +34,7 @@ switch obsType
         reqList.direction_ut = 0; %SN比が低くて観測できない
         reqList.length1w_ur  = 0; %SN比が低くて観測できない
         reqList.length2w_ur  = 0; %SN比が低くて観測できない
+        reqList.rangeRate1w_ur = 0;
         reqList.direction_dr = 0; %SN比が低くて観測できない
         reqList.length1w_dr  = 0; %宇宙機側の観測にはない
         reqList.length2w_dr  = 0; %宇宙機側の観測にはない
@@ -41,6 +44,7 @@ switch obsType
         reqList.length1w_ur  = 0;  %視野に入らないので観測できない
         reqList.length2w_ur  = 0;  %視野に入らないので観測できない
         reqList.direction_dr = 0;  %視野に入らないので観測できない
+        reqList.rangeRate1w_ur = 0;
         reqList.length1w_dr  = 0;  %uplinkの観測にはない
         reqList.length2w_dr  = 0;  %uplinkの観測にはない             
     case  "2u_lowD_obsU"  %downlinkはSN比が低い(信号が受信できない)で，uplinkは観測できる  
@@ -52,6 +56,7 @@ switch obsType
         reqList.length1w_ur  = 0; %SN比が低くて観測できない
         reqList.length2w_ur  = 0; %SN比が低くて観測できない
         reqList.direction_dr = 0; %SN比が低くて観測できない
+        reqList.rangeRate1w_ur = 0;
         reqList.length1w_dr  = 0; %宇宙機側の観測にはない
         reqList.length2w_dr  = 0; %宇宙機側の観測にはない
     case  "2u_lowD_noObsU"  %downlinkはSN比が低い(信号が受信できない)で，uplinkは観測できない
@@ -60,6 +65,7 @@ switch obsType
         reqList.length1w_ur  = 0;  %視野に入らないので観測できない
         reqList.length2w_ur  = 0;  %視野に入らないので観測できない
         reqList.direction_dr = 0;  %視野に入らないので観測できない
+        reqList.rangeRate1w_ur = 0;
         reqList.length1w_dr  = 0;  %uplinkの観測にはない
         reqList.length2w_dr  = 0;  %uplinkの観測にはない   
     case  "2u_noObsD_obsU"  %downlinkは観測できなくて，uplinkは観測できる 
@@ -72,6 +78,7 @@ switch obsType
         reqList.length1w_ur  = 0; %SN比が低くて観測できない
         reqList.length2w_ur  = 0; %実質1way
         reqList.direction_dr = 0; %実質1way
+        reqList.rangeRate1w_ur = 0;
         reqList.length1w_dr  = 0; %uplinkの観測にはない
         reqList.length2w_dr  = 0; %uplinkの観測にはない
     case  "2u_noObsD_noObsU" %downlinkは観測できなくて，uplinkも観測できない
@@ -80,12 +87,14 @@ switch obsType
         reqList.length1w_ur  = 0;  %視野に入らないので観測できない
         reqList.length2w_ur  = 0;  %実質1way
         reqList.direction_dr = 0;  %実質1way
+        reqList.rangeRate1w_ur = 0;
         reqList.length1w_dr  = 0;  %uplinkの観測にはない
         reqList.length2w_dr  = 0;  %uplinkの観測にはない
     %% 2wayの地上局側の観測
     case "2d_obsU_obsD"   %uplinkを観測できて，downkinkも観測できる
         reqList.length1w_ur  = 0; %地上局の観測にはない
         reqList.length2w_ur  = 0; %地上局の観測にはない
+        reqList.rangeRate1w_ur = 0;
     case "2d_obsU_lowD"   %uplinkを観測できて，downkinkはSN比が低い
         reqList.direction_ur  = 0; %downlinkのSN比が低いので受信できない
         reqList.direction_ut  = 0; %downlinkのSN比が低いので受信できない
@@ -94,6 +103,7 @@ switch obsType
         reqList.length2w_ur  = 0;  %地上局の観測にはない
         reqList.length1w_dr  = 0;  %downlinkのSN比が低いので受信できない
         reqList.length2w_dr  = 0;  %downlinkのSN比が低いので受信できない
+        reqList.rangeRate1w_ur = 0;
      case "2d_obsU_noObsD"   %uplinkを観測できて，downkinkは観測できない
         reqList.direction_ur  = 0; %downlinkが観測できないので，何も観測できない
         reqList.direction_ut  = 0; %downlinkが観測できないので，何も観測できない
@@ -103,11 +113,13 @@ switch obsType
         reqList.direction_dr = 0;  %downlinkが観測できないので，何も観測できない
         reqList.length1w_dr  = 0;  %downlinkが観測できないので，何も観測できない
         reqList.length2w_dr  = 0;  %downlinkが観測できないので，何も観測できない
+        reqList.rangeRate1w_ur = 0;
      case "2d_lowU_obsD"   %uplinkのSN比が低く，downkinkは観測できる
         reqList.direction_ut  = 0; %uplinkで信号を受信できないので
         reqList.length1w_ur  = 0;  %地上局の観測にはない
         reqList.length2w_ur  = 0;  %地上局の観測にはない
         reqList.length2w_dr  = 0;  %uplinkで信号を受信できないので
+        reqList.rangeRate1w_ur = 0;
      case "2d_lowU_lowD"   %uplinkのSN比が低く,downkinkはSN比が低い  
         reqList.direction_ur  = 0; %downlinkのSN比が低いので受信できない
         reqList.direction_ut  = 0; %downlinkのSN比が低いので受信できない
@@ -116,6 +128,7 @@ switch obsType
         reqList.length2w_ur  = 0;  %地上局の観測にはない
         reqList.length1w_dr  = 0;  %downlinkのSN比が低いので受信できない
         reqList.length2w_dr  = 0;  %downlinkのSN比が低いので受信できない
+        reqList.rangeRate1w_ur = 0;
      case "2d_lowU_noObsD"   %uplinkのSN比が低く,downkinkは観測できない 
         reqList.direction_ur  = 0; %downlinkが観測できないので，何も観測できない
         reqList.direction_ut  = 0; %downlinkが観測できないので，何も観測できない
@@ -125,12 +138,14 @@ switch obsType
         reqList.direction_dr = 0;  %downlinkが観測できないので，何も観測できない
         reqList.length1w_dr  = 0;  %downlinkが観測できないので，何も観測できない
         reqList.length2w_dr  = 0;  %downlinkが観測できないので，何も観測できない
+        reqList.rangeRate1w_ur = 0;
      case "2d_noObsU_obsD"   %uplinkの観測ができず，downkinkは観測できる
         reqList.direction_ur  = 0; %uplinkで観測できていないので
         reqList.direction_ut  = 0; %uplinkで観測できていないので
         reqList.length1w_ur  = 0;  %地上局の観測にはない
         reqList.length2w_ur  = 0;  %地上局の観測にはない
-        reqList.length2w_dr  = 0;  %uplinkで観測できていないので        
+        reqList.length2w_dr  = 0;  %uplinkで観測できていないので 
+        reqList.rangeRate1w_ur = 0;
      case "2d_noObsU_lowD"   %uplinkの観測できず，downkinkはSN比が低い  
         reqList.direction_ur  = 0; %downlinkのSN比が低いので受信できない
         reqList.direction_ut  = 0; %downlinkのSN比が低いので受信できない
@@ -139,6 +154,7 @@ switch obsType
         reqList.length2w_ur  = 0;  %地上局の観測にはない
         reqList.length1w_dr  = 0;  %downlinkのSN比が低いので受信できない
         reqList.length2w_dr  = 0;  %downlinkのSN比が低いので受信できない
+        reqList.rangeRate1w_ur = 0;
      case "2d_noObsU_noObsD"   %uplinkの観測できず，downkinkは観測できない
         reqList.direction_ur  = 0; %downlinkが観測できないので，何も観測できない
         reqList.direction_ut  = 0; %downlinkが観測できないので，何も観測できない
@@ -148,6 +164,7 @@ switch obsType
         reqList.direction_dr = 0;  %downlinkが観測できないので，何も観測できない
         reqList.length1w_dr  = 0;  %downlinkが観測できないので，何も観測できない
         reqList.length2w_dr  = 0;  %downlinkが観測できないので，何も観測できない
+        reqList.rangeRate1w_ur = 0;
     otherwise
         disp("observation type is not set correctly")
 end
@@ -260,7 +277,16 @@ else
         Rv     = [Rv; ones(1,1) * R.length2w_dr * 1];
         sigmaN = [sigmaN;ones(1,1) * 3];
     end
-
+    
+    if reqList.rangeRate1w_ur == 1 % 要素は1つ分
+        Yv     = [Yv;Y.rangeRate_ur];
+        YStarv = [YStarv;Y_star.rangeRate];
+        if strcmp(estType,"ekf")
+            Hm     = [Hm;H.rangeRate_ur];
+        end
+        Rv     = [Rv; ones(1,1) * R.rangeRate_ur * 1];
+        sigmaN = [sigmaN;ones(1,1) * 3];
+    end
 
     % Rv(ベクトル)を対角行列に変換する
     lenR = length(Rv);

@@ -37,6 +37,7 @@ classdef Spacecraft < handle
           transDirection_ur      %uplinkに載っている，送信方向(誤差を持つ)
           recDownAngle_ur        %uplinkに載っている，地上局の観測量(downlinkの測角)
           recDownAngleAccuracy_ur%上の精度
+          rangeRateObserved_ur      %レンジレート
           % ----------scTrueにあるもの(送信に関するもの)--------
           dt_counter             % downlinkを送信した回数を数える 
           t_dt                   % downlinkを送信した時刻  

@@ -58,7 +58,11 @@ if strcmp(type,"2way")
     Y_star.length2w_dr = length2w_dr;
 end
 
+% レンジレートの計算
+gs2scPos = xvsr(1:3) - xvet(1:3) - xvgt(1:3);
+gs2scVel = xvsr(4:6) - xvet(4:6) - xvgt(4:6);
 
+Y_star.rangeRate = gs2scPos.' * gs2scVel /norm(gs2scPos)/norm(gs2scVel);
 
 % Y_star = [azm_ur; elv_ur; azm_ut; elv_ut; accel;length1w];
 end

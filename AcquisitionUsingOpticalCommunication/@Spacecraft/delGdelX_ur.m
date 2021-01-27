@@ -8,8 +8,8 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time,xv
 
     %% 頻繁に出てくるもの
     % 距離
-    dru = xvs(1:3) - xvet(1:3) - xvgt(1:3);
-    Lu = norm(dru);
+    gs2scPos = xvs(1:3) - xvet(1:3) - xvgt(1:3);
+    Lu = norm(gs2scPos);
     % 太陽からの距離
     R = norm(xvs(1:3));
     % uplinkを受信する方向 (Direction uplink receive)
@@ -20,11 +20,14 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time,xv
     DutX = xvs(1) - xvet(1) - xvgt(1);
     DutY = xvs(2) - xvet(2) - xvgt(2);
     DutZ = xvs(3) - xvet(3) - xvgt(3);
+    
+    %相対距離
+    gs2scVel = xvs(4:6) - xvet(4:6) - xvgt(4:6);
 
 %% 頻繁に出てくるものの状態量微分
     % Luの微分
     delLu(1) = 0;
-    delLu(2:4) = dru.'/Lu;
+    delLu(2:4) = gs2scPos.'/Lu;
     delLu(5:7) = 0;
     % Rの微分
     delR(1) = 0;
@@ -117,16 +120,19 @@ function H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time,xv
      delDirectionZ_ut = 1/dut_norm^3 * ...
         (delDutZ * dut_norm^2 - DutZ*(DutX *delDutX + DutY *delDutY + DutZ *delDutZ )  );   
     
-    
+    % レンジレートの微分
+    % 相対位置と速度の内積の微分
+    sc2gsXU    = gs2scPos.'*gs2scVel;
+    delsc2gsXU = [0, gs2scVel.', gs2scPos.'];
+    delRR      = - 1/Lu^2 * delLu * sc2gsXU + 1/Lu * delsc2gsXU;
+    H.rangeRate_ur = delRR;
+
     %% まとめる
-%     H.azm_ur      = delAzm_ur;
-%     H.elv_ur      = delElv_ur;
     H.direction_ur  = [delDirectionX_ur;delDirectionY_ur;delDirectionZ_ur];
-%     H.azm_ut      = delAzm_ut;
-%     H.elv_ut      = delElv_ut;
     H.direction_ut  = [delDirectionX_ut;delDirectionY_ut;delDirectionZ_ut];
     H.accel_ur    = delAccel;
     H.length1w_ur = delL1w;
+    
     
     %% 2wayの場合
     if strcmp(type,"2way")
