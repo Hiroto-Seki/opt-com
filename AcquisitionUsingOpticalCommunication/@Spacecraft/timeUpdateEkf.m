@@ -12,9 +12,9 @@ function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error,type)
            Q(5:7,5:7) = 1e8 * error.dynamics^2 * eye(3); %1e8
            Q(1,1)     = 1e-14; % 1e-12
            Q(2:4,2:4) = 1e-8 * eye(3); % 1e-8
-%        Q(5:7,5:7) = 1e8 * error.dynamics^2 * eye(3); %1e8
+%        Q(5:7,5:7) = 1e0 * error.dynamics^2 * eye(3); %1e8
 %        Q(1,1)     = 1e-14; % 1e-12
-%        Q(2:4,2:4) = 1e-8 * eye(3); % 1e-8
+% %        Q(2:4,2:4) = 1e-8 * eye(3); % 1e-8
    elseif type == 2
        Q(1,1)     = 1e-12; % 1e-12
        Q(5:7,5:7) = error.dynamics^2 * eye(3);
@@ -59,19 +59,6 @@ function [X, P] = timeUpdateEkf(X, P, constant, Dt, dt,error,type)
    
    P = STM * P * STM.' +  STM *  Q *  STM.' * dt * dt;
    end
-   
-%    %% ODEで伝搬する場合
-%    tspan = [0 Dt];
-%    y0     = [X(2:7);reshape(eye(6),36,1)];
-%    opts   = odeset('Reltol',1e-12,'AbsTol',1e-12);
-%    odefun = @(t,x) Spacecraft.twobody_stateAndSTM(t,x,constant.sunMu);
-%     % nominal trajectory
-%    [t,ynom] = ode113(odefun,tspan,y0,opts);
-%    STM = reshape(ynom(size(ynom,1),7:end),6,6);
-%    x   = reshape(ynom(size(ynom,1),1:6),6,1);
-%    X = [X(1) ;x];
-%    STM = [1,zeros(1,6);zeros(6,1),STM];
-%    P = STM * P * STM.' +  STM *  Q *  STM.' * dt * dt;
    
 
 end

@@ -55,10 +55,14 @@ scEstByGsSeq_afterLos.P_list(:,:,1) = scEstByGsSeq_afterLos.P;
 scEstByScSeq_afterLos.useObs = scEstByScEkf.useObs;
 scEstByGsSeq_afterLos.useObs = scEstByGsEkf.useObs;
 
+% 推定に使わなかった観測
+scEstByScSeq_afterLos.estNoUse =[]; 
+scEstByGsSeq_afterLos.estNoUse =[]; 
 
 
 scEstByScSeq_afterLos.R = scEstByScEkf.R;
 scEstByGsSeq_afterLos.R = scEstByGsEkf.R;
+
 
 
 % 送受信した回数の初期化
@@ -70,6 +74,7 @@ scTrue_afterLos.dt_counter=0;
 scTrue_afterLos.ur2w_counter = 0;
 % 初期化
 time_afterLos.lastSearch = 0;
+
 
 
 % 結果を格納する

@@ -51,7 +51,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
             disp("observation type is not defined correctly ")
         end
         % Y, Y_star, H, Rから必要な要素だけ取り出す
-        [Yv,YStarv,Hm,Rm,~,sigmaN] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
+        [y,Hm,Rm,~,estNoUseList] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs,P_bar);
     else %2wayの観測 (1,2,3,4,5,6,7,8,9,10,11)の観測を得られる．(10,11はuplink内容に含まれる) 
         Y.direction_ur = scTrue.directionObserved_ur(:,ur_counter); % 測角
         Y.direction_ut = scTrue.transDirection_ur(:,ur_counter);...     % uplink方向
@@ -124,27 +124,105 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
         end
         
         
-        [Yv,YStarv,Hm,Rm,~,sigmaN] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs);
+        [y,Hm,Rm,~,estNoUseList] = Spacecraft.alignReqInfo4Est(Y,Y_star,H,obj.R,obsType,"ekf",obj.useObs,P_bar);
         
     end
-    y = Yv - YStarv;
-    obj.y = y;
-
     
+    % estNoUseListとscEstBySc.estNoUseを比較する．同じ要素が含まれていれば，誤差共分散を大きくする
+    noUseObsAgain = [];
     
-    
-    for k = length(y):-1:1
-        S = (Hm*P_bar*Hm.' + Rm);
-        if sigmaN(k) < abs(y(k))/sqrt(S(k,k))
-            y(k) = [];
-            Hm(k,:) = [];
-            Rm(k,:) = [];
-            Rm(:,k) = [];
-        end  
+    if isempty(obj.estNoUse) || isempty(estNoUseList)
+        % 特に何もしない
+    else
+        for i = 1:length(obj.estNoUse)
+            for j = 1:length(estNoUseList)
+                if obj.estNoUse(i) == estNoUseList(j)
+                    noUseObsAgain = [noUseObsAgain,obj.estNoUse(i)];
+                end
+            end
+        end
     end
     
+    % noUseObsAgainの要素によって，Pの大きさを変化させる
+    if isempty(noUseObsAgain)
+        % 特に何もしない
+    else
+        tempDt = P_bar(1,1)^0.5;
+        tempX  = P_bar(2,2)^0.5;
+        tempY  = P_bar(3,3)^0.5;
+        tempZ  = P_bar(4,4)^0.5;
+        tempU  = max(P_bar(5,5)^0.5); %経験値 
+        tempV  = max(P_bar(6,6)^0.5);
+        tempW  = max(P_bar(7,7)^0.5);
+        if sum(strcmp(noUseObsAgain,"direction_urX"))== 1
+            tempX  = max(tempX , abs(Y.direction_ur(1) - Y_star.direction_ur(1))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_ur(1) - Y_star.direction_ur(1))*constant.AU * 10/constant.lightSpeed);
+        end
+        if sum(strcmp(noUseObsAgain,"direction_urY")) == 1
+            tempY  = max(tempY , abs(Y.direction_ur(2) - Y_star.direction_ur(2))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_ur(2) - Y_star.direction_ur(2))*constant.AU * 10/constant.lightSpeed);      
+        end
+        if sum(strcmp(noUseObsAgain,"direction_urZ")) == 1
+            tempZ  = max(tempZ , abs(Y.direction_ur(3) - Y_star.direction_ur(3))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_ur(3) - Y_star.direction_ur(3))*constant.AU * 10/constant.lightSpeed);                   
+        end
+        if sum(strcmp(noUseObsAgain,"direction_utX")) == 1
+            tempX  = max(tempX , abs(Y.direction_ut(1) - Y_star.direction_ut(1))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_ut(1) - Y_star.direction_ut(1))*constant.AU * 10/constant.lightSpeed);
+        end
+        if sum(strcmp(noUseObsAgain,"direction_utY")) == 1
+            tempY  = max(tempY , abs(Y.direction_ut(2) - Y_star.direction_ut(2))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_ut(2) - Y_star.direction_ut(2))*constant.AU * 10/constant.lightSpeed);
+        end
+        if sum(strcmp(noUseObsAgain,"direction_utZ")) == 1
+            tempZ  = max(tempZ , abs(Y.direction_ut(3) - Y_star.direction_ut(3))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_ut(3) - Y_star.direction_ut(3))*constant.AU * 10/constant.lightSpeed);
+        end
+        if sum(strcmp(noUseObsAgain,"length1w_ur")) == 1
+            tempX  = max(tempX , abs(Y.length1w_ur - Y_star.length1w_ur));
+            tempY  = max(tempY , abs(Y.length1w_ur - Y_star.length1w_ur));
+            tempZ  = max(tempZ , abs(Y.length1w_ur - Y_star.length1w_ur));
+            tempDt = max(tempDt, abs(Y.length1w_ur - Y_star.length1w_ur)/constant.lightSpeed);            
+        end
+        if sum(strcmp(noUseObsAgain,"length2w_ur")) == 1
+            tempX  = max(tempX , abs(Y.length2w_ur - Y_star.length2w_ur));
+            tempY  = max(tempY , abs(Y.length2w_ur - Y_star.length2w_ur));
+            tempZ  = max(tempZ , abs(Y.length2w_ur - Y_star.length2w_ur));
+            tempDt = max(tempDt, abs(Y.length2w_ur - Y_star.length2w_ur)/constant.lightSpeed);  
+        end
+        if sum(strcmp(noUseObsAgain,"direction_drX")) == 1
+            tempX  = max(tempX , abs(Y.direction_dr(1) - Y_star.direction_dr(1))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_dr(1) - Y_star.direction_dr(1))*constant.AU * 10/constant.lightSpeed);
+        end
+        if sum(strcmp(noUseObsAgain,"direction_drY")) == 1
+            tempY  = max(tempY , abs(Y.direction_dr(2) - Y_star.direction_dr(2))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_dr(2) - Y_star.direction_dr(2))*constant.AU * 10/constant.lightSpeed);
+        end
+        if sum(strcmp(noUseObsAgain,"direction_drZ")) == 1
+            tempZ  = max(tempZ , abs(Y.direction_dr(3) - Y_star.direction_dr(3))*constant.AU * 10);
+            tempDt = max(tempDt, abs(Y.direction_dr(3) - Y_star.direction_dr(3))*constant.AU * 10/constant.lightSpeed);
+        end
+        % 速度の誤差は，公転半径の差由来だと考えて，
+        tempDr = (tempX^2 + tempY^2 + tempZ^2)^0.5;
+        tempR  = (X_star(2)^2 + X_star(3)^2 + X_star(4)^2)^0.5;
+        tempSpeed  = (((tempR+tempDr)/tempR)^0.5 -1) * (X_star(5)^2 + X_star(6)^2 + X_star(7)^2)^0.5;
+        tempU  = max(P_bar(5,5)^0.5,tempSpeed);
+        tempV  = max(P_bar(6,6)^0.5,tempSpeed);
+        tempW  = max(P_bar(7,7)^0.5,tempSpeed);
+    end
+    
+   % 特定の観測が連続で除外されていた場合はPを書き換え，Xはそのまま
+   if isempty(noUseObsAgain) == 0
+       X = X_star;
+       P = [  tempDt^2, zeros(1,6);
+            zeros(1,1),    tempX^2, zeros(1,5);
+            zeros(1,2),    tempY^2, zeros(1,4);
+            zeros(1,3),    tempZ^2, zeros(1,3);
+            zeros(1,4),    tempU^2, zeros(1,2);
+            zeros(1,5),    tempV^2, zeros(1,1);
+            zeros(1,6),    tempW^2];
     % 有効な観測がない時は例外処理
-   if isempty(y)
+   elseif isempty(y)
        X = X_star;
        P = P_bar;
    else
@@ -159,5 +237,7 @@ function observationUpdateByScEkf(obj,scTrue,earth, gsTrue,constant,type,time,ek
     
     obj.X = X;
     obj.P = P;
+    
+    obj.estNoUse = estNoUseList;
 
 end

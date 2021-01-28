@@ -69,5 +69,8 @@ function [time, gsTrue, scTrue,scEstBySc,scEstByGs] = resetParam(time, gsTrue, s
     scEstBySc.P_dt = [];
     scEstByGs.X_dt = [];
     scEstByGs.P_dt = [];
-
+    
+    scEstBySc.estNoUse =[];
+    scEstByGs.estNoUse =[];
+    
 end

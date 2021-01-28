@@ -10,7 +10,7 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
     constant.earthF = 1/298.257223560; % https://topex.ucsd.edu/geodynamics/14gravity1_2.pdf
     constant.elementaryCharge = 1.602 * 1e-19;
     constant.boltzmann = 1.381*1e-23;         %ボルツマン定数
-    
+    constant.AU = SSD.AU;
     
     %% parameter related to time
     % simulation timeStep[s]
@@ -201,7 +201,11 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByScSeq.useObs.direction_dr =1;  %downlinkを地上局が受信する角度 
    scEstByScSeq.useObs.length1w_dr =0;   %宇宙機→地上局の1way測距       (0になる)
    scEstByScSeq.useObs.length2w_dr =0;   %地上局→宇宙機→地上局の1way測距 (0になる)
-   scEstByScSeq.useObs.rangeRate1w_ur =1;   %レンジレート
+   scEstByScSeq.useObs.rangeRate1w_ur =0;   %レンジレート
+   
+   
+   scEstByScSeq.estNoUse =[]; %推定に使われなかった観測
+   
    
   % 使う観測の設定0or1で記述する. 0は使用しない. 1は使用する
    scEstByGsSeq.useObs.direction_ur =1;  %uplinkを宇宙機が受信する角度
@@ -213,6 +217,8 @@ function [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScSeq,scEstByGsSe
    scEstByGsSeq.useObs.length1w_dr =1;   %宇宙機→地上局の1way測距
    scEstByGsSeq.useObs.length2w_dr =1;   %地上局→宇宙機→地上局の2way測距
    scEstByGsSeq.useObs.rangeRate1w_ur =1;   %レンジレート
+   
+   scEstByGsSeq.estNoUse =[]; %推定に使われなかった観測
    
    scEstByScSeq.R.direction_ur = error.stt^2;
    scEstByScSeq.R.direction_ut = (gs.searchStep^2);

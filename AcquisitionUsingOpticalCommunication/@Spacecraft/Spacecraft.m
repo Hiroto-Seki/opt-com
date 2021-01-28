@@ -61,6 +61,7 @@ classdef Spacecraft < handle
           X_dt                   % scEstByGsEkfが使用するダウンリンクを送信した時刻の推定状態量
           P_dt                   % scEstByGsEkfが使用するダウンリンクを送信した時刻の誤差共分散行列
           useObs                 % それぞれの観測を使うかどうか記述している
+          estNoUse               % 推定に使われなかったもの
           % ----------UKFに使うもの---------------------
           x_sp                   % Xのsigma point
           y_sp                   % シグマポイントに対応するY
@@ -106,7 +107,7 @@ classdef Spacecraft < handle
         [X_new, P_new, x_sp_new] = timeUpdateUkf(x_sp,constant,ukf,Dt,dt, error) % UKFに使う．シグマ点列と誤差共分散を時間更新
         H = delGdelX_ur(X_star,xvet,xvgt,xver,xvgr, dt2w, constant,type,time,xve_ut3w,xvg_ut3w,dtAtSc3w)   % 観測方程式の微分(1way, 宇宙機による推定)
         H = delGdelX_dr(X_star,xv_ut,xv_dr,dtAtSc,constant);  % 観測方程式の微分(2way, 地上局による推定)
-        [Yv,YStarv,Hm,Rm,obsNum,sigmaN] = alignReqInfo4Est(Y,YStar,H,R,obsType,estType,reqList); %y, Y, H, Rを過不足なく並べる. type="1u:1wayのuplink", "2u:2wayのuplink","2d:2wayのdownlink"
+        [y,Hm,Rm,obsNum,estNoUseList] = alignReqInfo4Est(Y,Y_star,H,R,obsType,estType,reqList,P_bar) %y, Y, H, Rを過不足なく並べる. type="1u:1wayのuplink", "2u:2wayのuplink","2d:2wayのdownlink"
         [opn_t,opn_stateE,opn_stateGs] = calcTarget(t,gs,e,scAtT,time,constant) % ダウンリンクが届く時刻とその時刻の地球,地上局の位置を求める
         X_sp = calcSigmaPoint(X,P,ukf) % シグマ点列の計算
         dxdt = twobody_stateAndSTM(t,x,mu)

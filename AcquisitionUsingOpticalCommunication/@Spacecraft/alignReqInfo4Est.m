@@ -1,4 +1,4 @@
-function [Yv,YStarv,Hm,Rm,obsNum,sigmaN] = alignReqInfo4Est(Y,Y_star,H,R,obsType,estType,reqList)
+function [y,Hm,Rm,obsNum,estNoUseList] = alignReqInfo4Est(Y,Y_star,H,R,obsType,estType,reqList,P_bar)
 
 % ここで，そもそも選択によらず観測できないものは除く
 switch obsType
@@ -177,6 +177,8 @@ Hm     = [];
 Rv     = [];
 Rm     = []; 
 sigmaN = [];
+obsList = [];
+estNoUseList = [];
 
 % 観測の数
 obsNum = reqList.direction_ur + ...
@@ -194,14 +196,13 @@ else
     % 使用する観測のみを付け足していく
     if reqList.direction_ur == 1 % 要素は3つ分
         Yv     = [Yv;Y.direction_ur];
-%         YStarv = [YStarv;Y_star.azm_ur;Y_star.elv_ur];
         YStarv = [YStarv;Y_star.direction_ur;];
         if strcmp(estType,"ekf")
-%             Hm     = [Hm;H.azm_ur;H.elv_ur];
             Hm     = [Hm;H.direction_ur];
         end
         Rv     = [Rv;[1;1;1] * R.direction_ur * 1];
         sigmaN = [sigmaN;ones(3,1) * 3]; % [10,1]
+        obsList = [obsList,"direction_urX","direction_urY","direction_urZ"];
     end
 
     if reqList.direction_ut == 1 % 要素は3つ分
@@ -214,6 +215,7 @@ else
         end
         Rv     = [Rv; [1;1;1] *R.direction_ut]; % [10000;1]
         sigmaN = [sigmaN;ones(3,1) * 3];
+        obsList = [obsList,"direction_utX","direction_utY","direction_utZ"];
     end
 
     if reqList.accel_ur == 1 % 要素は3つ分
@@ -224,6 +226,7 @@ else
         end
         Rv     = [Rv; ones(3,1) * R.accel_ur * 1];
         sigmaN = [sigmaN;ones(3,1) * 3];
+        obsList = [obsList,"accel_urX","accel_urY","accel_urZ"];
     end
 
     if reqList.length1w_ur == 1 % 要素は1つ分
@@ -234,6 +237,7 @@ else
         end
         Rv     = [Rv; ones(1,1) * R.length1w_ur * 1];  % 1000
         sigmaN = [sigmaN;ones(1,1) * 3];
+        obsList = [obsList,"length1w_ur"];
     end
 
     if reqList.length2w_ur == 1 % 要素は1つ分
@@ -244,6 +248,7 @@ else
         end
         Rv     = [Rv; ones(1,1) * R.length2w_ur * 1]; % 100
         sigmaN = [sigmaN;ones(1,1) * 3];
+        obsList = [obsList,"length2w_ur"];
     end
 
     if reqList.direction_dr == 1 % 要素は3つ分
@@ -256,6 +261,7 @@ else
         end
         Rv     = [Rv; ones(3,1) * R.direction_dr * 1];
         sigmaN = [sigmaN;ones(3,1) * 3];
+        obsList = [obsList,"direction_drX","direction_drY","direction_drZ"];
     end
 
     if reqList.length1w_dr == 1 % 要素は1つ分
@@ -266,6 +272,7 @@ else
         end
         Rv     = [Rv; ones(1,1) * R.length1w_dr * 1];
         sigmaN = [sigmaN;ones(1,1) * 3];
+        obsList = [obsList,"length1w_dr"];
     end
 
     if reqList.length2w_dr == 1 % 要素は1つ分
@@ -276,6 +283,7 @@ else
         end
         Rv     = [Rv; ones(1,1) * R.length2w_dr * 1];
         sigmaN = [sigmaN;ones(1,1) * 3];
+        obsList = [obsList,"length2w_dr"];
     end
     
     if reqList.rangeRate1w_ur == 1 % 要素は1つ分
@@ -286,6 +294,7 @@ else
         end
         Rv     = [Rv; ones(1,1) * R.rangeRate_ur * 1];
         sigmaN = [sigmaN;ones(1,1) * 3];
+        obsList = [obsList,"rangeRate1w_ur"];
     end
 
     % Rv(ベクトル)を対角行列に変換する
@@ -294,7 +303,21 @@ else
     for i = 1:lenR
         Rm(i,i) = Rv(i);
     end
-%     Rm = Rm ;  %観測誤差共分散行列を大きくする
+    
+    y = Yv - YStarv;
+
+    for k = length(y):-1:1
+        S = (Hm*P_bar*Hm.' + Rm);
+        if sigmaN(k) < abs(y(k))/sqrt(S(k,k))
+            estNoUseList = [obsList(k),estNoUseList];
+            y(k) = [];
+            Hm(k,:) = [];
+            Rm(k,:) = [];
+            Rm(:,k) = [];
+        end  
+    end
+
+
 end
 
 end
