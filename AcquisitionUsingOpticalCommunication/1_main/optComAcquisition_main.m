@@ -43,7 +43,7 @@ result = struct("posErrorSc"  , zeros(8,N),... %x,y,z,rの誤差とそれに対�
                 "downAvail" ,zeros(1,N));    %Downlinkの成功率
 
 
-for n = [93,61,14,26,38,48,66]
+for n = 1:N
     rng(n)
 
     [constant,time,error,gs,sc,gsTrue,earth,scTrue,scEstByScEkf,scEstByGsEkf,ekf,~,saturn] = setparam(SSD);
