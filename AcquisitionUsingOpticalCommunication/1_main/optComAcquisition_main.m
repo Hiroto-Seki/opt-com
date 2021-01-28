@@ -18,8 +18,8 @@ elseif ispc
     addpath(genpath('~/Documents/matlab/SPICE'));
     % add path to keep the result
     resultFile = char(datetime('now','Format','yyyyMMddHH'));
-    mkdir('~/Documents/opt-com/result', resultFile)
-    resultPath = ['~/Documents/opt-com/result/',resultFile];
+    mkdir('C:¥Users¥seki¥Documents¥opt-com¥result', resultFile)
+    resultPath = [':¥Users¥seki¥Documents¥opt-com¥result¥',resultFile];
     addpath(resultPath);   
 end
 
